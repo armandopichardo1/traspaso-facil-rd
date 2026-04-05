@@ -28,7 +28,10 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-3">
+          <a href="/app/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+            Iniciar Sesión
+          </a>
           <Button variant="cta" asChild>
             <a href="#solicitud">Iniciar Traspaso</a>
           </Button>

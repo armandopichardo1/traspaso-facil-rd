@@ -6,9 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, ArrowRight } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, Briefcase, Shield } from "lucide-react";
+
+type RoleTab = "cliente" | "gestor" | "admin";
+
+const roleTabs: { key: RoleTab; label: string; icon: React.ReactNode; desc: string }[] = [
+  { key: "cliente", label: "Cliente", icon: <User className="h-4 w-4" />, desc: "Gestiona tus traspasos" },
+  { key: "gestor", label: "Gestor", icon: <Briefcase className="h-4 w-4" />, desc: "Panel de gestión" },
+  { key: "admin", label: "Admin", icon: <Shield className="h-4 w-4" />, desc: "Administración" },
+];
 
 export default function Login() {
+  const [activeRole, setActiveRole] = useState<RoleTab>("cliente");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,7 +45,6 @@ export default function Login() {
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
-        // Check profile role to redirect correctly
         const userId = data?.user?.id;
         if (userId) {
           const { data: profileData } = await supabase
@@ -65,17 +73,48 @@ export default function Login() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-primary">TRASPASA.DO</h1>
+          <a href="/" className="text-2xl font-extrabold tracking-tight">
+            <span className="text-primary">TRASPASA</span>
+            <span className="text-teal">.DO</span>
+          </a>
           <p className="text-muted-foreground mt-1">Tu traspaso vehicular, simplificado</p>
         </div>
 
+        {/* Role selector */}
+        <div className="grid grid-cols-3 gap-2 mb-6">
+          {roleTabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => {
+                setActiveRole(tab.key);
+                setIsSignUp(false);
+              }}
+              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 transition-all text-center ${
+                activeRole === tab.key
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-card text-muted-foreground hover:border-muted-foreground/40"
+              }`}
+            >
+              {tab.icon}
+              <span className="text-sm font-semibold">{tab.label}</span>
+              <span className="text-[11px] leading-tight opacity-70">{tab.desc}</span>
+            </button>
+          ))}
+        </div>
+
         <Card>
-          <CardHeader className="text-center">
-            <CardTitle>{isSignUp ? "Crear Cuenta" : "Iniciar Sesión"}</CardTitle>
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="text-lg">
+              {isSignUp ? "Crear Cuenta" : `Iniciar Sesión como ${roleTabs.find(t => t.key === activeRole)?.label}`}
+            </CardTitle>
             <CardDescription>
               {isSignUp
                 ? "Regístrate para gestionar tus traspasos"
-                : "Accede a tu panel de traspasos"}
+                : activeRole === "cliente"
+                ? "Accede a tu panel de traspasos"
+                : activeRole === "gestor"
+                ? "Accede al panel de gestión"
+                : "Accede al panel de administración"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -109,14 +148,22 @@ export default function Login() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-sm text-accent hover:underline"
-              >
-                {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
-              </button>
-            </div>
+            {activeRole === "cliente" && (
+              <div className="mt-6 text-center">
+                <button
+                  onClick={() => setIsSignUp(!isSignUp)}
+                  className="text-sm text-accent hover:underline"
+                >
+                  {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
+                </button>
+              </div>
+            )}
+
+            {activeRole !== "cliente" && (
+              <p className="mt-4 text-xs text-center text-muted-foreground">
+                Las cuentas de {activeRole === "gestor" ? "gestores" : "administradores"} son creadas por un administrador.
+              </p>
+            )}
           </CardContent>
         </Card>
 
