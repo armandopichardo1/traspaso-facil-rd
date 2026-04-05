@@ -39,11 +39,11 @@ export default function NotarioTraspasoDetail() {
     if (id) fetchData();
   }, [id]);
 
-  const handleSign = async (signatureDataUrl: string) => {
+  const handleSign = async (signatureData: { imageDataUrl: string; userAgent: string; geolocation: string | null }) => {
     if (!traspaso || !user) return;
     setSigning(true);
     try {
-      const blob = await (await fetch(signatureDataUrl)).blob();
+      const blob = await (await fetch(signatureData.imageDataUrl)).blob();
       const fileName = `firmas/${traspaso.id}/notario_${Date.now()}.png`;
       const { error: uploadError } = await supabase.storage
         .from("documentos")
@@ -57,9 +57,10 @@ export default function NotarioTraspasoDetail() {
         contrato_id: contratos[0]?.id || null,
         tipo_firmante: "notario",
         nombre_firmante: "Notario Certificador",
-        firma_hash: btoa(signatureDataUrl.slice(0, 100)),
+        firma_hash: btoa(signatureData.imageDataUrl.slice(0, 100)),
         firma_imagen_url: urlData.publicUrl,
-        user_agent: navigator.userAgent,
+        user_agent: signatureData.userAgent,
+        geolocation: signatureData.geolocation,
       });
       if (error) throw error;
 
@@ -231,8 +232,8 @@ export default function NotarioTraspasoDetail() {
               </CardHeader>
               <CardContent>
                 <SignaturePad
-                  onSave={handleSign}
-                  saving={signing}
+                  onSign={handleSign}
+                  title="Firma del Notario"
                 />
               </CardContent>
             </Card>

@@ -13,7 +13,7 @@ type RoleTab = "cliente" | "gestor" | "admin";
 const roleTabs: { key: RoleTab; label: string; icon: React.ReactNode; desc: string }[] = [
   { key: "cliente", label: "Cliente", icon: <User className="h-4 w-4" />, desc: "Gestiona tus traspasos" },
   { key: "gestor", label: "Gestor", icon: <Briefcase className="h-4 w-4" />, desc: "Panel de gestión" },
-  { key: "admin", label: "Admin", icon: <Shield className="h-4 w-4" />, desc: "Administración" },
+  { key: "admin", label: "Administrativo", icon: <Shield className="h-4 w-4" />, desc: "Admin, Notario, Mensajero" },
 ];
 
 export default function Login() {
@@ -59,6 +59,16 @@ export default function Login() {
           }
           if (profileData?.role === "admin") {
             navigate("/admin");
+            setSubmitting(false);
+            return;
+          }
+          if (profileData?.role === "notario") {
+            navigate("/notario");
+            setSubmitting(false);
+            return;
+          }
+          if (profileData?.role === "mensajero") {
+            navigate("/mensajero");
             setSubmitting(false);
             return;
           }
