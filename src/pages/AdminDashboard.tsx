@@ -387,7 +387,7 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </>
-            ) : (
+            ) : tab === "consultas" ? (
               <>
                 {filteredConsultas.length !== consultas.length && (
                   <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
