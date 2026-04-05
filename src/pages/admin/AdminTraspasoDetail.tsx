@@ -223,11 +223,11 @@ export default function AdminTraspasoDetail() {
               <CardContent className="text-sm space-y-1">
                 <p>{traspaso.vendedor_nombre}</p>
                 <p className="text-muted-foreground">
-                  {(traspaso as any).vendedor_tipo_persona === "juridica"
-                    ? `RNC: ${(traspaso as any).vendedor_rnc || "—"}`
+                  {traspaso.vendedor_tipo_persona === "juridica"
+                    ? `RNC: ${traspaso.vendedor_rnc || "—"}`
                     : `Cédula: ${traspaso.vendedor_cedula || "—"}`}
                 </p>
-                {(traspaso as any).vendedor_tipo_persona === "juridica" && (
+                {traspaso.vendedor_tipo_persona === "juridica" && (
                   <Badge variant="secondary" className="text-xs">Empresa</Badge>
                 )}
                 <a href={`https://wa.me/${(traspaso.vendedor_telefono || "").replace(/\D/g, "")}`} target="_blank" rel="noopener" className="text-accent hover:underline text-xs flex items-center gap-1">
@@ -244,11 +244,11 @@ export default function AdminTraspasoDetail() {
               <CardContent className="text-sm space-y-1">
                 <p>{traspaso.comprador_nombre}</p>
                 <p className="text-muted-foreground">
-                  {(traspaso as any).comprador_tipo_persona === "juridica"
-                    ? `RNC: ${(traspaso as any).comprador_rnc || "—"}`
+                  {traspaso.comprador_tipo_persona === "juridica"
+                    ? `RNC: ${traspaso.comprador_rnc || "—"}`
                     : `Cédula: ${traspaso.comprador_cedula || "—"}`}
                 </p>
-                {(traspaso as any).comprador_tipo_persona === "juridica" && (
+                {traspaso.comprador_tipo_persona === "juridica" && (
                   <Badge variant="secondary" className="text-xs">Empresa</Badge>
                 )}
                 <a href={`https://wa.me/${(traspaso.comprador_telefono || "").replace(/\D/g, "")}`} target="_blank" rel="noopener" className="text-accent hover:underline text-xs flex items-center gap-1">
