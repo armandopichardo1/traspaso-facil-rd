@@ -185,29 +185,43 @@ const AdminDashboard = () => {
       </header>
 
       <div className="container py-6">
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-card rounded-xl p-5 border border-border">
-            <p className="text-sm text-muted-foreground">Total Leads</p>
+            <p className="text-sm text-muted-foreground">Traspasos</p>
+            <p className="text-3xl font-extrabold text-foreground">{traspasos.length || "—"}</p>
+          </div>
+          <div className="bg-card rounded-xl p-5 border border-border">
+            <p className="text-sm text-muted-foreground">Leads</p>
             <p className="text-3xl font-extrabold text-foreground">{leads.length || "—"}</p>
           </div>
           <div className="bg-card rounded-xl p-5 border border-border">
-            <p className="text-sm text-muted-foreground">Consultas Historial</p>
+            <p className="text-sm text-muted-foreground">Historiales</p>
             <p className="text-3xl font-extrabold text-foreground">{consultas.length || "—"}</p>
           </div>
         </div>
 
         <div className="flex gap-2 mb-4">
           <button
+            onClick={() => setTab("traspasos")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "traspasos" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
+          >
+            <Car className="h-3.5 w-3.5 inline mr-1" /> Traspasos
+          </button>
+          <button
             onClick={() => setTab("leads")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "leads" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
           >
-            Leads de Traspaso
+            <Users className="h-3.5 w-3.5 inline mr-1" /> Leads
           </button>
           <button
             onClick={() => setTab("consultas")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "consultas" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
           >
-            Consultas Historial
+            <FileText className="h-3.5 w-3.5 inline mr-1" /> Historiales
+          </button>
+          <Button variant="outline" size="sm" onClick={() => navigate("/admin/historiales")} className="ml-auto">
+            Gestionar Historiales →
+          </Button>
           </button>
         </div>
 
