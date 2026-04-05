@@ -23,6 +23,11 @@ export default function AppLayout() {
     return <Navigate to="/app/login" state={{ from: location }} replace />;
   }
 
+  // Redirect gestors to their own layout
+  if (profile?.role === "gestor") {
+    return <Navigate to="/gestor" replace />;
+  }
+
   // If profile exists but nombre is not set, redirect to complete profile
   if (profile && !profile.nombre && location.pathname !== "/app/complete-profile") {
     return <Navigate to="/app/complete-profile" replace />;

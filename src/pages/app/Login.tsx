@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,13 +39,19 @@ export default function Login() {
         // Check profile role to redirect correctly
         const userId = data?.user?.id;
         if (userId) {
-          const { data: profileData } = await (await import("@/integrations/supabase/client")).supabase
+          const { data: profileData } = await supabase
             .from("profiles")
             .select("role")
             .eq("id", userId)
             .single();
           if (profileData?.role === "gestor") {
             navigate("/gestor");
+            setSubmitting(false);
+            return;
+          }
+          if (profileData?.role === "admin") {
+            navigate("/admin");
+            setSubmitting(false);
             return;
           }
         }
