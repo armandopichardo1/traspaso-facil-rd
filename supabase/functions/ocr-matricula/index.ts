@@ -37,14 +37,14 @@ serve(async (req) => {
           {
             role: "system",
             content:
-              "Eres un experto en lectura de matrículas de vehículos de República Dominicana. Extrae toda la información visible del documento de matrícula. Si un campo no es legible, devuelve una cadena vacía para ese campo.",
+              "Eres un experto en lectura de matrículas de vehículos de República Dominicana. Extrae toda la información visible del documento de matrícula. Si un campo no es legible, devuelve una cadena vacía para ese campo. Determina si el propietario es persona física (tiene cédula) o persona jurídica/empresa (tiene RNC). Si es persona física, llena propietario_cedula y deja propietario_rnc vacío. Si es empresa, llena propietario_rnc y deja propietario_cedula vacío.",
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: "Analiza esta imagen de matrícula vehicular dominicana y extrae los datos del vehículo y propietario.",
+                text: "Analiza esta imagen de matrícula vehicular dominicana y extrae los datos del vehículo y propietario. Determina si es persona física o jurídica.",
               },
               {
                 type: "image_url",
@@ -67,10 +67,12 @@ serve(async (req) => {
                   ano: { type: "string", description: "Año del vehículo (ej: 2020)" },
                   placa: { type: "string", description: "Número de placa (ej: A123456)" },
                   color: { type: "string", description: "Color del vehículo" },
-                  propietario_nombre: { type: "string", description: "Nombre completo del propietario" },
-                  propietario_cedula: { type: "string", description: "Cédula del propietario (formato XXX-XXXXXXX-X)" },
+                  tipo_persona: { type: "string", enum: ["fisica", "juridica"], description: "Tipo de persona: fisica (cédula) o juridica (RNC/empresa)" },
+                  propietario_nombre: { type: "string", description: "Nombre completo del propietario o razón social" },
+                  propietario_cedula: { type: "string", description: "Cédula del propietario si es persona física (formato XXX-XXXXXXX-X). Vacío si es empresa." },
+                  propietario_rnc: { type: "string", description: "RNC del propietario si es empresa (formato X-XX-XXXXX-X). Vacío si es persona física." },
                 },
-                required: ["marca", "modelo", "ano", "placa", "color", "propietario_nombre", "propietario_cedula"],
+                required: ["marca", "modelo", "ano", "placa", "color", "tipo_persona", "propietario_nombre", "propietario_cedula", "propietario_rnc"],
                 additionalProperties: false,
               },
             },

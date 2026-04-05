@@ -1,10 +1,10 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Camera, Loader2, CheckCircle, AlertTriangle, ScanLine } from "lucide-react";
+import { Loader2, CheckCircle, AlertTriangle, ScanLine } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import DocumentCameraGuide from "./DocumentCameraGuide";
 
 export type OcrResult = {
   marca: string;
@@ -12,8 +12,10 @@ export type OcrResult = {
   ano: string;
   placa: string;
   color: string;
+  tipo_persona: "fisica" | "juridica";
   propietario_nombre: string;
   propietario_cedula: string;
+  propietario_rnc: string;
 };
 
 interface MatriculaScannerProps {
@@ -23,26 +25,17 @@ interface MatriculaScannerProps {
 
 export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerProps) {
   const { toast } = useToast();
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
   const [result, setResult] = useState<OcrResult | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [showCamera, setShowCamera] = useState(false);
 
-  const handleFile = (file: File | null) => {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "Archivo muy grande", description: "Máximo 10MB", variant: "destructive" });
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      setImagePreview(dataUrl);
-      setImageBase64(dataUrl.split(",")[1]);
-      setResult(null);
-    };
-    reader.readAsDataURL(file);
+  const handleCameraCapture = (base64: string) => {
+    setImageBase64(base64);
+    setImagePreview(`data:image/jpeg;base64,${base64}`);
+    setShowCamera(false);
+    setResult(null);
   };
 
   const handleScan = async () => {
@@ -66,6 +59,27 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
     }
   };
 
+  if (showCamera) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ScanLine className="h-4 w-4" /> Capturar Matrícula
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <DocumentCameraGuide
+              onCapture={handleCameraCapture}
+              onCancel={() => setShowCamera(false)}
+              label="Coloca la matrícula dentro del marco"
+            />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -80,22 +94,13 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
           </p>
 
           {!imagePreview ? (
-            <div
-              className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-accent transition-colors"
-              onClick={() => fileRef.current?.click()}
+            <Button
+              variant="cta"
+              className="w-full"
+              onClick={() => setShowCamera(true)}
             >
-              <Camera className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm font-medium mb-1">Tomar foto o seleccionar imagen</p>
-              <p className="text-xs text-muted-foreground">JPG, PNG · máx 10MB</p>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                className="hidden"
-                onChange={(e) => handleFile(e.target.files?.[0] || null)}
-              />
-            </div>
+              <ScanLine className="h-4 w-4 mr-2" /> Abrir cámara / Subir foto
+            </Button>
           ) : (
             <div className="space-y-3">
               <div className="relative rounded-xl overflow-hidden border">
@@ -109,20 +114,11 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
               </div>
 
               {!result && (
-                <Button
-                  variant="cta"
-                  className="w-full"
-                  onClick={handleScan}
-                  disabled={scanning}
-                >
+                <Button variant="cta" className="w-full" onClick={handleScan} disabled={scanning}>
                   {scanning ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Escaneando con IA...
-                    </>
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Escaneando con IA...</>
                   ) : (
-                    <>
-                      <ScanLine className="h-4 w-4" /> Escanear con IA
-                    </>
+                    <><ScanLine className="h-4 w-4" /> Escanear con IA</>
                   )}
                 </Button>
               )}
@@ -141,8 +137,13 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
                 <Field label="Año" value={result.ano} />
                 <Field label="Placa" value={result.placa} />
                 <Field label="Color" value={result.color} />
+                <Field label="Tipo" value={result.tipo_persona === "juridica" ? "Empresa" : "Persona Física"} />
                 <Field label="Propietario" value={result.propietario_nombre} />
-                <Field label="Cédula" value={result.propietario_cedula} />
+                {result.tipo_persona === "juridica" ? (
+                  <Field label="RNC" value={result.propietario_rnc} />
+                ) : (
+                  <Field label="Cédula" value={result.propietario_cedula} />
+                )}
               </div>
               {Object.values(result).some(v => !v) && (
                 <div className="flex items-start gap-2 text-amber-700 bg-amber-50 rounded-lg p-3">
@@ -153,8 +154,8 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
               <Button variant="cta" className="w-full" onClick={() => onAccept(result)}>
                 Aceptar y continuar
               </Button>
-              <Button variant="outline" className="w-full" onClick={handleScan} disabled={scanning}>
-                {scanning ? "Reescaneando..." : "Reintentar escaneo"}
+              <Button variant="outline" className="w-full" onClick={() => { setResult(null); setShowCamera(true); }}>
+                Retomar foto
               </Button>
             </div>
           )}
