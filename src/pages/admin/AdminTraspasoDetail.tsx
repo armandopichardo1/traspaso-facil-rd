@@ -15,6 +15,8 @@ import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock,
   MessageCircle, User, FileText, Download, ShieldCheck, ShieldAlert, ShieldX, PenTool,
 } from "lucide-react";
+import ContractGenerator from "@/components/gestor/ContractGenerator";
+import type { ContractData } from "@/lib/contract-templates";
 
 const STATUS_STEPS = [
   { key: "solicitud_recibida", label: "Solicitud Recibida" },
@@ -535,72 +537,45 @@ export default function AdminTraspasoDetail() {
             </CardContent>
           </Card>
 
-          {/* Contratos generados */}
+          {/* Contract Generator - generate, preview, sign */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <FileText className="h-4 w-4" /> Contratos Generados ({contratos?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!contratos || contratos.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hay contratos generados</p>
-              ) : (
-                <div className="space-y-3">
-                  {contratos.map((c: any) => (
-                    <div key={c.id} className="border border-border rounded-lg p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium capitalize">{c.tipo.replace(/_/g, " ")}</span>
-                        <Badge variant="secondary" className="text-xs">{c.status}</Badge>
-                      </div>
-                      <div
-                        className="text-xs bg-muted p-2 rounded max-h-48 overflow-y-auto prose prose-xs"
-                        dangerouslySetInnerHTML={{ __html: c.contenido_html }}
-                      />
-                      {c.pdf_url && (
-                        <a href={c.pdf_url} target="_blank" rel="noopener" className="text-accent hover:underline text-xs flex items-center gap-1">
-                          <Download className="h-3 w-3" /> Descargar PDF
-                        </a>
-                      )}
-                      <p className="text-[10px] text-muted-foreground">
-                        {new Date(c.created_at).toLocaleString("es-DO")}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Firmas digitales */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <PenTool className="h-4 w-4" /> Firmas Digitales ({firmas?.length || 0})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {!firmas || firmas.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No hay firmas registradas</p>
-              ) : (
-                <div className="space-y-3">
-                  {firmas.map((f: any) => (
-                    <div key={f.id} className="flex items-start gap-3 border border-border rounded-lg p-3">
-                      <img src={f.firma_imagen_url} alt="Firma" className="h-12 w-24 object-contain border rounded bg-white" />
-                      <div className="flex-1 text-sm space-y-0.5">
-                        <p className="font-medium capitalize">{f.tipo_firmante}</p>
-                        <p className="text-muted-foreground">{f.nombre_firmante}</p>
-                        {f.cedula_firmante && <p className="text-xs text-muted-foreground">Cédula: {f.cedula_firmante}</p>}
-                        <p className="text-[10px] text-muted-foreground">
-                          {new Date(f.created_at).toLocaleString("es-DO")}
-                        </p>
-                        {f.geolocation && <p className="text-[10px] text-muted-foreground">📍 {f.geolocation}</p>}
-                        {f.ip_address && <p className="text-[10px] text-muted-foreground">IP: {f.ip_address}</p>}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <CardContent className="pt-4">
+              <ContractGenerator
+                traspasoId={traspaso.id}
+                contractData={{
+                  vehiculo_marca: traspaso.vehiculo_marca || "",
+                  vehiculo_modelo: traspaso.vehiculo_modelo || "",
+                  vehiculo_ano: traspaso.vehiculo_ano || "",
+                  vehiculo_placa: traspaso.vehiculo_placa || "",
+                  vehiculo_color: traspaso.vehiculo_color || "",
+                  vehiculo_chasis: traspaso.vehiculo_chasis || "",
+                  tipo_vehiculo: traspaso.tipo_vehiculo || "vehiculo_motor",
+                  vendedor_nombre: traspaso.vendedor_nombre || "",
+                  vendedor_cedula: traspaso.vendedor_cedula || "",
+                  vendedor_rnc: traspaso.vendedor_rnc || "",
+                  vendedor_tipo_persona: traspaso.vendedor_tipo_persona || "fisica",
+                  vendedor_telefono: traspaso.vendedor_telefono || "",
+                  comprador_nombre: traspaso.comprador_nombre || "",
+                  comprador_cedula: traspaso.comprador_cedula || "",
+                  comprador_rnc: traspaso.comprador_rnc || "",
+                  comprador_tipo_persona: traspaso.comprador_tipo_persona || "fisica",
+                  comprador_telefono: traspaso.comprador_telefono || "",
+                  precio_vehiculo: traspaso.precio_vehiculo ? Number(traspaso.precio_vehiculo) : null,
+                  medio_pago: traspaso.medio_pago || "",
+                  fecha_acto_venta: traspaso.fecha_acto_venta || "",
+                  es_traspaso_familiar: traspaso.es_traspaso_familiar || false,
+                  tiene_apoderado: traspaso.tiene_apoderado || false,
+                  apoderado_nombre: traspaso.apoderado_nombre || "",
+                  apoderado_cedula: traspaso.apoderado_cedula || "",
+                  codigo: traspaso.codigo || "",
+                } as ContractData}
+                contracts={contratos || []}
+                signatures={firmas || []}
+                onRefresh={() => {
+                  queryClient.invalidateQueries({ queryKey: ["admin-contratos", id] });
+                  queryClient.invalidateQueries({ queryKey: ["admin-firmas", id] });
+                }}
+              />
             </CardContent>
           </Card>
 
