@@ -15,6 +15,8 @@ import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock,
   MessageCircle, User, FileText, Download, ShieldCheck, ShieldAlert, ShieldX, PenTool,
 } from "lucide-react";
+import ContractGenerator from "@/components/gestor/ContractGenerator";
+import type { ContractData } from "@/lib/contract-templates";
 
 const STATUS_STEPS = [
   { key: "solicitud_recibida", label: "Solicitud Recibida" },
