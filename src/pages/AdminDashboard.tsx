@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { LogOut, RefreshCw } from "lucide-react";
 import type { Session } from "@supabase/supabase-js";
+import LeadFilters from "@/components/admin/LeadFilters";
 
 type Lead = {
   id: string;
@@ -37,6 +38,29 @@ const AdminDashboard = () => {
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [fetching, setFetching] = useState(false);
   const navigate = useNavigate();
+
+  // Filters
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [filterStatus, setFilterStatus] = useState("todos");
+  const [filterPlan, setFilterPlan] = useState("todos");
+
+  const clearFilters = () => {
+    setDateFrom("");
+    setDateTo("");
+    setFilterStatus("todos");
+    setFilterPlan("todos");
+  };
+
+  const filteredLeads = useMemo(() => {
+    return leads.filter((l) => {
+      if (dateFrom && new Date(l.created_at) < new Date(dateFrom)) return false;
+      if (dateTo && new Date(l.created_at) > new Date(dateTo + "T23:59:59")) return false;
+      if (filterStatus !== "todos" && l.status !== filterStatus) return false;
+      if (filterPlan !== "todos" && l.plan !== filterPlan) return false;
+      return true;
+    });
+  }, [leads, dateFrom, dateTo, filterStatus, filterPlan]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -89,7 +113,6 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-muted">
-      {/* Header */}
       <header className="bg-card border-b border-border sticky top-0 z-50">
         <div className="container flex items-center justify-between h-14">
           <div className="flex items-center gap-4">
@@ -111,7 +134,6 @@ const AdminDashboard = () => {
       </header>
 
       <div className="container py-6">
-        {/* Stats */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-card rounded-xl p-5 border border-border">
             <p className="text-sm text-muted-foreground">Total Leads</p>
@@ -123,7 +145,6 @@ const AdminDashboard = () => {
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => setTab("leads")}
@@ -139,8 +160,26 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        {/* Table */}
+        {tab === "leads" && (
+          <LeadFilters
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            status={filterStatus}
+            plan={filterPlan}
+            onDateFromChange={setDateFrom}
+            onDateToChange={setDateTo}
+            onStatusChange={setFilterStatus}
+            onPlanChange={setFilterPlan}
+            onClear={clearFilters}
+          />
+        )}
+
         <div className="bg-card rounded-xl border border-border overflow-hidden">
+          {tab === "leads" && filteredLeads.length !== leads.length && (
+            <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
+              Mostrando {filteredLeads.length} de {leads.length} leads
+            </div>
+          )}
           <div className="overflow-x-auto">
             {tab === "leads" ? (
               <table className="w-full text-sm">
@@ -157,9 +196,9 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {leads.length === 0 ? (
-                    <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No hay leads aún</td></tr>
-                  ) : leads.map((l) => (
+                  {filteredLeads.length === 0 ? (
+                    <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No hay leads con estos filtros</td></tr>
+                  ) : filteredLeads.map((l) => (
                     <tr key={l.id} className="hover:bg-muted/30">
                       <td className="p-3 whitespace-nowrap">{formatDate(l.created_at)}</td>
                       <td className="p-3 font-medium text-foreground">{l.nombre}</td>
