@@ -9,6 +9,8 @@ import GuiaTraspaso from "./pages/GuiaTraspaso.tsx";
 import Norma0325 from "./pages/Norma0325.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import AdminDashboard from "./pages/AdminDashboard.tsx";
+import AdminTraspasoDetail from "./pages/admin/AdminTraspasoDetail.tsx";
+import AdminHistoriales from "./pages/admin/AdminHistoriales.tsx";
 import Calculadora from "./pages/Calculadora.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Seguimiento from "./pages/Seguimiento.tsx";
