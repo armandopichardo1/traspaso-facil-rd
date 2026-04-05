@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MaskedInput } from "@/components/ui/masked-input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -270,9 +271,9 @@ export default function GestorNuevoTraspaso() {
                 <TipoPersonaToggle value={form.vendedor_tipo_persona} onChange={(v) => update("vendedor_tipo_persona", v)} />
                 <div><Label>Nombre del Vendedor</Label><Input value={form.vendedor_nombre} onChange={(e) => update("vendedor_nombre", e.target.value)} /></div>
                 {form.vendedor_tipo_persona === "fisica" ? (
-                  <div><Label>Cédula (XXX-XXXXXXX-X)</Label><Input value={form.vendedor_cedula} onChange={(e) => update("vendedor_cedula", e.target.value)} placeholder="001-0000000-0" /></div>
+                  <div><Label>Cédula (XXX-XXXXXXX-X)</Label><MaskedInput mask="cedula" value={form.vendedor_cedula} onValueChange={(v) => update("vendedor_cedula", v)} placeholder="001-0000000-0" /></div>
                 ) : (
-                  <div><Label>RNC (X-XX-XXXXX-X)</Label><Input value={form.vendedor_rnc} onChange={(e) => update("vendedor_rnc", e.target.value)} placeholder="1-01-00000-0" /></div>
+                  <div><Label>RNC (X-XX-XXXXX-X)</Label><MaskedInput mask="rnc" value={form.vendedor_rnc} onValueChange={(v) => update("vendedor_rnc", v)} placeholder="1-01-00000-0" /></div>
                 )}
                 <div><Label>Teléfono</Label><Input value={form.vendedor_telefono} onChange={(e) => update("vendedor_telefono", e.target.value)} /></div>
               </>
@@ -283,9 +284,9 @@ export default function GestorNuevoTraspaso() {
                 <TipoPersonaToggle value={form.comprador_tipo_persona} onChange={(v) => update("comprador_tipo_persona", v)} />
                 <div><Label>Nombre del Comprador</Label><Input value={form.comprador_nombre} onChange={(e) => update("comprador_nombre", e.target.value)} /></div>
                 {form.comprador_tipo_persona === "fisica" ? (
-                  <div><Label>Cédula (XXX-XXXXXXX-X)</Label><Input value={form.comprador_cedula} onChange={(e) => update("comprador_cedula", e.target.value)} placeholder="001-0000000-0" /></div>
+                  <div><Label>Cédula (XXX-XXXXXXX-X)</Label><MaskedInput mask="cedula" value={form.comprador_cedula} onValueChange={(v) => update("comprador_cedula", v)} placeholder="001-0000000-0" /></div>
                 ) : (
-                  <div><Label>RNC (X-XX-XXXXX-X)</Label><Input value={form.comprador_rnc} onChange={(e) => update("comprador_rnc", e.target.value)} placeholder="1-01-00000-0" /></div>
+                  <div><Label>RNC (X-XX-XXXXX-X)</Label><MaskedInput mask="rnc" value={form.comprador_rnc} onValueChange={(v) => update("comprador_rnc", v)} placeholder="1-01-00000-0" /></div>
                 )}
                 <div><Label>Teléfono</Label><Input value={form.comprador_telefono} onChange={(e) => update("comprador_telefono", e.target.value)} /></div>
               </>
