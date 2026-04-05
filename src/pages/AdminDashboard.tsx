@@ -206,6 +206,18 @@ const AdminDashboard = () => {
           />
         )}
 
+        {tab === "consultas" && (
+          <ConsultaFilters
+            dateFrom={cDateFrom}
+            dateTo={cDateTo}
+            status={cFilterStatus}
+            onDateFromChange={setCDateFrom}
+            onDateToChange={setCDateTo}
+            onStatusChange={setCFilterStatus}
+            onClear={clearConsultaFilters}
+          />
+        )}
+
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {tab === "leads" && filteredLeads.length !== leads.length && (
             <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
