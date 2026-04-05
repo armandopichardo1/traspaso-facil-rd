@@ -429,7 +429,43 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </>
-            )}
+            ) : tab === "equipo" ? (
+              <table className="w-full text-sm">
+                <thead className="bg-muted text-muted-foreground text-left">
+                  <tr>
+                    <th className="p-3 font-medium">Nombre</th>
+                    <th className="p-3 font-medium">Email</th>
+                    <th className="p-3 font-medium">Cédula</th>
+                    <th className="p-3 font-medium">Rol</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {profiles.length === 0 ? (
+                    <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No hay perfiles</td></tr>
+                  ) : profiles.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30">
+                      <td className="p-3 font-medium text-foreground">{p.nombre || "—"}</td>
+                      <td className="p-3">{p.email || "—"}</td>
+                      <td className="p-3 font-mono">{p.cedula || "—"}</td>
+                      <td className="p-3">
+                        <Select value={p.role} onValueChange={(v) => handleRoleChange(p.id, v)}>
+                          <SelectTrigger className="h-7 w-[140px] text-xs font-medium">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="customer">Cliente</SelectItem>
+                            <SelectItem value="gestor">Gestor</SelectItem>
+                            <SelectItem value="notario">Notario</SelectItem>
+                            <SelectItem value="mensajero">Mensajero</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
           </div>
         </div>
       </div>
