@@ -188,10 +188,22 @@ export default function AdminTraspasoDetail() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-1">
+              <p><span className="text-muted-foreground">Tipo:</span> {traspaso.tipo_vehiculo === 'motocicleta' ? 'Motocicleta' : 'Vehículo de Motor'}</p>
               <p><span className="text-muted-foreground">Marca/Modelo:</span> {traspaso.vehiculo_marca} {traspaso.vehiculo_modelo}</p>
               <p><span className="text-muted-foreground">Año:</span> {traspaso.vehiculo_ano}</p>
               <p><span className="text-muted-foreground">Placa:</span> {traspaso.vehiculo_placa}</p>
+              <p><span className="text-muted-foreground">Chasis/VIN:</span> {traspaso.vehiculo_chasis || '—'}</p>
               <p><span className="text-muted-foreground">Color:</span> {traspaso.vehiculo_color}</p>
+              {traspaso.fecha_acto_venta && (
+                <p><span className="text-muted-foreground">Fecha Acto de Venta:</span> {new Date(traspaso.fecha_acto_venta).toLocaleDateString('es-DO')}</p>
+              )}
+              {traspaso.medio_pago && (
+                <p><span className="text-muted-foreground">Medio de Pago:</span> {traspaso.medio_pago === 'efectivo' ? 'Efectivo' : traspaso.medio_pago === 'transferencia' ? 'Transferencia' : traspaso.medio_pago === 'cheque' ? 'Cheque' : traspaso.medio_pago === 'financiamiento' ? 'Financiamiento' : traspaso.medio_pago}</p>
+              )}
+              {traspaso.es_traspaso_familiar && <Badge variant="secondary" className="text-xs">Traspaso Familiar</Badge>}
+              {traspaso.tiene_apoderado && (
+                <p><span className="text-muted-foreground">Apoderado:</span> {traspaso.apoderado_nombre || '—'} · {traspaso.apoderado_cedula || '—'}</p>
+              )}
               <p><span className="text-muted-foreground">Plan:</span> {traspaso.plan} · RD$ {traspaso.precio_servicio?.toLocaleString()}</p>
               <p><span className="text-muted-foreground">Pago servicio:</span> {traspaso.pago_servicio_status}</p>
               {traspaso.escrow_status !== "no_aplica" && (
@@ -211,11 +223,11 @@ export default function AdminTraspasoDetail() {
               <CardContent className="text-sm space-y-1">
                 <p>{traspaso.vendedor_nombre}</p>
                 <p className="text-muted-foreground">
-                  {(traspaso as any).vendedor_tipo_persona === "juridica"
-                    ? `RNC: ${(traspaso as any).vendedor_rnc || "—"}`
+                  {traspaso.vendedor_tipo_persona === "juridica"
+                    ? `RNC: ${traspaso.vendedor_rnc || "—"}`
                     : `Cédula: ${traspaso.vendedor_cedula || "—"}`}
                 </p>
-                {(traspaso as any).vendedor_tipo_persona === "juridica" && (
+                {traspaso.vendedor_tipo_persona === "juridica" && (
                   <Badge variant="secondary" className="text-xs">Empresa</Badge>
                 )}
                 <a href={`https://wa.me/${(traspaso.vendedor_telefono || "").replace(/\D/g, "")}`} target="_blank" rel="noopener" className="text-accent hover:underline text-xs flex items-center gap-1">
@@ -232,11 +244,11 @@ export default function AdminTraspasoDetail() {
               <CardContent className="text-sm space-y-1">
                 <p>{traspaso.comprador_nombre}</p>
                 <p className="text-muted-foreground">
-                  {(traspaso as any).comprador_tipo_persona === "juridica"
-                    ? `RNC: ${(traspaso as any).comprador_rnc || "—"}`
+                  {traspaso.comprador_tipo_persona === "juridica"
+                    ? `RNC: ${traspaso.comprador_rnc || "—"}`
                     : `Cédula: ${traspaso.comprador_cedula || "—"}`}
                 </p>
-                {(traspaso as any).comprador_tipo_persona === "juridica" && (
+                {traspaso.comprador_tipo_persona === "juridica" && (
                   <Badge variant="secondary" className="text-xs">Empresa</Badge>
                 )}
                 <a href={`https://wa.me/${(traspaso.comprador_telefono || "").replace(/\D/g, "")}`} target="_blank" rel="noopener" className="text-accent hover:underline text-xs flex items-center gap-1">
