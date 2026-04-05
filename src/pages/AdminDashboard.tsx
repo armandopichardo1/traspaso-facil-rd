@@ -47,11 +47,22 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterPlan, setFilterPlan] = useState("todos");
 
+  // Consulta filters
+  const [cDateFrom, setCDateFrom] = useState("");
+  const [cDateTo, setCDateTo] = useState("");
+  const [cFilterStatus, setCFilterStatus] = useState("todos");
+
   const clearFilters = () => {
     setDateFrom("");
     setDateTo("");
     setFilterStatus("todos");
     setFilterPlan("todos");
+  };
+
+  const clearConsultaFilters = () => {
+    setCDateFrom("");
+    setCDateTo("");
+    setCFilterStatus("todos");
   };
 
   const filteredLeads = useMemo(() => {
