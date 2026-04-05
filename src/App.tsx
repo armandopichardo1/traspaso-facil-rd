@@ -24,6 +24,8 @@ const App = () => (
           <Route path="/guia-traspaso" element={<GuiaTraspaso />} />
           <Route path="/norma-03-25" element={<Norma0325 />} />
           <Route path="/calculadora" element={<Calculadora />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
