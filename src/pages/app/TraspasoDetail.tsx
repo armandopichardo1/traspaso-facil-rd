@@ -9,6 +9,7 @@ import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
+import MarbeteUpload from "@/components/app/MarbeteUpload";
 import type { ContractData } from "@/lib/contract-templates";
 
 const STATUS_STEPS = [
