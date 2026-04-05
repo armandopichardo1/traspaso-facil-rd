@@ -23,6 +23,8 @@ import NuevoTraspaso from "./pages/app/NuevoTraspaso.tsx";
 import TraspasoDetail from "./pages/app/TraspasoDetail.tsx";
 import EscrowView from "./pages/app/EscrowView.tsx";
 import Profile from "./pages/app/Profile.tsx";
+import Historial from "./pages/app/Historial.tsx";
+import Ayuda from "./pages/app/Ayuda.tsx";
 import GestorLayout from "./components/gestor/GestorLayout.tsx";
 import GestorDashboard from "./pages/gestor/GestorDashboard.tsx";
 import GestorNuevoTraspaso from "./pages/gestor/GestorNuevoTraspaso.tsx";
@@ -82,11 +84,13 @@ const App = () => (
             {/* Protected customer app */}
             <Route path="/app" element={<AppLayout />}>
               <Route index element={<Dashboard />} />
+              <Route path="historial" element={<Historial />} />
               <Route path="historial/:id" element={<HistorialDetail />} />
               <Route path="nuevo" element={<NuevoTraspaso />} />
               <Route path="traspaso/:id" element={<TraspasoDetail />} />
               <Route path="traspaso/:id/escrow" element={<EscrowView />} />
               <Route path="perfil" element={<Profile />} />
+              <Route path="ayuda" element={<Ayuda />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
