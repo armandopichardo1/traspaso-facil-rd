@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
 } from "lucide-react";
+import ContractGenerator from "@/components/gestor/ContractGenerator";
+import type { ContractData } from "@/lib/contract-templates";
 
 const STATUS_STEPS = [
   { key: "solicitud_recibida", label: "Solicitud Recibida" },
@@ -29,67 +31,91 @@ const antifraudeBadge = (s: string) => {
 export default function TraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["traspaso", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspasos")
-        .select("*")
-        .eq("id", id)
-        .single();
+      const { data, error } = await supabase.from("traspasos").select("*").eq("id", id).single();
       if (error) throw error;
       return data;
     },
-  });
-
-  const { data: timeline } = useQuery({
-    queryKey: ["traspaso-timeline", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspaso_timeline")
-        .select("*")
-        .eq("traspaso_id", id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
   });
 
   const { data: docs } = useQuery({
     queryKey: ["traspaso-docs", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspaso_documentos")
-        .select("*")
-        .eq("traspaso_id", id);
+      const { data, error } = await supabase.from("traspaso_documentos").select("*").eq("traspaso_id", id);
       if (error) throw error;
       return data;
     },
     enabled: !!id,
   });
 
+  const { data: contracts = [] } = useQuery({
+    queryKey: ["traspaso-contracts", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("traspaso_contratos").select("*").eq("traspaso_id", id!).order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: signatures = [] } = useQuery({
+    queryKey: ["traspaso-signatures", id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("traspaso_firmas").select("*").eq("traspaso_id", id!).order("created_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const refreshContracts = () => {
+    queryClient.invalidateQueries({ queryKey: ["traspaso-contracts", id] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso-signatures", id] });
+  };
+
   if (isLoading) {
-    return (
-      <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-40 w-full" />
-      </div>
-    );
+    return <div className="max-w-lg mx-auto px-4 pt-6 space-y-4"><Skeleton className="h-8 w-32" /><Skeleton className="h-40 w-full" /></div>;
   }
 
   if (!traspaso) {
-    return (
-      <div className="max-w-lg mx-auto px-4 pt-6 text-center">
-        <p className="text-muted-foreground">Traspaso no encontrado.</p>
-        <Button variant="ghost" onClick={() => navigate("/app")} className="mt-4">← Volver</Button>
-      </div>
-    );
+    return <div className="max-w-lg mx-auto px-4 pt-6 text-center"><p className="text-muted-foreground">Traspaso no encontrado.</p><Button variant="ghost" onClick={() => navigate("/app")} className="mt-4">← Volver</Button></div>;
   }
 
-  const currentIdx = STATUS_STEPS.findIndex((s) => s.key === traspaso.status);
-  const af = antifraudeBadge(traspaso.antifraude_status);
+  const t = traspaso as any;
+  const currentIdx = STATUS_STEPS.findIndex((s) => s.key === t.status);
+  const af = antifraudeBadge(t.antifraude_status);
+
+  const contractData: ContractData = {
+    vehiculo_marca: t.vehiculo_marca || "",
+    vehiculo_modelo: t.vehiculo_modelo || "",
+    vehiculo_ano: t.vehiculo_ano || "",
+    vehiculo_placa: t.vehiculo_placa || "",
+    vehiculo_color: t.vehiculo_color || "",
+    vehiculo_chasis: t.vehiculo_chasis || "",
+    tipo_vehiculo: t.tipo_vehiculo || "vehiculo_motor",
+    vendedor_nombre: t.vendedor_nombre || "",
+    vendedor_cedula: t.vendedor_cedula || "",
+    vendedor_rnc: t.vendedor_rnc || "",
+    vendedor_tipo_persona: t.vendedor_tipo_persona || "fisica",
+    vendedor_telefono: t.vendedor_telefono || "",
+    comprador_nombre: t.comprador_nombre || "",
+    comprador_cedula: t.comprador_cedula || "",
+    comprador_rnc: t.comprador_rnc || "",
+    comprador_tipo_persona: t.comprador_tipo_persona || "fisica",
+    comprador_telefono: t.comprador_telefono || "",
+    precio_vehiculo: t.precio_vehiculo,
+    medio_pago: t.medio_pago || "",
+    fecha_acto_venta: t.fecha_acto_venta || "",
+    es_traspaso_familiar: t.es_traspaso_familiar || false,
+    tiene_apoderado: t.tiene_apoderado || false,
+    apoderado_nombre: t.apoderado_nombre || "",
+    apoderado_cedula: t.apoderado_cedula || "",
+    codigo: t.codigo || "",
+  };
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
@@ -105,12 +131,9 @@ export default function TraspasoDetail() {
               <Car className="h-6 w-6 text-accent" />
             </div>
             <div className="flex-1">
-              <h1 className="font-bold">
-                {traspaso.vehiculo_marca} {traspaso.vehiculo_modelo} {traspaso.vehiculo_ano}
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Placa: {traspaso.vehiculo_placa} · {traspaso.codigo}
-              </p>
+              <h1 className="font-bold">{t.vehiculo_marca} {t.vehiculo_modelo} {t.vehiculo_ano}</h1>
+              <p className="text-sm text-muted-foreground">Placa: {t.vehiculo_placa} · {t.codigo}</p>
+              {t.vehiculo_chasis && <p className="text-xs text-muted-foreground">Chasis: {t.vehiculo_chasis}</p>}
             </div>
           </div>
         </CardContent>
@@ -128,7 +151,7 @@ export default function TraspasoDetail() {
           <h2 className="font-semibold text-sm mb-4">Progreso del Traspaso</h2>
           <div className="space-y-0">
             {STATUS_STEPS.map((s, i) => {
-              const isDone = i <= currentIdx && traspaso.status !== "cancelado";
+              const isDone = i <= currentIdx && t.status !== "cancelado";
               const isCurrent = i === currentIdx;
               return (
                 <div key={s.key} className="flex gap-3">
@@ -145,9 +168,7 @@ export default function TraspasoDetail() {
                     )}
                   </div>
                   <div className="pb-6">
-                    <p className={`text-sm ${isDone || isCurrent ? "font-medium" : "text-muted-foreground"}`}>
-                      {s.label}
-                    </p>
+                    <p className={`text-sm ${isDone || isCurrent ? "font-medium" : "text-muted-foreground"}`}>{s.label}</p>
                   </div>
                 </div>
               );
@@ -156,8 +177,21 @@ export default function TraspasoDetail() {
         </CardContent>
       </Card>
 
+      {/* Contracts & Signatures */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <ContractGenerator
+            traspasoId={t.id}
+            contractData={contractData}
+            contracts={contracts as any}
+            signatures={signatures as any}
+            onRefresh={refreshContracts}
+          />
+        </CardContent>
+      </Card>
+
       {/* Escrow card */}
-      {traspaso.escrow_status !== "no_aplica" && (
+      {t.escrow_status !== "no_aplica" && (
         <Card className="mb-4 cursor-pointer" onClick={() => navigate(`/app/traspaso/${id}/escrow`)}>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
@@ -165,11 +199,9 @@ export default function TraspasoDetail() {
             </div>
             <div className="flex-1">
               <p className="font-medium text-sm">Pago Seguro</p>
-              <p className="text-xs text-muted-foreground capitalize">{traspaso.escrow_status.replace("_", " ")}</p>
+              <p className="text-xs text-muted-foreground capitalize">{t.escrow_status.replace("_", " ")}</p>
             </div>
-            {traspaso.precio_vehiculo && (
-              <p className="font-bold text-accent">RD$ {traspaso.precio_vehiculo.toLocaleString()}</p>
-            )}
+            {t.precio_vehiculo && <p className="font-bold text-accent">RD$ {t.precio_vehiculo.toLocaleString()}</p>}
           </CardContent>
         </Card>
       )}
@@ -183,9 +215,7 @@ export default function TraspasoDetail() {
               {docs.map((d: any) => (
                 <div key={d.id} className="flex items-center justify-between text-sm">
                   <span className="capitalize">{d.tipo.replace(/_/g, " ")}</span>
-                  <a href={d.file_url} target="_blank" rel="noopener" className="text-accent hover:underline text-xs">
-                    Ver
-                  </a>
+                  <a href={d.file_url} target="_blank" rel="noopener" className="text-accent hover:underline text-xs">Ver</a>
                 </div>
               ))}
             </div>
@@ -194,11 +224,8 @@ export default function TraspasoDetail() {
       )}
 
       {/* WhatsApp help */}
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={() => window.open(`https://wa.me/18092001234?text=Hola, necesito ayuda con mi traspaso ${traspaso.codigo}`, "_blank")}
-      >
+      <Button variant="outline" className="w-full mb-8"
+        onClick={() => window.open(`https://wa.me/18092001234?text=Hola, necesito ayuda con mi traspaso ${t.codigo}`, "_blank")}>
         <MessageCircle className="h-4 w-4 mr-2" />
         ¿Necesitas ayuda? Escríbenos por WhatsApp
       </Button>
