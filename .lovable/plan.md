@@ -1,34 +1,53 @@
 
 
-## Plan: Escaneo OCR de Matrícula con Auto-Poblado de Formulario
+## Plan: Selector Persona Física / Empresa + Guía de Tarjeta con Auto-Crop en Cámara
 
 ### Qué se va a construir
-Un nuevo paso inicial en el flujo de "Nuevo Traspaso" del gestor donde puede tomar una foto o subir imagen de la matrícula del vehículo. El sistema usa inteligencia artificial para leer el documento y extraer automáticamente: marca, modelo, año, placa, color, y nombre del propietario. Los campos se auto-rellenan en el formulario.
+1. **Selector de tipo de persona** (física o jurídica) para vendedor y comprador en ambos flujos (gestor y usuario), mostrando campo de Cédula o RNC según corresponda
+2. **Guía visual de tarjeta** (overlay rectangular) al momento de capturar la foto de la matrícula/cédula, para que el documento quede dentro del rango
+3. **Auto-crop** de la imagen capturada al área de la guía antes de enviarla al OCR
+4. **OCR actualizado** para también extraer RNC cuando aplique
 
 ### Pasos de implementación
 
-**1. Crear edge function `ocr-matricula`** (`supabase/functions/ocr-matricula/index.ts`)
-- Recibe imagen en base64 desde el frontend
-- Usa Lovable AI (modelo `google/gemini-2.5-flash` con capacidad de imagen) para extraer campos estructurados de la matrícula
-- Usa tool calling para obtener JSON estructurado con: marca, modelo, año, placa, color, propietario_nombre, propietario_cedula
-- Retorna los campos extraídos al frontend
+**1. Migración de base de datos**
+- Agregar columnas `vendedor_tipo_persona` y `comprador_tipo_persona` (enum: `fisica`, `juridica`) con default `fisica` a la tabla `traspasos`
+- Agregar columnas `vendedor_rnc` y `comprador_rnc` (text, nullable) a la tabla `traspasos`
 
-**2. Agregar paso "Escanear Matrícula" al formulario del gestor** (editar `src/pages/gestor/GestorNuevoTraspaso.tsx`)
-- Nuevo paso 0: "Matrícula" con icono de cámara/escáner
-- UI: zona de captura de foto (cámara o galería) con preview de imagen
-- Botón "Escanear con IA" que envía la imagen al edge function
-- Muestra los campos detectados con indicador de confianza
-- Botón para aceptar y auto-rellenar o editar manualmente
-- Los pasos actuales se recorren (Vehículo pasa a ser paso 1, etc.)
+**2. Actualizar edge function `ocr-matricula`**
+- Agregar campo `propietario_rnc` al schema de tool calling
+- Indicar en el prompt que detecte si el propietario es persona física (cédula) o jurídica (RNC)
+- Retornar `tipo_persona` en el resultado (`fisica` o `juridica`)
 
-**3. Auto-poblado del formulario**
-- Al aceptar el escaneo, los campos `vehiculo_marca`, `vehiculo_modelo`, `vehiculo_ano`, `vehiculo_placa`, `vehiculo_color`, `vendedor_nombre`, `vendedor_cedula` se llenan automáticamente
-- El gestor puede editar cualquier campo antes de continuar
-- Opción de saltar el escaneo e ingresar datos manualmente
+**3. Crear componente `DocumentCameraGuide`** (nuevo componente reutilizable)
+- Overlay con guía rectangular semitransparente (aspect ratio de tarjeta ~1.586:1, estándar CR80)
+- Usa `<video>` con `getUserMedia` para vista en vivo de la cámara
+- Botón de captura que toma snapshot del `<canvas>`
+- **Auto-crop**: recorta la imagen al área exacta del rectángulo guía usando canvas
+- Fallback: si no hay acceso a cámara, muestra file input normal con la guía superpuesta en la preview
+- Props: `onCapture(base64)`, `aspectRatio`, `label`
+
+**4. Integrar `DocumentCameraGuide` en `MatriculaScanner`**
+- Reemplazar el file input básico por el nuevo componente con guía de tarjeta
+- La imagen resultante ya viene recortada al área del documento
+- Mantener opción de subir desde galería como alternativa
+
+**5. Actualizar formularios de vendedor/comprador** (en `GestorNuevoTraspaso.tsx` y `NuevoTraspaso.tsx`)
+- Agregar toggle/selector "Persona Física" / "Empresa" en los pasos de vendedor y comprador
+- Si es Persona Física: mostrar campo Cédula (formato XXX-XXXXXXX-X)
+- Si es Empresa: mostrar campo RNC (formato X-XX-XXXXX-X)
+- El OCR auto-puebla el campo correcto según lo detectado
+- Guardar `vendedor_tipo_persona`, `vendedor_rnc`, `comprador_tipo_persona`, `comprador_rnc` al crear el traspaso
+
+**6. Actualizar `MatriculaScanner` y `OcrResult`**
+- Agregar `propietario_rnc` y `tipo_persona` al type `OcrResult`
+- Mostrar RNC o Cédula según tipo detectado en la vista de resultados
+- Al aceptar, poblar el campo correcto en el formulario
 
 ### Detalles técnicos
-- El edge function usa `google/gemini-2.5-flash` (soporta imágenes) con tool calling para extraer datos estructurados
-- La imagen se convierte a base64 en el frontend antes de enviarla
-- Se acepta captura desde cámara (`capture="environment"`) para uso móvil
-- No se requieren cambios de base de datos
+- La guía de tarjeta usa un overlay SVG/CSS con esquinas redondeadas y área oscurecida fuera del rectángulo
+- El auto-crop se hace con Canvas API: se calcula la posición del rectángulo guía relativa al video/imagen y se dibuja solo esa porción
+- Aspect ratio de la guía: ~1.586 (estándar tarjeta de crédito / cédula dominicana)
+- `getUserMedia({ video: { facingMode: "environment" } })` para cámara trasera en móvil
+- No se necesitan dependencias nuevas
 
