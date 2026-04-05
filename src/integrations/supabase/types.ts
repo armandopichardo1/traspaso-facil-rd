@@ -23,6 +23,7 @@ export type Database = {
           resultado: Json | null
           status: string
           telefono: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -32,6 +33,7 @@ export type Database = {
           resultado?: Json | null
           status?: string
           telefono?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -41,8 +43,17 @@ export type Database = {
           resultado?: Json | null
           status?: string
           telefono?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "historial_consultas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -86,12 +97,221 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          cedula: string | null
+          created_at: string
+          email: string | null
+          id: string
+          nombre: string | null
+          role: string
+          telefono: string | null
+        }
+        Insert: {
+          cedula?: string | null
+          created_at?: string
+          email?: string | null
+          id: string
+          nombre?: string | null
+          role?: string
+          telefono?: string | null
+        }
+        Update: {
+          cedula?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          nombre?: string | null
+          role?: string
+          telefono?: string | null
+        }
+        Relationships: []
+      }
+      traspaso_documentos: {
+        Row: {
+          file_url: string
+          id: string
+          tipo: string
+          traspaso_id: string
+          uploaded_at: string
+        }
+        Insert: {
+          file_url: string
+          id?: string
+          tipo: string
+          traspaso_id: string
+          uploaded_at?: string
+        }
+        Update: {
+          file_url?: string
+          id?: string
+          tipo?: string
+          traspaso_id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspaso_documentos_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traspaso_timeline: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          nota: string | null
+          status: string
+          traspaso_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nota?: string | null
+          status: string
+          traspaso_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nota?: string | null
+          status?: string
+          traspaso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspaso_timeline_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspaso_timeline_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traspasos: {
+        Row: {
+          antifraude_notas: string | null
+          antifraude_status: string
+          codigo: string | null
+          comprador_cedula: string | null
+          comprador_nombre: string | null
+          comprador_telefono: string | null
+          created_at: string
+          customer_id: string
+          escrow_status: string
+          gestor_id: string | null
+          id: string
+          mensajero_nombre: string | null
+          notas_internas: string | null
+          pago_servicio_status: string
+          plan: string
+          precio_servicio: number
+          precio_vehiculo: number | null
+          status: string
+          updated_at: string
+          vehiculo_ano: number | null
+          vehiculo_color: string | null
+          vehiculo_marca: string | null
+          vehiculo_modelo: string | null
+          vehiculo_placa: string | null
+          vendedor_cedula: string | null
+          vendedor_nombre: string | null
+          vendedor_telefono: string | null
+        }
+        Insert: {
+          antifraude_notas?: string | null
+          antifraude_status?: string
+          codigo?: string | null
+          comprador_cedula?: string | null
+          comprador_nombre?: string | null
+          comprador_telefono?: string | null
+          created_at?: string
+          customer_id: string
+          escrow_status?: string
+          gestor_id?: string | null
+          id?: string
+          mensajero_nombre?: string | null
+          notas_internas?: string | null
+          pago_servicio_status?: string
+          plan?: string
+          precio_servicio?: number
+          precio_vehiculo?: number | null
+          status?: string
+          updated_at?: string
+          vehiculo_ano?: number | null
+          vehiculo_color?: string | null
+          vehiculo_marca?: string | null
+          vehiculo_modelo?: string | null
+          vehiculo_placa?: string | null
+          vendedor_cedula?: string | null
+          vendedor_nombre?: string | null
+          vendedor_telefono?: string | null
+        }
+        Update: {
+          antifraude_notas?: string | null
+          antifraude_status?: string
+          codigo?: string | null
+          comprador_cedula?: string | null
+          comprador_nombre?: string | null
+          comprador_telefono?: string | null
+          created_at?: string
+          customer_id?: string
+          escrow_status?: string
+          gestor_id?: string | null
+          id?: string
+          mensajero_nombre?: string | null
+          notas_internas?: string | null
+          pago_servicio_status?: string
+          plan?: string
+          precio_servicio?: number
+          precio_vehiculo?: number | null
+          status?: string
+          updated_at?: string
+          vehiculo_ano?: number | null
+          vehiculo_color?: string | null
+          vehiculo_marca?: string | null
+          vehiculo_modelo?: string | null
+          vehiculo_placa?: string | null
+          vendedor_cedula?: string | null
+          vendedor_nombre?: string | null
+          vendedor_telefono?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspasos_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspasos_gestor_id_fkey"
+            columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: { Args: { _user_id: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
