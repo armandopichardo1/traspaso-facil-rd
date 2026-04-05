@@ -7,6 +7,7 @@ import { LogOut, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
+import ConsultaFilters from "@/components/admin/ConsultaFilters";
 
 type Lead = {
   id: string;
