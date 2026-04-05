@@ -222,7 +222,6 @@ const AdminDashboard = () => {
           <Button variant="outline" size="sm" onClick={() => navigate("/admin/historiales")} className="ml-auto">
             Gestionar Historiales →
           </Button>
-          </button>
         </div>
 
         {tab === "leads" && (
