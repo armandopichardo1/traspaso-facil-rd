@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import GuiaTraspaso from "./pages/GuiaTraspaso.tsx";
 import Norma0325 from "./pages/Norma0325.tsx";
+import AdminLogin from "./pages/AdminLogin.tsx";
+import AdminDashboard from "./pages/AdminDashboard.tsx";
 import Calculadora from "./pages/Calculadora.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -22,6 +24,8 @@ const App = () => (
           <Route path="/guia-traspaso" element={<GuiaTraspaso />} />
           <Route path="/norma-03-25" element={<Norma0325 />} />
           <Route path="/calculadora" element={<Calculadora />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
