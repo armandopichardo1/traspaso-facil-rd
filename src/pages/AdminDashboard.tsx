@@ -122,7 +122,11 @@ const AdminDashboard = () => {
   const fetchData = async () => {
     setFetching(true);
     try {
-      if (tab === "leads") {
+      if (tab === "traspasos") {
+        const { data, error } = await supabase.from("traspasos").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        setTraspasos(data || []);
+      } else if (tab === "leads") {
         const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
         if (error) throw error;
         setLeads(data || []);
