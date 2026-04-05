@@ -9,6 +9,7 @@ import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
+import MarbeteUpload from "@/components/app/MarbeteUpload";
 import type { ContractData } from "@/lib/contract-templates";
 
 const STATUS_STEPS = [
@@ -72,9 +73,10 @@ export default function TraspasoDetail() {
     enabled: !!id,
   });
 
-  const refreshContracts = () => {
+  const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ["traspaso-contracts", id] });
     queryClient.invalidateQueries({ queryKey: ["traspaso-signatures", id] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso-docs", id] });
   };
 
   if (isLoading) {
@@ -185,10 +187,19 @@ export default function TraspasoDetail() {
             contractData={contractData}
             contracts={contracts as any}
             signatures={signatures as any}
-            onRefresh={refreshContracts}
+            onRefresh={refreshData}
           />
         </CardContent>
       </Card>
+
+      {/* Marbete upload */}
+      <div className="mb-4">
+        <MarbeteUpload
+          traspasoId={t.id}
+          existingUrl={docs?.find((d: any) => d.tipo === "marbete")?.file_url || null}
+          onUploaded={refreshData}
+        />
+      </div>
 
       {/* Escrow card */}
       {t.escrow_status !== "no_aplica" && (
