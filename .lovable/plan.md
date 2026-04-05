@@ -1,53 +1,123 @@
 
+## Plan: Campos DGII + Contratos Auto-generados + Firma Electrónica (Ley 126-02)
 
-## Plan: Selector Persona Física / Empresa + Guía de Tarjeta con Auto-Crop en Cámara
+### Contexto Legal - Firma Electrónica en RD
+La **Ley 126-02** sobre Comercio Electrónico, Documentos y Firmas Digitales establece que:
+- La **firma electrónica simple** (consentimiento + datos de identificación + timestamp) tiene validez legal para contratos privados
+- La **firma digital certificada** (PKI con certificado de OGTIC) se requiere solo para trámites gubernamentales
+- Para contratos de compraventa de vehículos entre privados, la firma electrónica simple con audit trail es suficiente
 
-### Qué se va a construir
-1. **Selector de tipo de persona** (física o jurídica) para vendedor y comprador en ambos flujos (gestor y usuario), mostrando campo de Cédula o RNC según corresponda
-2. **Guía visual de tarjeta** (overlay rectangular) al momento de capturar la foto de la matrícula/cédula, para que el documento quede dentro del rango
-3. **Auto-crop** de la imagen capturada al área de la guía antes de enviarla al OCR
-4. **OCR actualizado** para también extraer RNC cuando aplique
+**Mecanismo a implementar**: Firma electrónica simple con:
+- Pad de firma táctil (dibujo del usuario)
+- Captura de IP, timestamp, user-agent, geolocalización
+- Hash SHA-256 del documento firmado
+- Almacenamiento del audit trail completo
 
-### Pasos de implementación
+---
 
-**1. Migración de base de datos**
-- Agregar columnas `vendedor_tipo_persona` y `comprador_tipo_persona` (enum: `fisica`, `juridica`) con default `fisica` a la tabla `traspasos`
-- Agregar columnas `vendedor_rnc` y `comprador_rnc` (text, nullable) a la tabla `traspasos`
+### Paso 1: Migración de base de datos
+Agregar a tabla `traspasos`:
+- `tipo_vehiculo` (text, default 'vehiculo_motor') — motor o motocicleta
+- `vehiculo_chasis` (text, nullable) — número de chasis/VIN
+- `fecha_acto_venta` (date, nullable) — fecha del contrato
+- `medio_pago` (text, nullable) — transferencia, cheque, efectivo, financiamiento
+- `es_traspaso_familiar` (boolean, default false)
+- `tiene_apoderado` (boolean, default false)
+- `apoderado_nombre` (text, nullable)
+- `apoderado_cedula` (text, nullable)
 
-**2. Actualizar edge function `ocr-matricula`**
-- Agregar campo `propietario_rnc` al schema de tool calling
-- Indicar en el prompt que detecte si el propietario es persona física (cédula) o jurídica (RNC)
-- Retornar `tipo_persona` en el resultado (`fisica` o `juridica`)
+Crear tabla `traspaso_firmas`:
+- `id` (uuid, PK)
+- `traspaso_id` (uuid, FK → traspasos)
+- `tipo_firmante` (text) — vendedor, comprador, apoderado
+- `nombre_firmante` (text)
+- `cedula_firmante` (text)
+- `firma_imagen_url` (text) — imagen del pad de firma
+- `firma_hash` (text) — SHA-256 del documento al momento de firmar
+- `ip_address` (text)
+- `user_agent` (text)
+- `geolocation` (text, nullable)
+- `documento_url` (text) — URL del PDF firmado
+- `created_at` (timestamptz)
 
-**3. Crear componente `DocumentCameraGuide`** (nuevo componente reutilizable)
-- Overlay con guía rectangular semitransparente (aspect ratio de tarjeta ~1.586:1, estándar CR80)
-- Usa `<video>` con `getUserMedia` para vista en vivo de la cámara
-- Botón de captura que toma snapshot del `<canvas>`
-- **Auto-crop**: recorta la imagen al área exacta del rectángulo guía usando canvas
-- Fallback: si no hay acceso a cámara, muestra file input normal con la guía superpuesta en la preview
-- Props: `onCapture(base64)`, `aspectRatio`, `label`
+Crear tabla `traspaso_contratos`:
+- `id` (uuid, PK)
+- `traspaso_id` (uuid, FK → traspasos)
+- `tipo` (text) — contrato_venta, poder_notarial, carta_autorizacion, declaracion_jurada
+- `contenido_html` (text) — HTML del contrato generado
+- `pdf_url` (text, nullable) — URL del PDF generado
+- `status` (text) — borrador, firmado
+- `created_at` (timestamptz)
 
-**4. Integrar `DocumentCameraGuide` en `MatriculaScanner`**
-- Reemplazar el file input básico por el nuevo componente con guía de tarjeta
-- La imagen resultante ya viene recortada al área del documento
-- Mantener opción de subir desde galería como alternativa
+### Paso 2: Actualizar formularios — Nuevos campos DGII
 
-**5. Actualizar formularios de vendedor/comprador** (en `GestorNuevoTraspaso.tsx` y `NuevoTraspaso.tsx`)
-- Agregar toggle/selector "Persona Física" / "Empresa" en los pasos de vendedor y comprador
-- Si es Persona Física: mostrar campo Cédula (formato XXX-XXXXXXX-X)
-- Si es Empresa: mostrar campo RNC (formato X-XX-XXXXX-X)
-- El OCR auto-puebla el campo correcto según lo detectado
-- Guardar `vendedor_tipo_persona`, `vendedor_rnc`, `comprador_tipo_persona`, `comprador_rnc` al crear el traspaso
+**Paso Vehículo** (ambos flujos):
+- Selector tipo_vehiculo: "Vehículo de Motor" / "Motocicleta"
+- Campo chasis/VIN
 
-**6. Actualizar `MatriculaScanner` y `OcrResult`**
-- Agregar `propietario_rnc` y `tipo_persona` al type `OcrResult`
-- Mostrar RNC o Cédula según tipo detectado en la vista de resultados
-- Al aceptar, poblar el campo correcto en el formulario
+**Nuevo paso "Contrato"** (entre Comprador y Documentos):
+- Fecha del acto de venta (date picker)
+- Selector medio de pago (Transferencia, Cheque, Efectivo, Financiamiento)
+- Toggle "¿Traspaso entre familiares directos?"
+- Toggle "¿El trámite lo realiza un apoderado?"
+- Si apoderado → nombre y cédula del apoderado
+- ⚠️ Alerta si fecha > 90 días (recargos DGII)
+
+**Paso Documentos actualizado** — uploads condicionales:
+- ✅ Siempre: Cédula vendedor reverso, Cédula comprador reverso, Certificación Plan Piloto
+- 🔄 Si empresa: Carta de autorización + Cédula representante legal
+- 🔄 Si apoderado: Poder notarizado + Cédula del apoderado
+- 🔄 Si familiar: Certificación bancaria + Carta trabajo / Declaración jurada
+- 🔄 Si precio > RD$800,000: Comprobante de pago
+- 📄 Contrato de venta → **Botón "Generar Contrato"** (auto-populado)
+
+### Paso 3: Generación de contratos (Edge Function)
+
+Edge function `generate-contract` que:
+1. Recibe `traspaso_id` y `tipo_contrato`
+2. Consulta datos del traspaso de la BD
+3. Genera HTML del contrato usando template
+4. Convierte a PDF con la data auto-populada
+5. Guarda en Storage y registra en `traspaso_contratos`
+
+Templates a generar:
+- **Contrato de Compraventa** — template genérico con datos de vendedor, comprador, vehículo, precio, medio de pago
+- **Poder Notarial** — cuando hay apoderado
+- **Carta de Autorización** — cuando el vendedor/comprador es empresa
+- **Declaración Jurada** — para traspasos familiares
+
+Cada template se auto-popula con los datos del formulario. El usuario puede previsualizar antes de firmar.
+
+### Paso 4: Componente SignaturePad
+
+Componente React reutilizable:
+- Canvas táctil para dibujar firma
+- Botones: Limpiar, Confirmar
+- Al confirmar: captura firma como PNG, IP, timestamp, user-agent
+- Calcula hash SHA-256 del documento
+- Sube firma a Storage
+- Registra en `traspaso_firmas`
+- Cumple con Ley 126-02: identifica al firmante, vincula firma al documento, registra audit trail
+
+### Paso 5: Flujo de firma en detalle del traspaso
+
+En las vistas de detalle (GestorTraspasoDetail, TraspasoDetail):
+- Sección "Documentos y Contratos"
+- Botón "Generar Contrato" → llama edge function → muestra preview
+- Botón "Firmar Documento" → abre SignaturePad → registra firma
+- Estado visual: Sin firmar / Firmado por vendedor / Firmado por ambas partes
+- Descarga del PDF firmado con audit trail
+
+### Paso 6: Actualizar OCR para extraer chasis/VIN
+
+Actualizar edge function `ocr-matricula`:
+- Agregar `vehiculo_chasis` al schema de extracción
+- El chasis aparece en la matrícula dominicana
 
 ### Detalles técnicos
-- La guía de tarjeta usa un overlay SVG/CSS con esquinas redondeadas y área oscurecida fuera del rectángulo
-- El auto-crop se hace con Canvas API: se calcula la posición del rectángulo guía relativa al video/imagen y se dibuja solo esa porción
-- Aspect ratio de la guía: ~1.586 (estándar tarjeta de crédito / cédula dominicana)
-- `getUserMedia({ video: { facingMode: "environment" } })` para cámara trasera en móvil
-- No se necesitan dependencias nuevas
-
+- Los contratos se generan como HTML → se almacenan en `traspaso_contratos.contenido_html`
+- El PDF se genera via edge function usando HTML-to-PDF
+- La firma electrónica cumple Ley 126-02 Art. 6: "firma electrónica" = datos en forma electrónica que identifican al firmante
+- El hash SHA-256 vincula la firma al documento exacto (integridad)
+- El audit trail (IP, timestamp, user-agent, geolocation) cumple con requisitos de no repudio
+- Dependencia nueva: `signature_pad` (npm) para el canvas de firma
