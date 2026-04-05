@@ -159,6 +159,11 @@ export default function GestorTraspasoDetail() {
         </Card>
       </div>
 
+      {/* Documents */}
+      <div className="mb-4">
+        <DocumentUpload traspasoId={traspaso.id} />
+      </div>
+
       {/* Status badges */}
       <Card className="mb-4">
         <CardHeader className="pb-2">
