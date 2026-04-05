@@ -49,9 +49,10 @@ type Traspaso = {
 const AdminDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"leads" | "consultas">("leads");
+  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas">("traspasos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
+  const [traspasos, setTraspasos] = useState<Traspaso[]>([]);
   const [fetching, setFetching] = useState(false);
   const navigate = useNavigate();
 
