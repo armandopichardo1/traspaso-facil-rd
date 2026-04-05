@@ -7,6 +7,7 @@ import { LogOut, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
+import ConsultaFilters from "@/components/admin/ConsultaFilters";
 
 type Lead = {
   id: string;
@@ -46,11 +47,22 @@ const AdminDashboard = () => {
   const [filterStatus, setFilterStatus] = useState("todos");
   const [filterPlan, setFilterPlan] = useState("todos");
 
+  // Consulta filters
+  const [cDateFrom, setCDateFrom] = useState("");
+  const [cDateTo, setCDateTo] = useState("");
+  const [cFilterStatus, setCFilterStatus] = useState("todos");
+
   const clearFilters = () => {
     setDateFrom("");
     setDateTo("");
     setFilterStatus("todos");
     setFilterPlan("todos");
+  };
+
+  const clearConsultaFilters = () => {
+    setCDateFrom("");
+    setCDateTo("");
+    setCFilterStatus("todos");
   };
 
   const filteredLeads = useMemo(() => {
@@ -62,6 +74,15 @@ const AdminDashboard = () => {
       return true;
     });
   }, [leads, dateFrom, dateTo, filterStatus, filterPlan]);
+
+  const filteredConsultas = useMemo(() => {
+    return consultas.filter((c) => {
+      if (cDateFrom && new Date(c.created_at) < new Date(cDateFrom)) return false;
+      if (cDateTo && new Date(c.created_at) > new Date(cDateTo + "T23:59:59")) return false;
+      if (cFilterStatus !== "todos" && c.status !== cFilterStatus) return false;
+      return true;
+    });
+  }, [consultas, cDateFrom, cDateTo, cFilterStatus]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -185,6 +206,18 @@ const AdminDashboard = () => {
           />
         )}
 
+        {tab === "consultas" && (
+          <ConsultaFilters
+            dateFrom={cDateFrom}
+            dateTo={cDateTo}
+            status={cFilterStatus}
+            onDateFromChange={setCDateFrom}
+            onDateToChange={setCDateTo}
+            onStatusChange={setCFilterStatus}
+            onClear={clearConsultaFilters}
+          />
+        )}
+
         <div className="bg-card rounded-xl border border-border overflow-hidden">
           {tab === "leads" && filteredLeads.length !== leads.length && (
             <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
@@ -246,6 +279,12 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             ) : (
+              <>
+                {filteredConsultas.length !== consultas.length && (
+                  <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
+                    Mostrando {filteredConsultas.length} de {consultas.length} consultas
+                  </div>
+                )}
               <table className="w-full text-sm">
                 <thead className="bg-muted text-muted-foreground text-left">
                   <tr>
@@ -257,9 +296,9 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {consultas.length === 0 ? (
-                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No hay consultas aún</td></tr>
-                  ) : consultas.map((c) => (
+                  {filteredConsultas.length === 0 ? (
+                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No hay consultas con estos filtros</td></tr>
+                  ) : filteredConsultas.map((c) => (
                     <tr key={c.id} className="hover:bg-muted/30">
                       <td className="p-3 whitespace-nowrap">{formatDate(c.created_at)}</td>
                       <td className="p-3 font-mono font-medium text-foreground">{c.placa}</td>
@@ -280,6 +319,7 @@ const AdminDashboard = () => {
                   ))}
                 </tbody>
               </table>
+              </>
             )}
           </div>
         </div>
