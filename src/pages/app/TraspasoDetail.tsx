@@ -192,6 +192,15 @@ export default function TraspasoDetail() {
         </CardContent>
       </Card>
 
+      {/* Marbete upload */}
+      <div className="mb-4">
+        <MarbeteUpload
+          traspasoId={t.id}
+          existingUrl={docs?.find((d: any) => d.tipo === "marbete")?.file_url || null}
+          onUploaded={refreshData}
+        />
+      </div>
+
       {/* Escrow card */}
       {t.escrow_status !== "no_aplica" && (
         <Card className="mb-4 cursor-pointer" onClick={() => navigate(`/app/traspaso/${id}/escrow`)}>
