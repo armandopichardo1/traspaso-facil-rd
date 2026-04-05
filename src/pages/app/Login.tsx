@@ -35,7 +35,17 @@ export default function Login() {
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
-        navigate("/app");
+        // Check profile role to redirect correctly
+        const { data: profileData } = await (await import("@/integrations/supabase/client")).supabase
+          .from("profiles")
+          .select("role")
+          .eq("email", email)
+          .single();
+        if (profileData?.role === "gestor") {
+          navigate("/gestor");
+        } else {
+          navigate("/app");
+        }
       }
     }
     setSubmitting(false);
