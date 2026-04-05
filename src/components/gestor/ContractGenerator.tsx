@@ -122,6 +122,21 @@ export default function ContractGenerator({ traspasoId, contractData, contracts,
     }
   };
 
+  const handleDownloadPdf = (html: string, tipo: string) => {
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast({ title: "Error", description: "Permite ventanas emergentes para descargar el PDF", variant: "destructive" });
+      return;
+    }
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 300);
+    };
+  };
+
   const getContractSignatures = (contractId: string) =>
     signatures.filter(s => s.contrato_id === contractId);
 
