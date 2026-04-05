@@ -73,9 +73,10 @@ export default function TraspasoDetail() {
     enabled: !!id,
   });
 
-  const refreshContracts = () => {
+  const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ["traspaso-contracts", id] });
     queryClient.invalidateQueries({ queryKey: ["traspaso-signatures", id] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso-docs", id] });
   };
 
   if (isLoading) {
