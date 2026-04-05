@@ -187,7 +187,7 @@ export default function TraspasoDetail() {
             contractData={contractData}
             contracts={contracts as any}
             signatures={signatures as any}
-            onRefresh={refreshContracts}
+            onRefresh={refreshData}
           />
         </CardContent>
       </Card>
