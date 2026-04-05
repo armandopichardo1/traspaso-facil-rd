@@ -186,6 +186,9 @@ export default function ContractGenerator({ traspasoId, contractData, contracts,
                       <Button size="sm" variant="ghost" onClick={() => setPreviewHtml(existing.contenido_html)}>
                         <Eye className="h-4 w-4" />
                       </Button>
+                      <Button size="sm" variant="ghost" onClick={() => handleDownloadPdf(existing.contenido_html, tipo)}>
+                        <Download className="h-4 w-4" />
+                      </Button>
                       {!isSigned && (
                         <>
                           <Button size="sm" variant="outline"
