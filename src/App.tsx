@@ -42,6 +42,8 @@ const App = () => (
             <Route path="/seguimiento/:code" element={<Seguimiento />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/traspaso/:id" element={<AdminTraspasoDetail />} />
+            <Route path="/admin/historiales" element={<AdminHistoriales />} />
 
             {/* Auth */}
             <Route path="/app/login" element={<Login />} />
