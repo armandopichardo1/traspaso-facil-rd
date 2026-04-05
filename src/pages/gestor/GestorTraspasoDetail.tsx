@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Car, User, Shield, CreditCard, Clock, Phone } from "lucide-react";
+import DocumentUpload from "@/components/gestor/DocumentUpload";
 
 const STATUS_STEPS = [
   "solicitud_recibida", "documentos_pendientes", "verificacion_antifraude", "contrato_firmado",
