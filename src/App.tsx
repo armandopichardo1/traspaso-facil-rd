@@ -23,6 +23,10 @@ import NuevoTraspaso from "./pages/app/NuevoTraspaso.tsx";
 import TraspasoDetail from "./pages/app/TraspasoDetail.tsx";
 import EscrowView from "./pages/app/EscrowView.tsx";
 import Profile from "./pages/app/Profile.tsx";
+import GestorLayout from "./components/gestor/GestorLayout.tsx";
+import GestorDashboard from "./pages/gestor/GestorDashboard.tsx";
+import GestorNuevoTraspaso from "./pages/gestor/GestorNuevoTraspaso.tsx";
+import GestorTraspasoDetail from "./pages/gestor/GestorTraspasoDetail.tsx";
 
 const queryClient = new QueryClient();
 

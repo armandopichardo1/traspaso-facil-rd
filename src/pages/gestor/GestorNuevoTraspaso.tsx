@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 const STEPS = [
   { title: "Vehículo", icon: Car },
@@ -317,5 +318,3 @@ export default function GestorNuevoTraspaso() {
   );
 }
 
-// Need Badge import
-import { Badge } from "@/components/ui/badge";
