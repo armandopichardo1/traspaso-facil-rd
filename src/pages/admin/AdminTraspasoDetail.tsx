@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock,
-  MessageCircle, User, FileText, Download, ShieldCheck, ShieldAlert, ShieldX,
+  MessageCircle, User, FileText, Download, ShieldCheck, ShieldAlert, ShieldX, PenTool,
 } from "lucide-react";
 
 const STATUS_STEPS = [
@@ -86,6 +86,34 @@ export default function AdminTraspasoDetail() {
         .from("traspaso_documentos")
         .select("*")
         .eq("traspaso_id", id);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: contratos } = useQuery({
+    queryKey: ["admin-contratos", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("traspaso_contratos")
+        .select("*")
+        .eq("traspaso_id", id)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  const { data: firmas } = useQuery({
+    queryKey: ["admin-firmas", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("traspaso_firmas")
+        .select("*")
+        .eq("traspaso_id", id)
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
