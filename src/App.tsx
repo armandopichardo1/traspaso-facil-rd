@@ -51,6 +51,13 @@ const App = () => (
 
             {/* Auth */}
             <Route path="/app/login" element={<Login />} />
+
+            {/* Gestor routes */}
+            <Route path="/gestor" element={<GestorLayout />}>
+              <Route index element={<GestorDashboard />} />
+              <Route path="nuevo" element={<GestorNuevoTraspaso />} />
+              <Route path="traspaso/:id" element={<GestorTraspasoDetail />} />
+            </Route>
             <Route path="/app/complete-profile" element={<CompleteProfile />} />
 
             {/* Protected customer app */}
