@@ -75,6 +75,15 @@ const AdminDashboard = () => {
     });
   }, [leads, dateFrom, dateTo, filterStatus, filterPlan]);
 
+  const filteredConsultas = useMemo(() => {
+    return consultas.filter((c) => {
+      if (cDateFrom && new Date(c.created_at) < new Date(cDateFrom)) return false;
+      if (cDateTo && new Date(c.created_at) > new Date(cDateTo + "T23:59:59")) return false;
+      if (cFilterStatus !== "todos" && c.status !== cFilterStatus) return false;
+      return true;
+    });
+  }, [consultas, cDateFrom, cDateTo, cFilterStatus]);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
