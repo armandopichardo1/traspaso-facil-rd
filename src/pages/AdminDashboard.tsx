@@ -3,8 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, RefreshCw } from "lucide-react";
+import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
 import ConsultaFilters from "@/components/admin/ConsultaFilters";
@@ -30,6 +31,19 @@ type Consulta = {
   email: string | null;
   telefono: string | null;
   status: string;
+};
+
+type Traspaso = {
+  id: string;
+  created_at: string;
+  codigo: string | null;
+  status: string;
+  vehiculo_marca: string | null;
+  vehiculo_modelo: string | null;
+  vehiculo_placa: string | null;
+  comprador_nombre: string | null;
+  antifraude_status: string;
+  plan: string;
 };
 
 const AdminDashboard = () => {
