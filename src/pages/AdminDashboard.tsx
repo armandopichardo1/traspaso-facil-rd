@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { LogOut, RefreshCw } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
 
@@ -104,6 +105,16 @@ const AdminDashboard = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/admin/login");
+  };
+
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    const { error } = await supabase.from("leads").update({ status: newStatus }).eq("id", leadId);
+    if (error) {
+      toast.error("Error al actualizar status");
+      return;
+    }
+    setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, status: newStatus } : l));
+    toast.success("Status actualizado");
   };
 
   if (loading) return <div className="min-h-screen bg-muted flex items-center justify-center text-muted-foreground">Cargando...</div>;
@@ -212,9 +223,23 @@ const AdminDashboard = () => {
                       <td className="p-3 font-mono">{l.placa || "—"}</td>
                       <td className="p-3 capitalize">{l.plan || "—"}</td>
                       <td className="p-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${l.status === "nuevo" ? "bg-teal/10 text-teal" : "bg-muted text-muted-foreground"}`}>
-                          {l.status}
-                        </span>
+                        <Select value={l.status} onValueChange={(v) => handleStatusChange(l.id, v)}>
+                          <SelectTrigger className={`h-7 w-[130px] text-xs font-medium border-0 ${
+                            l.status === "nuevo" ? "bg-teal/10 text-teal" :
+                            l.status === "contactado" ? "bg-blue-500/10 text-blue-600" :
+                            l.status === "en_proceso" ? "bg-cta/10 text-cta" :
+                            l.status === "completado" ? "bg-green-500/10 text-green-600" :
+                            "bg-muted text-muted-foreground"
+                          }`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="nuevo">Nuevo</SelectItem>
+                            <SelectItem value="contactado">Contactado</SelectItem>
+                            <SelectItem value="en_proceso">En proceso</SelectItem>
+                            <SelectItem value="completado">Completado</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                     </tr>
                   ))}
