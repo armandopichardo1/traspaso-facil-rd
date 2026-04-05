@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent } from "lucide-react";
+import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent, ScanLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import MatriculaScanner, { type OcrResult } from "@/components/gestor/MatriculaScanner";
 
 const STEPS = [
+  { title: "Matrícula", icon: ScanLine },
   { title: "Vehículo", icon: Car },
   { title: "Vendedor", icon: User },
   { title: "Comprador", icon: User },
@@ -76,6 +78,20 @@ export default function GestorNuevoTraspaso() {
     setFiles((prev) => ({ ...prev, [tipo]: file }));
   };
 
+  const handleOcrAccept = (data: OcrResult) => {
+    setForm((prev) => ({
+      ...prev,
+      vehiculo_marca: data.marca || prev.vehiculo_marca,
+      vehiculo_modelo: data.modelo || prev.vehiculo_modelo,
+      vehiculo_ano: data.ano || prev.vehiculo_ano,
+      vehiculo_placa: data.placa || prev.vehiculo_placa,
+      vehiculo_color: data.color || prev.vehiculo_color,
+      vendedor_nombre: data.propietario_nombre || prev.vendedor_nombre,
+      vendedor_cedula: data.propietario_cedula || prev.vendedor_cedula,
+    }));
+    setStep(1);
+  };
+
   const uploadFiles = async (traspasoId: string) => {
     for (const [tipo, file] of Object.entries(files)) {
       if (!file) continue;
@@ -135,7 +151,7 @@ export default function GestorNuevoTraspaso() {
     if (data) {
       await uploadFiles(data.id);
       setCodigo(data.codigo || "");
-      setStep(5);
+      setStep(6); // success step
     }
     setSubmitting(false);
   };
@@ -159,7 +175,8 @@ export default function GestorNuevoTraspaso() {
     </div>
   );
 
-  if (step === 5) {
+  // Success screen
+  if (step === 6) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-10 text-center">
         <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
@@ -202,119 +219,129 @@ export default function GestorNuevoTraspaso() {
         ))}
       </div>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            {(() => { const Icon = STEPS[step].icon; return <Icon className="h-4 w-4" />; })()}
-            {STEPS[step].title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {step === 0 && (
-            <>
-              <div><Label>Marca</Label><Input value={form.vehiculo_marca} onChange={(e) => update("vehiculo_marca", e.target.value)} placeholder="Toyota" /></div>
-              <div><Label>Modelo</Label><Input value={form.vehiculo_modelo} onChange={(e) => update("vehiculo_modelo", e.target.value)} placeholder="Corolla" /></div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Año</Label><Input type="number" value={form.vehiculo_ano} onChange={(e) => update("vehiculo_ano", e.target.value)} placeholder="2020" /></div>
-                <div><Label>Color</Label><Input value={form.vehiculo_color} onChange={(e) => update("vehiculo_color", e.target.value)} placeholder="Blanco" /></div>
-              </div>
-              <div><Label>Placa</Label><Input value={form.vehiculo_placa} onChange={(e) => update("vehiculo_placa", e.target.value.toUpperCase())} placeholder="A123456" /></div>
-            </>
-          )}
+      {/* Step 0: Matrícula Scanner */}
+      {step === 0 && (
+        <MatriculaScanner
+          onAccept={handleOcrAccept}
+          onSkip={() => setStep(1)}
+        />
+      )}
 
-          {step === 1 && (
-            <>
-              <div><Label>Nombre del Vendedor</Label><Input value={form.vendedor_nombre} onChange={(e) => update("vendedor_nombre", e.target.value)} /></div>
-              <div><Label>Cédula (XXX-XXXXXXX-X)</Label><Input value={form.vendedor_cedula} onChange={(e) => update("vendedor_cedula", e.target.value)} /></div>
-              <div><Label>Teléfono</Label><Input value={form.vendedor_telefono} onChange={(e) => update("vendedor_telefono", e.target.value)} /></div>
-            </>
-          )}
-
-          {step === 2 && (
-            <>
-              <div><Label>Nombre del Comprador</Label><Input value={form.comprador_nombre} onChange={(e) => update("comprador_nombre", e.target.value)} /></div>
-              <div><Label>Cédula (XXX-XXXXXXX-X)</Label><Input value={form.comprador_cedula} onChange={(e) => update("comprador_cedula", e.target.value)} /></div>
-              <div><Label>Teléfono</Label><Input value={form.comprador_telefono} onChange={(e) => update("comprador_telefono", e.target.value)} /></div>
-            </>
-          )}
-
-          {step === 3 && (
-            <>
-              <p className="text-sm text-muted-foreground">
-                Sube los documentos de identidad para la verificación antifraude.
-              </p>
-              <FileInput tipo="cedula_comprador" label="Cédula del Comprador (frente)" />
-              <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />
-              <FileInput tipo="cedula_vendedor" label="Cédula del Vendedor (frente)" />
-              <FileInput tipo="selfie_vendedor" label="Selfie del Vendedor" />
-              <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
-            </>
-          )}
-
-          {step === 4 && (
-            <>
-              <div>
-                <Label className="mb-2 block">Plan de Servicio (Precio Mayorista)</Label>
+      {/* Steps 1-5 */}
+      {step >= 1 && step <= 5 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              {(() => { const Icon = STEPS[step].icon; return <Icon className="h-4 w-4" />; })()}
+              {STEPS[step].title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {step === 1 && (
+              <>
+                <div><Label>Marca</Label><Input value={form.vehiculo_marca} onChange={(e) => update("vehiculo_marca", e.target.value)} placeholder="Toyota" /></div>
+                <div><Label>Modelo</Label><Input value={form.vehiculo_modelo} onChange={(e) => update("vehiculo_modelo", e.target.value)} placeholder="Corolla" /></div>
                 <div className="grid grid-cols-2 gap-3">
-                  {GESTOR_PLANS.map((p) => (
-                    <button
-                      key={p.value}
-                      onClick={() => update("plan", p.value)}
-                      className={`border-2 rounded-xl p-4 text-left transition-all ${
-                        form.plan === p.value ? "border-accent bg-accent/5" : "border-border"
-                      }`}
-                    >
-                      <p className="font-semibold text-sm">{p.label}</p>
-                      <p className="text-lg font-bold text-accent">{p.price}</p>
-                      <p className="text-xs text-muted-foreground line-through">{p.retail}</p>
-                      <p className="text-xs text-muted-foreground">{p.desc}</p>
-                    </button>
-                  ))}
+                  <div><Label>Año</Label><Input type="number" value={form.vehiculo_ano} onChange={(e) => update("vehiculo_ano", e.target.value)} placeholder="2020" /></div>
+                  <div><Label>Color</Label><Input value={form.vehiculo_color} onChange={(e) => update("vehiculo_color", e.target.value)} placeholder="Blanco" /></div>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Checkbox checked={form.pago_seguro} onCheckedChange={(v) => update("pago_seguro", !!v)} />
-                <Label>¿Activar Pago Seguro (Escrow)?</Label>
-              </div>
-
-              {form.pago_seguro && (
-                <div>
-                  <Label>Precio del Vehículo (RD$)</Label>
-                  <Input type="number" value={form.precio_vehiculo} onChange={(e) => update("precio_vehiculo", e.target.value)} placeholder="500,000" />
-                </div>
-              )}
-
-              <div className="bg-muted rounded-lg p-4 text-sm space-y-1">
-                <p className="font-semibold">Resumen</p>
-                <p>Vehículo: {form.vehiculo_marca} {form.vehiculo_modelo} {form.vehiculo_ano}</p>
-                <p>Placa: {form.vehiculo_placa}</p>
-                <p>Plan: {selectedPlan.label} ({selectedPlan.price})</p>
-                <p className="text-green-700 font-medium">Ahorro: RD$ {((form.plan === "express" ? 5000 : 3500) - selectedPlan.priceNum).toLocaleString()}</p>
-                {form.pago_seguro && <p>Pago Seguro: RD$ {parseInt(form.precio_vehiculo || "0").toLocaleString()}</p>}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Checkbox checked={form.acepta_terminos} onCheckedChange={(v) => update("acepta_terminos", !!v)} />
-                <Label className="text-sm">Acepto los términos y condiciones</Label>
-              </div>
-            </>
-          )}
-
-          <div className="flex gap-3 pt-2">
-            {step < 4 ? (
-              <Button variant="cta" className="w-full" onClick={() => setStep(step + 1)}>
-                Siguiente <ArrowRight className="h-4 w-4 ml-1" />
-              </Button>
-            ) : (
-              <Button variant="cta" className="w-full" onClick={handleSubmit} disabled={submitting}>
-                {submitting ? "Enviando..." : "Confirmar Solicitud →"}
-              </Button>
+                <div><Label>Placa</Label><Input value={form.vehiculo_placa} onChange={(e) => update("vehiculo_placa", e.target.value.toUpperCase())} placeholder="A123456" /></div>
+              </>
             )}
-          </div>
-        </CardContent>
-      </Card>
+
+            {step === 2 && (
+              <>
+                <div><Label>Nombre del Vendedor</Label><Input value={form.vendedor_nombre} onChange={(e) => update("vendedor_nombre", e.target.value)} /></div>
+                <div><Label>Cédula (XXX-XXXXXXX-X)</Label><Input value={form.vendedor_cedula} onChange={(e) => update("vendedor_cedula", e.target.value)} /></div>
+                <div><Label>Teléfono</Label><Input value={form.vendedor_telefono} onChange={(e) => update("vendedor_telefono", e.target.value)} /></div>
+              </>
+            )}
+
+            {step === 3 && (
+              <>
+                <div><Label>Nombre del Comprador</Label><Input value={form.comprador_nombre} onChange={(e) => update("comprador_nombre", e.target.value)} /></div>
+                <div><Label>Cédula (XXX-XXXXXXX-X)</Label><Input value={form.comprador_cedula} onChange={(e) => update("comprador_cedula", e.target.value)} /></div>
+                <div><Label>Teléfono</Label><Input value={form.comprador_telefono} onChange={(e) => update("comprador_telefono", e.target.value)} /></div>
+              </>
+            )}
+
+            {step === 4 && (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  Sube los documentos de identidad para la verificación antifraude.
+                </p>
+                <FileInput tipo="cedula_comprador" label="Cédula del Comprador (frente)" />
+                <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />
+                <FileInput tipo="cedula_vendedor" label="Cédula del Vendedor (frente)" />
+                <FileInput tipo="selfie_vendedor" label="Selfie del Vendedor" />
+                <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
+              </>
+            )}
+
+            {step === 5 && (
+              <>
+                <div>
+                  <Label className="mb-2 block">Plan de Servicio (Precio Mayorista)</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {GESTOR_PLANS.map((p) => (
+                      <button
+                        key={p.value}
+                        onClick={() => update("plan", p.value)}
+                        className={`border-2 rounded-xl p-4 text-left transition-all ${
+                          form.plan === p.value ? "border-accent bg-accent/5" : "border-border"
+                        }`}
+                      >
+                        <p className="font-semibold text-sm">{p.label}</p>
+                        <p className="text-lg font-bold text-accent">{p.price}</p>
+                        <p className="text-xs text-muted-foreground line-through">{p.retail}</p>
+                        <p className="text-xs text-muted-foreground">{p.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Checkbox checked={form.pago_seguro} onCheckedChange={(v) => update("pago_seguro", !!v)} />
+                  <Label>¿Activar Pago Seguro (Escrow)?</Label>
+                </div>
+
+                {form.pago_seguro && (
+                  <div>
+                    <Label>Precio del Vehículo (RD$)</Label>
+                    <Input type="number" value={form.precio_vehiculo} onChange={(e) => update("precio_vehiculo", e.target.value)} placeholder="500,000" />
+                  </div>
+                )}
+
+                <div className="bg-muted rounded-lg p-4 text-sm space-y-1">
+                  <p className="font-semibold">Resumen</p>
+                  <p>Vehículo: {form.vehiculo_marca} {form.vehiculo_modelo} {form.vehiculo_ano}</p>
+                  <p>Placa: {form.vehiculo_placa}</p>
+                  <p>Plan: {selectedPlan.label} ({selectedPlan.price})</p>
+                  <p className="text-green-700 font-medium">Ahorro: RD$ {((form.plan === "express" ? 5000 : 3500) - selectedPlan.priceNum).toLocaleString()}</p>
+                  {form.pago_seguro && <p>Pago Seguro: RD$ {parseInt(form.precio_vehiculo || "0").toLocaleString()}</p>}
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <Checkbox checked={form.acepta_terminos} onCheckedChange={(v) => update("acepta_terminos", !!v)} />
+                  <Label className="text-sm">Acepto los términos y condiciones</Label>
+                </div>
+              </>
+            )}
+
+            <div className="flex gap-3 pt-2">
+              {step < 5 ? (
+                <Button variant="cta" className="w-full" onClick={() => setStep(step + 1)}>
+                  Siguiente <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              ) : (
+                <Button variant="cta" className="w-full" onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? "Enviando..." : "Confirmar Solicitud →"}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-
