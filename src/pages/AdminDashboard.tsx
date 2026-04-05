@@ -107,6 +107,16 @@ const AdminDashboard = () => {
     navigate("/admin/login");
   };
 
+  const handleStatusChange = async (leadId: string, newStatus: string) => {
+    const { error } = await supabase.from("leads").update({ status: newStatus }).eq("id", leadId);
+    if (error) {
+      toast.error("Error al actualizar status");
+      return;
+    }
+    setLeads((prev) => prev.map((l) => l.id === leadId ? { ...l, status: newStatus } : l));
+    toast.success("Status actualizado");
+  };
+
   if (loading) return <div className="min-h-screen bg-muted flex items-center justify-center text-muted-foreground">Cargando...</div>;
   if (!session) return null;
 
