@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import GuiaTraspaso from "./pages/GuiaTraspaso.tsx";
 import Norma0325 from "./pages/Norma0325.tsx";
+import AdminLogin from "./pages/AdminLogin.tsx";
+import AdminDashboard from "./pages/AdminDashboard.tsx";
 import Calculadora from "./pages/Calculadora.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
