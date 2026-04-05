@@ -31,21 +31,24 @@ export default function Login() {
         });
       }
     } else {
-      const { error } = await signIn(email, password);
+      const { error, data } = await signIn(email, password);
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
       } else {
         // Check profile role to redirect correctly
-        const { data: profileData } = await (await import("@/integrations/supabase/client")).supabase
-          .from("profiles")
-          .select("role")
-          .eq("email", email)
-          .single();
-        if (profileData?.role === "gestor") {
-          navigate("/gestor");
-        } else {
-          navigate("/app");
+        const userId = data?.user?.id;
+        if (userId) {
+          const { data: profileData } = await (await import("@/integrations/supabase/client")).supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", userId)
+            .single();
+          if (profileData?.role === "gestor") {
+            navigate("/gestor");
+            return;
+          }
         }
+        navigate("/app");
       }
     }
     setSubmitting(false);
