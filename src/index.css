@@ -83,14 +83,23 @@
   }
 
   .bg-navy-gradient {
-    background: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--navy-light)) 50%, hsl(222 40% 15%) 100%);
+    background-color: hsl(var(--navy));
+    background-image: linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--navy-light)) 50%, hsl(222 40% 15%) 100%);
   }
 
   .bg-geometric-pattern {
+    position: relative;
+  }
+
+  .bg-geometric-pattern::after {
+    content: '';
+    position: absolute;
+    inset: 0;
     background-image: 
       radial-gradient(circle at 20% 50%, hsl(var(--teal) / 0.08) 0%, transparent 50%),
       radial-gradient(circle at 80% 20%, hsl(var(--orange) / 0.05) 0%, transparent 50%),
       radial-gradient(circle at 60% 80%, hsl(var(--teal) / 0.05) 0%, transparent 50%);
+    pointer-events: none;
   }
 
   .animate-fade-in {
