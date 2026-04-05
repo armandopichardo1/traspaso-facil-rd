@@ -133,7 +133,14 @@ export default function GestorTraspasoDetail() {
           </CardHeader>
           <CardContent className="text-xs space-y-1">
             <p>{traspaso.vendedor_nombre || "—"}</p>
-            <p>{traspaso.vendedor_cedula || "—"}</p>
+            <p className="text-muted-foreground">
+              {(traspaso as any).vendedor_tipo_persona === "juridica"
+                ? `RNC: ${(traspaso as any).vendedor_rnc || "—"}`
+                : `Cédula: ${traspaso.vendedor_cedula || "—"}`}
+            </p>
+            {(traspaso as any).vendedor_tipo_persona === "juridica" && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Empresa</Badge>
+            )}
             {traspaso.vendedor_telefono && (
               <a href={whatsappLink(traspaso.vendedor_telefono)} target="_blank" className="flex items-center gap-1 text-accent hover:underline">
                 <Phone className="h-3 w-3" /> WhatsApp
@@ -149,7 +156,14 @@ export default function GestorTraspasoDetail() {
           </CardHeader>
           <CardContent className="text-xs space-y-1">
             <p>{traspaso.comprador_nombre || "—"}</p>
-            <p>{traspaso.comprador_cedula || "—"}</p>
+            <p className="text-muted-foreground">
+              {(traspaso as any).comprador_tipo_persona === "juridica"
+                ? `RNC: ${(traspaso as any).comprador_rnc || "—"}`
+                : `Cédula: ${traspaso.comprador_cedula || "—"}`}
+            </p>
+            {(traspaso as any).comprador_tipo_persona === "juridica" && (
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">Empresa</Badge>
+            )}
             {traspaso.comprador_telefono && (
               <a href={whatsappLink(traspaso.comprador_telefono)} target="_blank" className="flex items-center gap-1 text-accent hover:underline">
                 <Phone className="h-3 w-3" /> WhatsApp
