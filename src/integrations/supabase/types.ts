@@ -208,7 +208,9 @@ export type Database = {
           codigo: string | null
           comprador_cedula: string | null
           comprador_nombre: string | null
+          comprador_rnc: string | null
           comprador_telefono: string | null
+          comprador_tipo_persona: string
           created_at: string
           customer_id: string
           escrow_status: string
@@ -229,7 +231,9 @@ export type Database = {
           vehiculo_placa: string | null
           vendedor_cedula: string | null
           vendedor_nombre: string | null
+          vendedor_rnc: string | null
           vendedor_telefono: string | null
+          vendedor_tipo_persona: string
         }
         Insert: {
           antifraude_notas?: string | null
@@ -237,7 +241,9 @@ export type Database = {
           codigo?: string | null
           comprador_cedula?: string | null
           comprador_nombre?: string | null
+          comprador_rnc?: string | null
           comprador_telefono?: string | null
+          comprador_tipo_persona?: string
           created_at?: string
           customer_id: string
           escrow_status?: string
@@ -258,7 +264,9 @@ export type Database = {
           vehiculo_placa?: string | null
           vendedor_cedula?: string | null
           vendedor_nombre?: string | null
+          vendedor_rnc?: string | null
           vendedor_telefono?: string | null
+          vendedor_tipo_persona?: string
         }
         Update: {
           antifraude_notas?: string | null
@@ -266,7 +274,9 @@ export type Database = {
           codigo?: string | null
           comprador_cedula?: string | null
           comprador_nombre?: string | null
+          comprador_rnc?: string | null
           comprador_telefono?: string | null
+          comprador_tipo_persona?: string
           created_at?: string
           customer_id?: string
           escrow_status?: string
@@ -287,7 +297,9 @@ export type Database = {
           vehiculo_placa?: string | null
           vendedor_cedula?: string | null
           vendedor_nombre?: string | null
+          vendedor_rnc?: string | null
           vendedor_telefono?: string | null
+          vendedor_tipo_persona?: string
         }
         Relationships: [
           {
