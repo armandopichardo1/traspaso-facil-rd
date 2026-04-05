@@ -492,7 +492,117 @@ export default function AdminTraspasoDetail() {
             </CardContent>
           </Card>
 
-          {/* Escrow management */}
+          {/* KPIs de Tiempo por Etapa */}
+          {timeline && timeline.length > 0 && (() => {
+            const SLA_HOURS: Record<string, number> = {
+              solicitud_recibida: 2,
+              verificacion_antifraude: 24,
+              contrato_firmado: 48,
+              matricula_recogida: 24,
+              plan_piloto: 72,
+              dgii_proceso: 48,
+              completado: 24,
+            };
+
+            const sortedTimeline = [...timeline].sort(
+              (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+
+            const stageKpis = sortedTimeline.map((entry: any, idx: number) => {
+              const prevTime = idx === 0
+                ? new Date(traspaso.created_at).getTime()
+                : new Date(sortedTimeline[idx - 1].created_at).getTime();
+              const currentTime = new Date(entry.created_at).getTime();
+              const durationMs = currentTime - prevTime;
+              const durationHours = durationMs / (1000 * 60 * 60);
+              const slaHours = SLA_HOURS[entry.status] || 24;
+              const pct = Math.min((durationHours / slaHours) * 100, 100);
+              const isOverdue = durationHours > slaHours;
+
+              return { status: entry.status, durationHours, slaHours, pct, isOverdue };
+            });
+
+            // Overall
+            const totalHours = stageKpis.reduce((sum, k) => sum + k.durationHours, 0);
+            const totalSla = stageKpis.reduce((sum, k) => sum + k.slaHours, 0);
+            const overallOnTime = totalHours <= totalSla;
+
+            // Current stage (if not completed)
+            const currentIdx = STATUS_STEPS.findIndex(s => s.key === traspaso.status);
+            const lastTimelineTime = sortedTimeline.length > 0
+              ? new Date(sortedTimeline[sortedTimeline.length - 1].created_at).getTime()
+              : new Date(traspaso.created_at).getTime();
+            const currentElapsedHours = (Date.now() - lastTimelineTime) / (1000 * 60 * 60);
+            const currentSla = SLA_HOURS[traspaso.status] || 24;
+
+            const formatDuration = (hours: number) => {
+              if (hours < 1) return `${Math.round(hours * 60)}min`;
+              if (hours < 24) return `${hours.toFixed(1)}h`;
+              return `${(hours / 24).toFixed(1)}d`;
+            };
+
+            const statusLabel = (key: string) =>
+              STATUS_STEPS.find(s => s.key === key)?.label || key.replace(/_/g, " ");
+
+            return (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Timer className="h-4 w-4 text-accent" /> KPIs de Entrega
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Overall summary */}
+                  <div className={`rounded-lg p-3 ${overallOnTime ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {overallOnTime
+                          ? <TrendingUp className="h-4 w-4 text-green-600" />
+                          : <AlertTriangle className="h-4 w-4 text-red-600" />}
+                        <span className={`text-sm font-semibold ${overallOnTime ? "text-green-700" : "text-red-700"}`}>
+                          {overallOnTime ? "En tiempo" : "Con retraso"}
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground">
+                        Total: {formatDuration(totalHours)} / {formatDuration(totalSla)} SLA
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Current stage indicator */}
+                  {traspaso.status !== "completado" && traspaso.status !== "cancelado" && (
+                    <div className="rounded-lg border p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium">Etapa actual: {statusLabel(traspaso.status)}</span>
+                        <span className={`text-xs font-bold ${currentElapsedHours > currentSla ? "text-red-600" : "text-green-600"}`}>
+                          {formatDuration(currentElapsedHours)} / {formatDuration(currentSla)}
+                        </span>
+                      </div>
+                      <Progress
+                        value={Math.min((currentElapsedHours / currentSla) * 100, 100)}
+                        className={`h-2 ${currentElapsedHours > currentSla ? "[&>div]:bg-red-500" : "[&>div]:bg-green-500"}`}
+                      />
+                    </div>
+                  )}
+
+                  {/* Per-stage breakdown */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase">Desglose por etapa</p>
+                    {stageKpis.map((kpi) => (
+                      <div key={kpi.status} className="flex items-center gap-3 text-xs">
+                        <div className={`h-2 w-2 rounded-full shrink-0 ${kpi.isOverdue ? "bg-red-500" : "bg-green-500"}`} />
+                        <span className="flex-1 truncate">{statusLabel(kpi.status)}</span>
+                        <span className={`font-mono font-medium ${kpi.isOverdue ? "text-red-600" : "text-foreground"}`}>
+                          {formatDuration(kpi.durationHours)}
+                        </span>
+                        <span className="text-muted-foreground">/ {formatDuration(kpi.slaHours)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })()}
           {traspaso.escrow_status !== "no_aplica" && (
             <Card>
               <CardHeader className="pb-2">
