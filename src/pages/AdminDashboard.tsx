@@ -223,9 +223,23 @@ const AdminDashboard = () => {
                       <td className="p-3 font-mono">{l.placa || "—"}</td>
                       <td className="p-3 capitalize">{l.plan || "—"}</td>
                       <td className="p-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${l.status === "nuevo" ? "bg-teal/10 text-teal" : "bg-muted text-muted-foreground"}`}>
-                          {l.status}
-                        </span>
+                        <Select value={l.status} onValueChange={(v) => handleStatusChange(l.id, v)}>
+                          <SelectTrigger className={`h-7 w-[130px] text-xs font-medium border-0 ${
+                            l.status === "nuevo" ? "bg-teal/10 text-teal" :
+                            l.status === "contactado" ? "bg-blue-500/10 text-blue-600" :
+                            l.status === "en_proceso" ? "bg-cta/10 text-cta" :
+                            l.status === "completado" ? "bg-green-500/10 text-green-600" :
+                            "bg-muted text-muted-foreground"
+                          }`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="nuevo">Nuevo</SelectItem>
+                            <SelectItem value="contactado">Contactado</SelectItem>
+                            <SelectItem value="en_proceso">En proceso</SelectItem>
+                            <SelectItem value="completado">Completado</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                     </tr>
                   ))}
