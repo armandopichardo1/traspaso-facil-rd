@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent, ScanLine } from "lucide-react";
+import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent, ScanLine, FileText, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import MatriculaScanner, { type OcrResult } from "@/components/gestor/MatriculaScanner";
 
@@ -18,7 +18,8 @@ const STEPS = [
   { title: "Vehículo", icon: Car },
   { title: "Vendedor", icon: User },
   { title: "Comprador", icon: User },
-  { title: "Antifraude", icon: Shield },
+  { title: "Contrato", icon: FileText },
+  { title: "Documentos", icon: Shield },
   { title: "Plan y Pago", icon: CreditCard },
 ];
 
@@ -27,14 +28,18 @@ const GESTOR_PLANS = [
   { value: "express" as const, label: "Express", price: "RD$3,500", priceNum: 3500, desc: "2-3 días · Precio mayorista", retail: "RD$5,000" },
 ];
 
+const MEDIOS_PAGO = ["Transferencia Bancaria", "Cheque", "Efectivo", "Financiamiento"];
+
 type TipoPersona = "fisica" | "juridica";
 
 type FormData = {
+  tipo_vehiculo: string;
   vehiculo_marca: string;
   vehiculo_modelo: string;
   vehiculo_ano: string;
   vehiculo_placa: string;
   vehiculo_color: string;
+  vehiculo_chasis: string;
   vendedor_tipo_persona: TipoPersona;
   vendedor_nombre: string;
   vendedor_cedula: string;
@@ -45,6 +50,12 @@ type FormData = {
   comprador_cedula: string;
   comprador_rnc: string;
   comprador_telefono: string;
+  fecha_acto_venta: string;
+  medio_pago: string;
+  es_traspaso_familiar: boolean;
+  tiene_apoderado: boolean;
+  apoderado_nombre: string;
+  apoderado_cedula: string;
   plan: "basico" | "express";
   pago_seguro: boolean;
   precio_vehiculo: string;
@@ -61,11 +72,13 @@ export default function GestorNuevoTraspaso() {
   const [codigo, setCodigo] = useState("");
 
   const [form, setForm] = useState<FormData>({
+    tipo_vehiculo: "vehiculo_motor",
     vehiculo_marca: "",
     vehiculo_modelo: "",
     vehiculo_ano: "",
     vehiculo_placa: "",
     vehiculo_color: "",
+    vehiculo_chasis: "",
     vendedor_tipo_persona: "fisica",
     vendedor_nombre: "",
     vendedor_cedula: "",
@@ -76,6 +89,12 @@ export default function GestorNuevoTraspaso() {
     comprador_cedula: "",
     comprador_rnc: "",
     comprador_telefono: "",
+    fecha_acto_venta: "",
+    medio_pago: "",
+    es_traspaso_familiar: false,
+    tiene_apoderado: false,
+    apoderado_nombre: "",
+    apoderado_cedula: "",
     plan: "basico",
     pago_seguro: false,
     precio_vehiculo: "",
@@ -97,6 +116,7 @@ export default function GestorNuevoTraspaso() {
       vehiculo_ano: data.ano || prev.vehiculo_ano,
       vehiculo_placa: data.placa || prev.vehiculo_placa,
       vehiculo_color: data.color || prev.vehiculo_color,
+      vehiculo_chasis: data.chasis || prev.vehiculo_chasis,
       vendedor_tipo_persona: data.tipo_persona || prev.vendedor_tipo_persona,
       vendedor_nombre: data.propietario_nombre || prev.vendedor_nombre,
       vendedor_cedula: data.propietario_cedula || prev.vendedor_cedula,
@@ -124,6 +144,13 @@ export default function GestorNuevoTraspaso() {
 
   const selectedPlan = GESTOR_PLANS.find(p => p.value === form.plan)!;
 
+  // Check if fecha_acto_venta > 90 days
+  const fechaWarning = (() => {
+    if (!form.fecha_acto_venta) return false;
+    const diff = (new Date().getTime() - new Date(form.fecha_acto_venta).getTime()) / (1000 * 3600 * 24);
+    return diff > 90;
+  })();
+
   const handleSubmit = async () => {
     if (!form.acepta_terminos) {
       toast({ title: "Debes aceptar los términos y condiciones", variant: "destructive" });
@@ -136,11 +163,13 @@ export default function GestorNuevoTraspaso() {
       .insert({
         customer_id: user!.id,
         gestor_id: user!.id,
+        tipo_vehiculo: form.tipo_vehiculo,
         vehiculo_marca: form.vehiculo_marca,
         vehiculo_modelo: form.vehiculo_modelo,
         vehiculo_ano: parseInt(form.vehiculo_ano) || null,
         vehiculo_placa: form.vehiculo_placa.toUpperCase(),
         vehiculo_color: form.vehiculo_color,
+        vehiculo_chasis: form.vehiculo_chasis || null,
         vendedor_tipo_persona: form.vendedor_tipo_persona,
         vendedor_nombre: form.vendedor_nombre,
         vendedor_cedula: form.vendedor_tipo_persona === "fisica" ? form.vendedor_cedula : null,
@@ -151,11 +180,17 @@ export default function GestorNuevoTraspaso() {
         comprador_cedula: form.comprador_tipo_persona === "fisica" ? form.comprador_cedula : null,
         comprador_rnc: form.comprador_tipo_persona === "juridica" ? form.comprador_rnc : null,
         comprador_telefono: form.comprador_telefono,
+        fecha_acto_venta: form.fecha_acto_venta || null,
+        medio_pago: form.medio_pago || null,
+        es_traspaso_familiar: form.es_traspaso_familiar,
+        tiene_apoderado: form.tiene_apoderado,
+        apoderado_nombre: form.tiene_apoderado ? form.apoderado_nombre : null,
+        apoderado_cedula: form.tiene_apoderado ? form.apoderado_cedula : null,
         plan: form.plan,
         precio_servicio: selectedPlan.priceNum,
         precio_vehiculo: form.pago_seguro ? parseFloat(form.precio_vehiculo) || null : null,
         escrow_status: form.pago_seguro ? "depositado" : "no_aplica",
-      })
+      } as any)
       .select()
       .single();
 
@@ -166,9 +201,9 @@ export default function GestorNuevoTraspaso() {
     }
 
     if (data) {
-      await uploadFiles(data.id);
-      setCodigo(data.codigo || "");
-      setStep(6);
+      await uploadFiles((data as any).id);
+      setCodigo((data as any).codigo || "");
+      setStep(8);
     }
     setSubmitting(false);
   };
@@ -178,7 +213,7 @@ export default function GestorNuevoTraspaso() {
       <Label className="text-sm">{label}</Label>
       <div className="mt-1 border-2 border-dashed border-border rounded-lg p-4 text-center">
         <Upload className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
-        <input type="file" accept="image/*" className="hidden" id={`file-g-${tipo}`}
+        <input type="file" accept="image/*,application/pdf" className="hidden" id={`file-g-${tipo}`}
           onChange={(e) => handleFile(tipo, e.target.files?.[0] || null)} />
         <label htmlFor={`file-g-${tipo}`} className="text-sm text-accent cursor-pointer hover:underline">
           {files[tipo] ? files[tipo]!.name : "Seleccionar archivo"}
@@ -200,7 +235,8 @@ export default function GestorNuevoTraspaso() {
     </div>
   );
 
-  if (step === 6) {
+  // Success screen
+  if (step === 8) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-10 text-center">
         <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
@@ -213,6 +249,7 @@ export default function GestorNuevoTraspaso() {
           <BadgePercent className="h-5 w-5 text-green-600 mx-auto mb-1" />
           <p className="text-sm text-green-800 font-medium">Precio mayorista aplicado: RD$ {selectedPlan.priceNum.toLocaleString()}</p>
         </div>
+        <p className="text-sm text-muted-foreground mb-4">Los contratos se pueden generar y firmar desde el detalle del traspaso.</p>
         <Button variant="cta" onClick={() => navigate("/gestor")} className="w-full" size="lg">
           Ir al Dashboard
         </Button>
@@ -245,7 +282,7 @@ export default function GestorNuevoTraspaso() {
         <MatriculaScanner onAccept={handleOcrAccept} onSkip={() => setStep(1)} />
       )}
 
-      {step >= 1 && step <= 5 && (
+      {step >= 1 && step <= 6 && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
@@ -254,8 +291,22 @@ export default function GestorNuevoTraspaso() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Step 1: Vehicle */}
             {step === 1 && (
               <>
+                <div>
+                  <Label className="mb-2 block">Tipo de Vehículo</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[["vehiculo_motor", "Vehículo de Motor"], ["motocicleta", "Motocicleta"]].map(([val, label]) => (
+                      <button key={val} onClick={() => update("tipo_vehiculo", val)}
+                        className={`border-2 rounded-lg py-2 px-3 text-sm font-medium transition-all ${
+                          form.tipo_vehiculo === val ? "border-accent bg-accent/5 text-accent" : "border-border text-muted-foreground"
+                        }`}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div><Label>Marca</Label><Input value={form.vehiculo_marca} onChange={(e) => update("vehiculo_marca", e.target.value)} placeholder="Toyota" /></div>
                 <div><Label>Modelo</Label><Input value={form.vehiculo_modelo} onChange={(e) => update("vehiculo_modelo", e.target.value)} placeholder="Corolla" /></div>
                 <div className="grid grid-cols-2 gap-3">
@@ -263,9 +314,11 @@ export default function GestorNuevoTraspaso() {
                   <div><Label>Color</Label><Input value={form.vehiculo_color} onChange={(e) => update("vehiculo_color", e.target.value)} placeholder="Blanco" /></div>
                 </div>
                 <div><Label>Placa</Label><Input value={form.vehiculo_placa} onChange={(e) => update("vehiculo_placa", e.target.value.toUpperCase())} placeholder="A123456" /></div>
+                <div><Label>Chasis / VIN</Label><Input value={form.vehiculo_chasis} onChange={(e) => update("vehiculo_chasis", e.target.value.toUpperCase())} placeholder="1HGBH41JXMN109186" /></div>
               </>
             )}
 
+            {/* Step 2: Seller */}
             {step === 2 && (
               <>
                 <TipoPersonaToggle value={form.vendedor_tipo_persona} onChange={(v) => update("vendedor_tipo_persona", v)} />
@@ -279,6 +332,7 @@ export default function GestorNuevoTraspaso() {
               </>
             )}
 
+            {/* Step 3: Buyer */}
             {step === 3 && (
               <>
                 <TipoPersonaToggle value={form.comprador_tipo_persona} onChange={(v) => update("comprador_tipo_persona", v)} />
@@ -292,18 +346,109 @@ export default function GestorNuevoTraspaso() {
               </>
             )}
 
+            {/* Step 4: Contract details */}
             {step === 4 && (
               <>
-                <p className="text-sm text-muted-foreground">Sube los documentos de identidad para la verificación antifraude.</p>
-                <FileInput tipo="cedula_comprador" label="Cédula del Comprador (frente)" />
-                <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />
-                <FileInput tipo="cedula_vendedor" label="Cédula del Vendedor (frente)" />
-                <FileInput tipo="selfie_vendedor" label="Selfie del Vendedor" />
-                <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
+                <div>
+                  <Label>Fecha del Acto de Venta</Label>
+                  <Input type="date" value={form.fecha_acto_venta} onChange={(e) => update("fecha_acto_venta", e.target.value)} />
+                </div>
+                {fechaWarning && (
+                  <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-800">
+                      ⚠️ Han pasado más de 90 días desde el acto de venta. Aplican recargos e intereses según Arts. 26, 27 y 252 del Código Tributario.
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <Label className="mb-2 block">Medio de Pago</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {MEDIOS_PAGO.map(mp => (
+                      <button key={mp} onClick={() => update("medio_pago", mp)}
+                        className={`border-2 rounded-lg py-2 px-3 text-sm font-medium transition-all ${
+                          form.medio_pago === mp ? "border-accent bg-accent/5 text-accent" : "border-border text-muted-foreground"
+                        }`}>
+                        {mp}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Checkbox checked={form.es_traspaso_familiar} onCheckedChange={(v) => update("es_traspaso_familiar", !!v)} />
+                  <Label className="text-sm">¿Traspaso entre familiares directos?</Label>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Checkbox checked={form.tiene_apoderado} onCheckedChange={(v) => update("tiene_apoderado", !!v)} />
+                  <Label className="text-sm">¿El trámite lo realiza un apoderado?</Label>
+                </div>
+                {form.tiene_apoderado && (
+                  <>
+                    <div><Label>Nombre del Apoderado</Label><Input value={form.apoderado_nombre} onChange={(e) => update("apoderado_nombre", e.target.value)} /></div>
+                    <div><Label>Cédula del Apoderado</Label><MaskedInput mask="cedula" value={form.apoderado_cedula} onValueChange={(v) => update("apoderado_cedula", v)} placeholder="001-0000000-0" /></div>
+                  </>
+                )}
               </>
             )}
 
+            {/* Step 5: Documents */}
             {step === 5 && (
+              <>
+                <p className="text-sm text-muted-foreground">Sube los documentos requeridos para el trámite DGII.</p>
+                
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Siempre requeridos</div>
+                <FileInput tipo="cedula_vendedor_frente" label="Cédula Vendedor (Frente)" />
+                <FileInput tipo="cedula_vendedor_reverso" label="Cédula Vendedor (Reverso)" />
+                <FileInput tipo="cedula_comprador_frente" label="Cédula Comprador (Frente)" />
+                <FileInput tipo="cedula_comprador_reverso" label="Cédula Comprador (Reverso)" />
+                <FileInput tipo="selfie_vendedor" label="Selfie del Vendedor" />
+                <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />
+                <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
+                <FileInput tipo="certificacion_plan_piloto" label="Certificación Plan Piloto" />
+
+                {/* Conditional: Company */}
+                {(form.vendedor_tipo_persona === "juridica" || form.comprador_tipo_persona === "juridica") && (
+                  <>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">Persona Jurídica</div>
+                    <FileInput tipo="carta_autorizacion" label="Carta de Autorización de la Empresa" />
+                    <FileInput tipo="cedula_representante" label="Cédula del Representante Legal" />
+                  </>
+                )}
+
+                {/* Conditional: Power of attorney */}
+                {form.tiene_apoderado && (
+                  <>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">Apoderado</div>
+                    <FileInput tipo="poder_notarial" label="Poder Notarizado" />
+                    <FileInput tipo="cedula_apoderado" label="Cédula del Apoderado" />
+                  </>
+                )}
+
+                {/* Conditional: Family transfer */}
+                {form.es_traspaso_familiar && (
+                  <>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">Traspaso Familiar</div>
+                    <FileInput tipo="certificacion_bancaria" label="Certificación Bancaria" />
+                    <FileInput tipo="carta_trabajo" label="Carta de Trabajo / Declaración Jurada de Ingresos" />
+                  </>
+                )}
+
+                {/* Conditional: Price > 800K */}
+                {parseFloat(form.precio_vehiculo) > 800000 && (
+                  <>
+                    <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">Venta &gt; RD$800,000</div>
+                    <FileInput tipo="comprobante_pago" label="Comprobante de Pago al Vendedor" />
+                  </>
+                )}
+
+                <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-sm text-accent">
+                  📄 Los contratos se generan automáticamente después de crear el traspaso.
+                </div>
+              </>
+            )}
+
+            {/* Step 6: Plan & Payment */}
+            {step === 6 && (
               <>
                 <div>
                   <Label className="mb-2 block">Plan de Servicio (Precio Mayorista)</Label>
@@ -329,9 +474,13 @@ export default function GestorNuevoTraspaso() {
                 <div className="bg-muted rounded-lg p-4 text-sm space-y-1">
                   <p className="font-semibold">Resumen</p>
                   <p>Vehículo: {form.vehiculo_marca} {form.vehiculo_modelo} {form.vehiculo_ano}</p>
-                  <p>Placa: {form.vehiculo_placa}</p>
+                  <p>Placa: {form.vehiculo_placa} · Chasis: {form.vehiculo_chasis || "—"}</p>
                   <p>Plan: {selectedPlan.label} ({selectedPlan.price})</p>
                   <p className="text-green-700 font-medium">Ahorro: RD$ {((form.plan === "express" ? 5000 : 3500) - selectedPlan.priceNum).toLocaleString()}</p>
+                  {form.fecha_acto_venta && <p>Fecha acto: {form.fecha_acto_venta}</p>}
+                  {form.medio_pago && <p>Medio de pago: {form.medio_pago}</p>}
+                  {form.es_traspaso_familiar && <p>🏠 Traspaso familiar</p>}
+                  {form.tiene_apoderado && <p>👤 Apoderado: {form.apoderado_nombre}</p>}
                   {form.pago_seguro && <p>Pago Seguro: RD$ {parseInt(form.precio_vehiculo || "0").toLocaleString()}</p>}
                 </div>
                 <div className="flex items-center gap-3">
@@ -342,7 +491,7 @@ export default function GestorNuevoTraspaso() {
             )}
 
             <div className="flex gap-3 pt-2">
-              {step < 5 ? (
+              {step < 6 ? (
                 <Button variant="cta" className="w-full" onClick={() => setStep(step + 1)}>
                   Siguiente <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>

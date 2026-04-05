@@ -127,6 +127,44 @@ export type Database = {
         }
         Relationships: []
       }
+      traspaso_contratos: {
+        Row: {
+          contenido_html: string
+          created_at: string
+          id: string
+          pdf_url: string | null
+          status: string
+          tipo: string
+          traspaso_id: string
+        }
+        Insert: {
+          contenido_html: string
+          created_at?: string
+          id?: string
+          pdf_url?: string | null
+          status?: string
+          tipo: string
+          traspaso_id: string
+        }
+        Update: {
+          contenido_html?: string
+          created_at?: string
+          id?: string
+          pdf_url?: string | null
+          status?: string
+          tipo?: string
+          traspaso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspaso_contratos_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traspaso_documentos: {
         Row: {
           file_url: string
@@ -152,6 +190,69 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "traspaso_documentos_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      traspaso_firmas: {
+        Row: {
+          cedula_firmante: string | null
+          contrato_id: string | null
+          created_at: string
+          documento_url: string | null
+          firma_hash: string
+          firma_imagen_url: string
+          geolocation: string | null
+          id: string
+          ip_address: string | null
+          nombre_firmante: string
+          tipo_firmante: string
+          traspaso_id: string
+          user_agent: string | null
+        }
+        Insert: {
+          cedula_firmante?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          documento_url?: string | null
+          firma_hash: string
+          firma_imagen_url: string
+          geolocation?: string | null
+          id?: string
+          ip_address?: string | null
+          nombre_firmante: string
+          tipo_firmante: string
+          traspaso_id: string
+          user_agent?: string | null
+        }
+        Update: {
+          cedula_firmante?: string | null
+          contrato_id?: string | null
+          created_at?: string
+          documento_url?: string | null
+          firma_hash?: string
+          firma_imagen_url?: string
+          geolocation?: string | null
+          id?: string
+          ip_address?: string | null
+          nombre_firmante?: string
+          tipo_firmante?: string
+          traspaso_id?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspaso_firmas_contrato_id_fkey"
+            columns: ["contrato_id"]
+            isOneToOne: false
+            referencedRelation: "traspaso_contratos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspaso_firmas_traspaso_id_fkey"
             columns: ["traspaso_id"]
             isOneToOne: false
             referencedRelation: "traspasos"
@@ -205,6 +306,8 @@ export type Database = {
         Row: {
           antifraude_notas: string | null
           antifraude_status: string
+          apoderado_cedula: string | null
+          apoderado_nombre: string | null
           codigo: string | null
           comprador_cedula: string | null
           comprador_nombre: string | null
@@ -213,9 +316,12 @@ export type Database = {
           comprador_tipo_persona: string
           created_at: string
           customer_id: string
+          es_traspaso_familiar: boolean
           escrow_status: string
+          fecha_acto_venta: string | null
           gestor_id: string | null
           id: string
+          medio_pago: string | null
           mensajero_nombre: string | null
           notas_internas: string | null
           pago_servicio_status: string
@@ -223,8 +329,11 @@ export type Database = {
           precio_servicio: number
           precio_vehiculo: number | null
           status: string
+          tiene_apoderado: boolean
+          tipo_vehiculo: string
           updated_at: string
           vehiculo_ano: number | null
+          vehiculo_chasis: string | null
           vehiculo_color: string | null
           vehiculo_marca: string | null
           vehiculo_modelo: string | null
@@ -238,6 +347,8 @@ export type Database = {
         Insert: {
           antifraude_notas?: string | null
           antifraude_status?: string
+          apoderado_cedula?: string | null
+          apoderado_nombre?: string | null
           codigo?: string | null
           comprador_cedula?: string | null
           comprador_nombre?: string | null
@@ -246,9 +357,12 @@ export type Database = {
           comprador_tipo_persona?: string
           created_at?: string
           customer_id: string
+          es_traspaso_familiar?: boolean
           escrow_status?: string
+          fecha_acto_venta?: string | null
           gestor_id?: string | null
           id?: string
+          medio_pago?: string | null
           mensajero_nombre?: string | null
           notas_internas?: string | null
           pago_servicio_status?: string
@@ -256,8 +370,11 @@ export type Database = {
           precio_servicio?: number
           precio_vehiculo?: number | null
           status?: string
+          tiene_apoderado?: boolean
+          tipo_vehiculo?: string
           updated_at?: string
           vehiculo_ano?: number | null
+          vehiculo_chasis?: string | null
           vehiculo_color?: string | null
           vehiculo_marca?: string | null
           vehiculo_modelo?: string | null
@@ -271,6 +388,8 @@ export type Database = {
         Update: {
           antifraude_notas?: string | null
           antifraude_status?: string
+          apoderado_cedula?: string | null
+          apoderado_nombre?: string | null
           codigo?: string | null
           comprador_cedula?: string | null
           comprador_nombre?: string | null
@@ -279,9 +398,12 @@ export type Database = {
           comprador_tipo_persona?: string
           created_at?: string
           customer_id?: string
+          es_traspaso_familiar?: boolean
           escrow_status?: string
+          fecha_acto_venta?: string | null
           gestor_id?: string | null
           id?: string
+          medio_pago?: string | null
           mensajero_nombre?: string | null
           notas_internas?: string | null
           pago_servicio_status?: string
@@ -289,8 +411,11 @@ export type Database = {
           precio_servicio?: number
           precio_vehiculo?: number | null
           status?: string
+          tiene_apoderado?: boolean
+          tipo_vehiculo?: string
           updated_at?: string
           vehiculo_ano?: number | null
+          vehiculo_chasis?: string | null
           vehiculo_color?: string | null
           vehiculo_marca?: string | null
           vehiculo_modelo?: string | null

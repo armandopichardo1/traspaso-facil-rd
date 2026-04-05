@@ -12,6 +12,7 @@ export type OcrResult = {
   ano: string;
   placa: string;
   color: string;
+  chasis: string;
   tipo_persona: "fisica" | "juridica";
   propietario_nombre: string;
   propietario_cedula: string;
