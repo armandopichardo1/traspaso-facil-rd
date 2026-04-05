@@ -279,6 +279,12 @@ const AdminDashboard = () => {
                 </tbody>
               </table>
             ) : (
+              <>
+                {filteredConsultas.length !== consultas.length && (
+                  <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
+                    Mostrando {filteredConsultas.length} de {consultas.length} consultas
+                  </div>
+                )}
               <table className="w-full text-sm">
                 <thead className="bg-muted text-muted-foreground text-left">
                   <tr>
@@ -290,9 +296,9 @@ const AdminDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {consultas.length === 0 ? (
-                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No hay consultas aún</td></tr>
-                  ) : consultas.map((c) => (
+                  {filteredConsultas.length === 0 ? (
+                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No hay consultas con estos filtros</td></tr>
+                  ) : filteredConsultas.map((c) => (
                     <tr key={c.id} className="hover:bg-muted/30">
                       <td className="p-3 whitespace-nowrap">{formatDate(c.created_at)}</td>
                       <td className="p-3 font-mono font-medium text-foreground">{c.placa}</td>
