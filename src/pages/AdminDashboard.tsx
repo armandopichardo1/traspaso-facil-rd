@@ -251,65 +251,113 @@ const AdminDashboard = () => {
         )}
 
         <div className="bg-card rounded-xl border border-border overflow-hidden">
-          {tab === "leads" && filteredLeads.length !== leads.length && (
-            <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
-              Mostrando {filteredLeads.length} de {leads.length} leads
-            </div>
-          )}
           <div className="overflow-x-auto">
-            {tab === "leads" ? (
+            {tab === "traspasos" ? (
               <table className="w-full text-sm">
                 <thead className="bg-muted text-muted-foreground text-left">
                   <tr>
                     <th className="p-3 font-medium">Fecha</th>
-                    <th className="p-3 font-medium">Nombre</th>
-                    <th className="p-3 font-medium">Teléfono</th>
-                    <th className="p-3 font-medium">Tipo</th>
+                    <th className="p-3 font-medium">Código</th>
                     <th className="p-3 font-medium">Vehículo</th>
                     <th className="p-3 font-medium">Placa</th>
+                    <th className="p-3 font-medium">Comprador</th>
                     <th className="p-3 font-medium">Plan</th>
+                    <th className="p-3 font-medium">Antifraude</th>
                     <th className="p-3 font-medium">Status</th>
+                    <th className="p-3 font-medium"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {filteredLeads.length === 0 ? (
-                    <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No hay leads con estos filtros</td></tr>
-                  ) : filteredLeads.map((l) => (
-                    <tr key={l.id} className="hover:bg-muted/30">
-                      <td className="p-3 whitespace-nowrap">{formatDate(l.created_at)}</td>
-                      <td className="p-3 font-medium text-foreground">{l.nombre}</td>
+                  {traspasos.length === 0 ? (
+                    <tr><td colSpan={9} className="p-8 text-center text-muted-foreground">No hay traspasos</td></tr>
+                  ) : traspasos.map((t) => (
+                    <tr key={t.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => navigate(`/admin/traspaso/${t.id}`)}>
+                      <td className="p-3 whitespace-nowrap">{formatDate(t.created_at)}</td>
+                      <td className="p-3 font-mono text-xs">{t.codigo || "—"}</td>
+                      <td className="p-3">{t.vehiculo_marca} {t.vehiculo_modelo}</td>
+                      <td className="p-3 font-mono">{t.vehiculo_placa || "—"}</td>
+                      <td className="p-3">{t.comprador_nombre || "—"}</td>
+                      <td className="p-3 capitalize">{t.plan}</td>
                       <td className="p-3">
-                        <a href={`https://wa.me/${l.telefono.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-teal hover:underline">
-                          {l.telefono}
-                        </a>
+                        <Badge variant="secondary" className={
+                          t.antifraude_status === "aprobado" ? "bg-green-100 text-green-800" :
+                          t.antifraude_status === "alerta" ? "bg-amber-100 text-amber-800" :
+                          t.antifraude_status === "rechazado" ? "bg-red-100 text-red-800" :
+                          "bg-blue-100 text-blue-800"
+                        }>{t.antifraude_status}</Badge>
                       </td>
-                      <td className="p-3 capitalize">{l.tipo_usuario}</td>
-                      <td className="p-3">{l.marca_modelo || "—"} {l.ano || ""}</td>
-                      <td className="p-3 font-mono">{l.placa || "—"}</td>
-                      <td className="p-3 capitalize">{l.plan || "—"}</td>
                       <td className="p-3">
-                        <Select value={l.status} onValueChange={(v) => handleStatusChange(l.id, v)}>
-                          <SelectTrigger className={`h-7 w-[130px] text-xs font-medium border-0 ${
-                            l.status === "nuevo" ? "bg-teal/10 text-teal" :
-                            l.status === "contactado" ? "bg-blue-500/10 text-blue-600" :
-                            l.status === "en_proceso" ? "bg-cta/10 text-cta" :
-                            l.status === "completado" ? "bg-green-500/10 text-green-600" :
-                            "bg-muted text-muted-foreground"
-                          }`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="nuevo">Nuevo</SelectItem>
-                            <SelectItem value="contactado">Contactado</SelectItem>
-                            <SelectItem value="en_proceso">En proceso</SelectItem>
-                            <SelectItem value="completado">Completado</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <Badge variant="secondary" className={
+                          t.status === "completado" ? "bg-green-100 text-green-800" :
+                          t.status === "cancelado" ? "bg-red-100 text-red-800" :
+                          "bg-blue-100 text-blue-800"
+                        }>{t.status.replace(/_/g, " ")}</Badge>
                       </td>
+                      <td className="p-3"><ArrowRight className="h-4 w-4 text-muted-foreground" /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            ) : tab === "leads" ? (
+              <>
+                {filteredLeads.length !== leads.length && (
+                  <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
+                    Mostrando {filteredLeads.length} de {leads.length} leads
+                  </div>
+                )}
+                <table className="w-full text-sm">
+                  <thead className="bg-muted text-muted-foreground text-left">
+                    <tr>
+                      <th className="p-3 font-medium">Fecha</th>
+                      <th className="p-3 font-medium">Nombre</th>
+                      <th className="p-3 font-medium">Teléfono</th>
+                      <th className="p-3 font-medium">Tipo</th>
+                      <th className="p-3 font-medium">Vehículo</th>
+                      <th className="p-3 font-medium">Placa</th>
+                      <th className="p-3 font-medium">Plan</th>
+                      <th className="p-3 font-medium">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredLeads.length === 0 ? (
+                      <tr><td colSpan={8} className="p-8 text-center text-muted-foreground">No hay leads con estos filtros</td></tr>
+                    ) : filteredLeads.map((l) => (
+                      <tr key={l.id} className="hover:bg-muted/30">
+                        <td className="p-3 whitespace-nowrap">{formatDate(l.created_at)}</td>
+                        <td className="p-3 font-medium text-foreground">{l.nombre}</td>
+                        <td className="p-3">
+                          <a href={`https://wa.me/${l.telefono.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-teal hover:underline">
+                            {l.telefono}
+                          </a>
+                        </td>
+                        <td className="p-3 capitalize">{l.tipo_usuario}</td>
+                        <td className="p-3">{l.marca_modelo || "—"} {l.ano || ""}</td>
+                        <td className="p-3 font-mono">{l.placa || "—"}</td>
+                        <td className="p-3 capitalize">{l.plan || "—"}</td>
+                        <td className="p-3">
+                          <Select value={l.status} onValueChange={(v) => handleStatusChange(l.id, v)}>
+                            <SelectTrigger className={`h-7 w-[130px] text-xs font-medium border-0 ${
+                              l.status === "nuevo" ? "bg-teal/10 text-teal" :
+                              l.status === "contactado" ? "bg-blue-500/10 text-blue-600" :
+                              l.status === "en_proceso" ? "bg-cta/10 text-cta" :
+                              l.status === "completado" ? "bg-green-500/10 text-green-600" :
+                              "bg-muted text-muted-foreground"
+                            }`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="nuevo">Nuevo</SelectItem>
+                              <SelectItem value="contactado">Contactado</SelectItem>
+                              <SelectItem value="en_proceso">En proceso</SelectItem>
+                              <SelectItem value="completado">Completado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
             ) : (
               <>
                 {filteredConsultas.length !== consultas.length && (
@@ -317,45 +365,44 @@ const AdminDashboard = () => {
                     Mostrando {filteredConsultas.length} de {consultas.length} consultas
                   </div>
                 )}
-              <table className="w-full text-sm">
-                <thead className="bg-muted text-muted-foreground text-left">
-                  <tr>
-                    <th className="p-3 font-medium">Fecha</th>
-                    <th className="p-3 font-medium">Placa</th>
-                    <th className="p-3 font-medium">Teléfono</th>
-                    <th className="p-3 font-medium">Email</th>
-                    <th className="p-3 font-medium">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredConsultas.length === 0 ? (
-                    <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No hay consultas con estos filtros</td></tr>
-                  ) : filteredConsultas.map((c) => (
-                    <tr key={c.id} className="hover:bg-muted/30">
-                      <td className="p-3 whitespace-nowrap">{formatDate(c.created_at)}</td>
-                      <td className="p-3 font-mono font-medium text-foreground">{c.placa}</td>
-                      <td className="p-3">
-                        {c.telefono ? (
-                          <a href={`https://wa.me/${c.telefono.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-teal hover:underline">
-                            {c.telefono}
-                          </a>
-                        ) : "—"}
-                      </td>
-                      <td className="p-3">{c.email || "—"}</td>
-                      <td className="p-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === "pendiente" ? "bg-cta/10 text-cta" : "bg-teal/10 text-teal"}`}>
-                          {c.status}
-                        </span>
-                      </td>
+                <table className="w-full text-sm">
+                  <thead className="bg-muted text-muted-foreground text-left">
+                    <tr>
+                      <th className="p-3 font-medium">Fecha</th>
+                      <th className="p-3 font-medium">Placa</th>
+                      <th className="p-3 font-medium">Teléfono</th>
+                      <th className="p-3 font-medium">Email</th>
+                      <th className="p-3 font-medium">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {filteredConsultas.length === 0 ? (
+                      <tr><td colSpan={5} className="p-8 text-center text-muted-foreground">No hay consultas con estos filtros</td></tr>
+                    ) : filteredConsultas.map((c) => (
+                      <tr key={c.id} className="hover:bg-muted/30">
+                        <td className="p-3 whitespace-nowrap">{formatDate(c.created_at)}</td>
+                        <td className="p-3 font-mono font-medium text-foreground">{c.placa}</td>
+                        <td className="p-3">
+                          {c.telefono ? (
+                            <a href={`https://wa.me/${c.telefono.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-teal hover:underline">
+                              {c.telefono}
+                            </a>
+                          ) : "—"}
+                        </td>
+                        <td className="p-3">{c.email || "—"}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.status === "pendiente" ? "bg-cta/10 text-cta" : "bg-teal/10 text-teal"}`}>
+                            {c.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </>
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 };
