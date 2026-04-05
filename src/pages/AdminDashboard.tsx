@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight } from "lucide-react";
+import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import type { Session } from "@supabase/supabase-js";
@@ -46,13 +46,22 @@ type Traspaso = {
   plan: string;
 };
 
+type ProfileRow = {
+  id: string;
+  nombre: string | null;
+  email: string | null;
+  cedula: string | null;
+  role: string;
+};
+
 const AdminDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas">("traspasos");
+  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas" | "equipo">("traspasos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [traspasos, setTraspasos] = useState<Traspaso[]>([]);
+  const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [fetching, setFetching] = useState(false);
   const navigate = useNavigate();
 
@@ -130,6 +139,10 @@ const AdminDashboard = () => {
         const { data, error } = await supabase.from("leads").select("*").order("created_at", { ascending: false });
         if (error) throw error;
         setLeads(data || []);
+      } else if (tab === "equipo") {
+        const { data, error } = await supabase.from("profiles").select("id, nombre, email, cedula, role").order("created_at", { ascending: false });
+        if (error) throw error;
+        setProfiles(data || []);
       } else {
         const { data, error } = await supabase.from("historial_consultas").select("*").order("created_at", { ascending: false });
         if (error) throw error;
@@ -140,6 +153,16 @@ const AdminDashboard = () => {
     } finally {
       setFetching(false);
     }
+  };
+
+  const handleRoleChange = async (profileId: string, newRole: string) => {
+    const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", profileId);
+    if (error) {
+      toast.error("Error al cambiar rol");
+      return;
+    }
+    setProfiles((prev) => prev.map((p) => p.id === profileId ? { ...p, role: newRole } : p));
+    toast.success("Rol actualizado");
   };
 
   const handleLogout = async () => {
@@ -218,6 +241,12 @@ const AdminDashboard = () => {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "consultas" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
           >
             <FileText className="h-3.5 w-3.5 inline mr-1" /> Historiales
+          </button>
+          <button
+            onClick={() => setTab("equipo")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "equipo" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
+          >
+            <UserCog className="h-3.5 w-3.5 inline mr-1" /> Equipo
           </button>
           <Button variant="outline" size="sm" onClick={() => navigate("/admin/historiales")} className="ml-auto">
             Gestionar Historiales →
@@ -358,7 +387,7 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </>
-            ) : (
+            ) : tab === "consultas" ? (
               <>
                 {filteredConsultas.length !== consultas.length && (
                   <div className="px-4 py-2 bg-muted/50 border-b border-border text-xs text-muted-foreground">
@@ -400,7 +429,43 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </>
-            )}
+            ) : tab === "equipo" ? (
+              <table className="w-full text-sm">
+                <thead className="bg-muted text-muted-foreground text-left">
+                  <tr>
+                    <th className="p-3 font-medium">Nombre</th>
+                    <th className="p-3 font-medium">Email</th>
+                    <th className="p-3 font-medium">Cédula</th>
+                    <th className="p-3 font-medium">Rol</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {profiles.length === 0 ? (
+                    <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No hay perfiles</td></tr>
+                  ) : profiles.map((p) => (
+                    <tr key={p.id} className="hover:bg-muted/30">
+                      <td className="p-3 font-medium text-foreground">{p.nombre || "—"}</td>
+                      <td className="p-3">{p.email || "—"}</td>
+                      <td className="p-3 font-mono">{p.cedula || "—"}</td>
+                      <td className="p-3">
+                        <Select value={p.role} onValueChange={(v) => handleRoleChange(p.id, v)}>
+                          <SelectTrigger className="h-7 w-[140px] text-xs font-medium">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="customer">Cliente</SelectItem>
+                            <SelectItem value="gestor">Gestor</SelectItem>
+                            <SelectItem value="notario">Notario</SelectItem>
+                            <SelectItem value="mensajero">Mensajero</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : null}
           </div>
         </div>
       </div>

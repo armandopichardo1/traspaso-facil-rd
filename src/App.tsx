@@ -27,6 +27,12 @@ import GestorLayout from "./components/gestor/GestorLayout.tsx";
 import GestorDashboard from "./pages/gestor/GestorDashboard.tsx";
 import GestorNuevoTraspaso from "./pages/gestor/GestorNuevoTraspaso.tsx";
 import GestorTraspasoDetail from "./pages/gestor/GestorTraspasoDetail.tsx";
+import NotarioLayout from "./components/notario/NotarioLayout.tsx";
+import NotarioDashboard from "./pages/notario/NotarioDashboard.tsx";
+import NotarioTraspasoDetail from "./pages/notario/NotarioTraspasoDetail.tsx";
+import MensajeroLayout from "./components/mensajero/MensajeroLayout.tsx";
+import MensajeroDashboard from "./pages/mensajero/MensajeroDashboard.tsx";
+import MensajeroTraspasoDetail from "./pages/mensajero/MensajeroTraspasoDetail.tsx";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +64,19 @@ const App = () => (
               <Route path="nuevo" element={<GestorNuevoTraspaso />} />
               <Route path="traspaso/:id" element={<GestorTraspasoDetail />} />
             </Route>
+
+            {/* Notario routes */}
+            <Route path="/notario" element={<NotarioLayout />}>
+              <Route index element={<NotarioDashboard />} />
+              <Route path="traspaso/:id" element={<NotarioTraspasoDetail />} />
+            </Route>
+
+            {/* Mensajero routes */}
+            <Route path="/mensajero" element={<MensajeroLayout />}>
+              <Route index element={<MensajeroDashboard />} />
+              <Route path="traspaso/:id" element={<MensajeroTraspasoDetail />} />
+            </Route>
+
             <Route path="/app/complete-profile" element={<CompleteProfile />} />
 
             {/* Protected customer app */}

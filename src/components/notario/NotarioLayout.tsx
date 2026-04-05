@@ -1,9 +1,9 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import BottomNav from "./BottomNav";
+import NotarioBottomNav from "./NotarioBottomNav";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AppLayout() {
+export default function NotarioLayout() {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
 
@@ -23,26 +23,14 @@ export default function AppLayout() {
     return <Navigate to="/app/login" state={{ from: location }} replace />;
   }
 
-  // Redirect non-customer roles to their own layout
-  if (profile?.role === "gestor") {
-    return <Navigate to="/gestor" replace />;
-  }
-  if (profile?.role === "notario") {
-    return <Navigate to="/notario" replace />;
-  }
-  if (profile?.role === "mensajero") {
-    return <Navigate to="/mensajero" replace />;
-  }
-
-  // If profile exists but nombre is not set, redirect to complete profile
-  if (profile && !profile.nombre && location.pathname !== "/app/complete-profile") {
-    return <Navigate to="/app/complete-profile" replace />;
+  if (profile?.role !== "notario") {
+    return <Navigate to="/app" replace />;
   }
 
   return (
     <div className="min-h-screen bg-background pb-20">
       <Outlet />
-      <BottomNav />
+      <NotarioBottomNav />
     </div>
   );
 }
