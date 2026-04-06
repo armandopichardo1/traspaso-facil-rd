@@ -494,16 +494,6 @@ export default function AdminTraspasoDetail() {
 
           {/* KPIs de Tiempo por Etapa */}
           {timeline && timeline.length > 0 && (() => {
-            const SLA_HOURS: Record<string, number> = {
-              solicitud_recibida: 2,
-              verificacion_antifraude: 24,
-              contrato_firmado: 48,
-              matricula_recogida: 24,
-              plan_piloto: 72,
-              dgii_proceso: 48,
-              completado: 24,
-            };
-
             const sortedTimeline = [...timeline].sort(
               (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
