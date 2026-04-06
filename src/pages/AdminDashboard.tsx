@@ -256,6 +256,12 @@ const AdminDashboard = () => {
           >
             <Clock className="h-3.5 w-3.5 inline mr-1" /> SLAs
           </button>
+          <button
+            onClick={() => setTab("metricas")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "metricas" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
+          >
+            <BarChart3 className="h-3.5 w-3.5 inline mr-1" /> Métricas
+          </button>
           <Button variant="outline" size="sm" onClick={() => navigate("/admin/historiales")} className="ml-auto">
             Gestionar Historiales →
           </Button>
