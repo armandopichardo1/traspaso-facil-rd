@@ -83,6 +83,18 @@ export default function AdminTraspasoDetail() {
     enabled: !!id,
   });
 
+  const { data: slaConfig } = useQuery({
+    queryKey: ["sla_config"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sla_config").select("etapa, horas_objetivo");
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      (data || []).forEach((r: any) => { map[r.etapa] = Number(r.horas_objetivo); });
+      return map;
+    },
+  });
+
+
   const { data: docs } = useQuery({
     queryKey: ["admin-docs", id],
     queryFn: async () => {
@@ -494,16 +506,6 @@ export default function AdminTraspasoDetail() {
 
           {/* KPIs de Tiempo por Etapa */}
           {timeline && timeline.length > 0 && (() => {
-            const SLA_HOURS: Record<string, number> = {
-              solicitud_recibida: 2,
-              verificacion_antifraude: 24,
-              contrato_firmado: 48,
-              matricula_recogida: 24,
-              plan_piloto: 72,
-              dgii_proceso: 48,
-              completado: 24,
-            };
-
             const sortedTimeline = [...timeline].sort(
               (a: any, b: any) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
@@ -515,7 +517,7 @@ export default function AdminTraspasoDetail() {
               const currentTime = new Date(entry.created_at).getTime();
               const durationMs = currentTime - prevTime;
               const durationHours = durationMs / (1000 * 60 * 60);
-              const slaHours = SLA_HOURS[entry.status] || 24;
+              const slaHours = (slaConfig && slaConfig[entry.status]) || 24;
               const pct = Math.min((durationHours / slaHours) * 100, 100);
               const isOverdue = durationHours > slaHours;
 
@@ -533,7 +535,7 @@ export default function AdminTraspasoDetail() {
               ? new Date(sortedTimeline[sortedTimeline.length - 1].created_at).getTime()
               : new Date(traspaso.created_at).getTime();
             const currentElapsedHours = (Date.now() - lastTimelineTime) / (1000 * 60 * 60);
-            const currentSla = SLA_HOURS[traspaso.status] || 24;
+            const currentSla = (slaConfig && slaConfig[traspaso.status]) || 24;
 
             const formatDuration = (hours: number) => {
               if (hours < 1) return `${Math.round(hours * 60)}min`;

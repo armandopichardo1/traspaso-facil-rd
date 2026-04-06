@@ -127,6 +127,30 @@ export type Database = {
         }
         Relationships: []
       }
+      sla_config: {
+        Row: {
+          descripcion: string | null
+          etapa: string
+          horas_objetivo: number
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          descripcion?: string | null
+          etapa: string
+          horas_objetivo?: number
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          descripcion?: string | null
+          etapa?: string
+          horas_objetivo?: number
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       traspaso_contratos: {
         Row: {
           contenido_html: string
