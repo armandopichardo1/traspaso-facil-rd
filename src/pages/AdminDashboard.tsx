@@ -483,6 +483,8 @@ const AdminDashboard = () => {
               <div className="p-4">
                 <SlaConfig />
               </div>
+            ) : tab === "metricas" ? (
+              <MetricsDashboard />
             ) : null}
           </div>
         </div>
