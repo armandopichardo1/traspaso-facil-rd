@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog, Clock } from "lucide-react";
+import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog, Clock, BarChart3 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
 import ConsultaFilters from "@/components/admin/ConsultaFilters";
 import SlaConfig from "@/components/admin/SlaConfig";
+import MetricsDashboard from "@/components/admin/MetricsDashboard";
 
 type Lead = {
   id: string;
@@ -58,7 +59,7 @@ type ProfileRow = {
 const AdminDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas" | "equipo" | "sla">("traspasos");
+  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas" | "equipo" | "sla" | "metricas">("traspasos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [traspasos, setTraspasos] = useState<Traspaso[]>([]);
