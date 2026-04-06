@@ -83,6 +83,18 @@ export default function AdminTraspasoDetail() {
     enabled: !!id,
   });
 
+  const { data: slaConfig } = useQuery({
+    queryKey: ["sla_config"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("sla_config").select("etapa, horas_objetivo");
+      if (error) throw error;
+      const map: Record<string, number> = {};
+      (data || []).forEach((r: any) => { map[r.etapa] = Number(r.horas_objetivo); });
+      return map;
+    },
+  });
+
+
   const { data: docs } = useQuery({
     queryKey: ["admin-docs", id],
     queryFn: async () => {
