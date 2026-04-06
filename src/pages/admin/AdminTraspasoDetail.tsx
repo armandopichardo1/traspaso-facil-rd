@@ -517,7 +517,7 @@ export default function AdminTraspasoDetail() {
               const currentTime = new Date(entry.created_at).getTime();
               const durationMs = currentTime - prevTime;
               const durationHours = durationMs / (1000 * 60 * 60);
-              const slaHours = SLA_HOURS[entry.status] || 24;
+              const slaHours = (slaConfig && slaConfig[entry.status]) || 24;
               const pct = Math.min((durationHours / slaHours) * 100, 100);
               const isOverdue = durationHours > slaHours;
 
@@ -535,7 +535,7 @@ export default function AdminTraspasoDetail() {
               ? new Date(sortedTimeline[sortedTimeline.length - 1].created_at).getTime()
               : new Date(traspaso.created_at).getTime();
             const currentElapsedHours = (Date.now() - lastTimelineTime) / (1000 * 60 * 60);
-            const currentSla = SLA_HOURS[traspaso.status] || 24;
+            const currentSla = (slaConfig && slaConfig[traspaso.status]) || 24;
 
             const formatDuration = (hours: number) => {
               if (hours < 1) return `${Math.round(hours * 60)}min`;
