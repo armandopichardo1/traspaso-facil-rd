@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog, Clock, BarChart3 } from "lucide-react";
+import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog, Clock, BarChart3, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import type { Session } from "@supabase/supabase-js";
@@ -11,6 +11,7 @@ import LeadFilters from "@/components/admin/LeadFilters";
 import ConsultaFilters from "@/components/admin/ConsultaFilters";
 import SlaConfig from "@/components/admin/SlaConfig";
 import MetricsDashboard from "@/components/admin/MetricsDashboard";
+import TrendCharts from "@/components/admin/TrendCharts";
 
 type Lead = {
   id: string;
@@ -262,6 +263,12 @@ const AdminDashboard = () => {
           >
             <BarChart3 className="h-3.5 w-3.5 inline mr-1" /> Métricas
           </button>
+          <button
+            onClick={() => setTab("tendencias")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${tab === "tendencias" ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground border border-border hover:text-foreground"}`}
+          >
+            <TrendingUp className="h-3.5 w-3.5 inline mr-1" /> Tendencias
+          </button>
           <Button variant="outline" size="sm" onClick={() => navigate("/admin/historiales")} className="ml-auto">
             Gestionar Historiales →
           </Button>
@@ -485,6 +492,8 @@ const AdminDashboard = () => {
               </div>
             ) : tab === "metricas" ? (
               <MetricsDashboard />
+            ) : tab === "tendencias" ? (
+              <TrendCharts />
             ) : null}
           </div>
         </div>
