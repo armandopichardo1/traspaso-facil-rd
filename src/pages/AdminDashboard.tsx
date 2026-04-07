@@ -60,7 +60,7 @@ type ProfileRow = {
 const AdminDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas" | "equipo" | "sla" | "metricas">("traspasos");
+  const [tab, setTab] = useState<"traspasos" | "leads" | "consultas" | "equipo" | "sla" | "metricas" | "tendencias">("traspasos");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [traspasos, setTraspasos] = useState<Traspaso[]>([]);
