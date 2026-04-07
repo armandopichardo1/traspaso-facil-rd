@@ -138,7 +138,7 @@ export default function AdminTraspasoDetail() {
   });
 
   const updateTraspaso = useMutation({
-    mutationFn: async (updates: Partial<Tables<"traspasos">>) => {
+    mutationFn: async (updates: TablesUpdate<"traspasos">) => {
       const { error } = await supabase
         .from("traspasos")
         .update(updates)
