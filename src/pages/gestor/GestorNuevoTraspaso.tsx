@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent, ScanLine, FileText, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import MatriculaScanner, { type OcrResult } from "@/components/gestor/MatriculaScanner";
+import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
 
 const STEPS = [
   { title: "Matrícula", icon: ScanLine },
@@ -70,6 +71,7 @@ export default function GestorNuevoTraspaso() {
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [codigo, setCodigo] = useState("");
+  const [cedulaFiles, setCedulaFiles] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<FormData>({
     tipo_vehiculo: "vehiculo_motor",
@@ -123,6 +125,16 @@ export default function GestorNuevoTraspaso() {
       vendedor_rnc: data.propietario_rnc || prev.vendedor_rnc,
     }));
     setStep(1);
+  };
+
+  const handleCedulaResult = (side: "vendedor" | "comprador", result: CedulaOcrResult, imageBase64: string) => {
+    const prefix = side;
+    setForm(prev => ({
+      ...prev,
+      [`${prefix}_nombre`]: result.nombre_completo || prev[`${prefix}_nombre` as keyof FormData],
+      [`${prefix}_cedula`]: result.cedula || prev[`${prefix}_cedula` as keyof FormData],
+    }));
+    setCedulaFiles(prev => ({ ...prev, [`cedula_${side}_frente`]: imageBase64 }));
   };
 
   const uploadFiles = async (traspasoId: string) => {
@@ -321,6 +333,10 @@ export default function GestorNuevoTraspaso() {
             {/* Step 2: Seller */}
             {step === 2 && (
               <>
+                <CedulaCapture
+                  label="Cédula del Vendedor"
+                  onResult={(result, base64) => handleCedulaResult("vendedor", result, base64)}
+                />
                 <TipoPersonaToggle value={form.vendedor_tipo_persona} onChange={(v) => update("vendedor_tipo_persona", v)} />
                 <div><Label>Nombre del Vendedor</Label><Input value={form.vendedor_nombre} onChange={(e) => update("vendedor_nombre", e.target.value)} /></div>
                 {form.vendedor_tipo_persona === "fisica" ? (
@@ -335,6 +351,10 @@ export default function GestorNuevoTraspaso() {
             {/* Step 3: Buyer */}
             {step === 3 && (
               <>
+                <CedulaCapture
+                  label="Cédula del Comprador"
+                  onResult={(result, base64) => handleCedulaResult("comprador", result, base64)}
+                />
                 <TipoPersonaToggle value={form.comprador_tipo_persona} onChange={(v) => update("comprador_tipo_persona", v)} />
                 <div><Label>Nombre del Comprador</Label><Input value={form.comprador_nombre} onChange={(e) => update("comprador_nombre", e.target.value)} /></div>
                 {form.comprador_tipo_persona === "fisica" ? (
