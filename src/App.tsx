@@ -13,6 +13,8 @@ import AdminTraspasoDetail from "./pages/admin/AdminTraspasoDetail.tsx";
 import AdminHistoriales from "./pages/admin/AdminHistoriales.tsx";
 import Calculadora from "./pages/Calculadora.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import TerminosServicio from "./pages/TerminosServicio.tsx";
+import PoliticaPrivacidad from "./pages/PoliticaPrivacidad.tsx";
 import Seguimiento from "./pages/Seguimiento.tsx";
 import Login from "./pages/app/Login.tsx";
 import CompleteProfile from "./pages/app/CompleteProfile.tsx";
