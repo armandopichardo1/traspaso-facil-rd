@@ -506,6 +506,11 @@ export default function NuevoTraspaso() {
                 <MarbeteCapture
                   onCapture={(base64) => setCedulaFiles(prev => ({ ...prev, marbete: base64 }))}
                   captured={!!cedulaFiles["marbete"]}
+                  onOcrResult={(ocrData) => {
+                    if (ocrData.placa && !vehiculo.placa) {
+                      setVehiculo(prev => ({ ...prev, placa: ocrData.placa }));
+                    }
+                  }}
                 />
                 <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
                 <FileInput tipo="certificacion_plan_piloto" label="Certificación Plan Piloto" />
