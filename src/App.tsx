@@ -24,6 +24,7 @@ import HistorialDetail from "./pages/app/HistorialDetail.tsx";
 import NuevoTraspaso from "./pages/app/NuevoTraspaso.tsx";
 import TraspasoDetail from "./pages/app/TraspasoDetail.tsx";
 import EscrowView from "./pages/app/EscrowView.tsx";
+import TraspasoFirmado from "./pages/app/TraspasoFirmado.tsx";
 import Profile from "./pages/app/Profile.tsx";
 import Historial from "./pages/app/Historial.tsx";
 import Ayuda from "./pages/app/Ayuda.tsx";
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="nuevo" element={<NuevoTraspaso />} />
               <Route path="traspaso/:id" element={<TraspasoDetail />} />
               <Route path="traspaso/:id/escrow" element={<EscrowView />} />
+              <Route path="traspaso/:id/firmado" element={<TraspasoFirmado />} />
               <Route path="perfil" element={<Profile />} />
               <Route path="ayuda" element={<Ayuda />} />
             </Route>
