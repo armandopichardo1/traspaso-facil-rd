@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck } from "lucide-react";
+import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle, Clock, Phone } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 
 const STATUS_STEPS = [
   { key: "solicitud_recibida", label: "SOLICITUD" },
@@ -38,6 +39,9 @@ export default function Dashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [placa, setPlaca] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   const { data: traspasos, isLoading: loadingTraspasos } = useQuery({
     queryKey: ["my-traspasos"],
@@ -65,15 +69,36 @@ export default function Dashboard() {
     },
   });
 
+  const needsTelefono = !profile?.telefono;
+
   const handleHistorial = async () => {
     if (!placa.trim()) return;
-    const { data, error } = await supabase
-      .from("historial_consultas")
-      .insert({ placa: placa.trim().toUpperCase(), user_id: profile?.id })
-      .select()
-      .single();
-    if (!error && data) {
-      navigate(`/app/historial/${data.id}`);
+    if (needsTelefono && !telefono.trim()) {
+      toast.error("Ingresa tu número de WhatsApp para recibir el informe");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const { error } = await supabase
+        .from("historial_consultas")
+        .insert({
+          placa: placa.trim().toUpperCase(),
+          user_id: profile?.id,
+          telefono: needsTelefono ? telefono.trim() : profile?.telefono,
+        });
+
+      if (error) throw error;
+
+      setSubmitted(true);
+      setPlaca("");
+      setTelefono("");
+      toast.success("¡Solicitud recibida! Te enviaremos el informe por WhatsApp en menos de 30 minutos.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error al enviar la solicitud");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -86,7 +111,6 @@ export default function Dashboard() {
   const getProgressStep = (status: string) => {
     const idx = STATUS_STEPS.findIndex((s) => s.key === status);
     if (idx === -1) return 0;
-    // Map 7 steps to 5 labels
     if (idx <= 0) return 0;
     if (idx <= 1) return 1;
     if (idx <= 2) return 2;
@@ -115,32 +139,70 @@ export default function Dashboard() {
         </p>
       </motion.div>
 
-      {/* Search bar */}
+      {/* Historial request */}
       <motion.div
         className="mb-6"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.4 }}
       >
-        <div className="flex gap-0 rounded-full border border-border bg-card shadow-sm overflow-hidden">
-          <div className="relative flex-1">
-            <Car className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              placeholder="Consulta historial por placa"
-              value={placa}
-              onChange={(e) => setPlaca(e.target.value.toUpperCase())}
-              className="pl-12 border-0 rounded-none shadow-none focus-visible:ring-0 h-12 bg-transparent"
-              onKeyDown={(e) => e.key === "Enter" && handleHistorial()}
-            />
+        {submitted ? (
+          <Card className="rounded-2xl border-green-200 bg-green-50">
+            <CardContent className="p-5 text-center">
+              <CheckCircle className="h-10 w-10 text-green-600 mx-auto mb-2" />
+              <h3 className="font-bold text-green-800">¡Solicitud Recibida!</h3>
+              <p className="text-sm text-green-700 mt-1">
+                Te enviaremos el informe del historial por WhatsApp en menos de 30 minutos.
+              </p>
+              <Button
+                variant="outline"
+                className="mt-3"
+                onClick={() => setSubmitted(false)}
+              >
+                Solicitar otro informe
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex gap-0 rounded-full border border-border bg-card shadow-sm overflow-hidden">
+              <div className="relative flex-1">
+                <Car className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                <Input
+                  placeholder="Placa del vehículo"
+                  value={placa}
+                  onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                  className="pl-12 border-0 rounded-none shadow-none focus-visible:ring-0 h-12 bg-transparent"
+                  onKeyDown={(e) => e.key === "Enter" && handleHistorial()}
+                />
+              </div>
+              <Button
+                variant="default"
+                className="rounded-none rounded-r-full h-12 px-4 font-bold text-xs bg-cta text-white hover:bg-cta/90 whitespace-nowrap"
+                onClick={handleHistorial}
+                disabled={submitting}
+              >
+                {submitting ? "ENVIANDO..." : "SOLICITAR INFORME"}
+              </Button>
+            </div>
+            {needsTelefono && placa.trim() && (
+              <div className="flex gap-0 rounded-full border border-border bg-card shadow-sm overflow-hidden">
+                <div className="relative flex-1">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Tu WhatsApp (ej: 809-555-1234)"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    className="pl-12 border-0 rounded-none shadow-none focus-visible:ring-0 h-11 bg-transparent text-sm"
+                  />
+                </div>
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground text-center">
+              Investigamos el historial del vehículo y te enviamos el informe por WhatsApp · RD$350
+            </p>
           </div>
-          <Button
-            variant="default"
-            className="rounded-none rounded-r-full h-12 px-6 font-bold text-sm bg-foreground text-background hover:bg-foreground/90"
-            onClick={handleHistorial}
-          >
-            BUSCAR
-          </Button>
-        </div>
+        )}
       </motion.div>
 
       {/* Active transfer */}
@@ -329,13 +391,17 @@ export default function Dashboard() {
                     <Search className="h-4 w-4 text-cta" />
                   </div>
                   <p className="font-bold text-sm">{h.placa}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Historial</p>
-                  <Badge className={`mt-2 text-[10px] ${
+                  <p className="text-xs text-muted-foreground mt-0.5">Historial vehicular</p>
+                  <Badge className={`mt-2 text-[10px] gap-1 ${
                     h.status === "completado"
                       ? "bg-green-100 text-green-700"
                       : "bg-amber-100 text-amber-700"
                   }`}>
-                    ● {h.status === "completado" ? "COMPLETADO" : "PENDIENTE"}
+                    {h.status === "completado" ? (
+                      <><CheckCircle className="h-3 w-3" /> COMPLETADO</>
+                    ) : (
+                      <><Clock className="h-3 w-3" /> EN PROCESO</>
+                    )}
                   </Badge>
                 </CardContent>
               </Card>

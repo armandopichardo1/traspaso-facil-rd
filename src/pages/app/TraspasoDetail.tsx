@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +12,7 @@ import {
   ShieldCheck, MapPin, PenTool, DollarSign,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
-import MarbeteUpload from "@/components/app/MarbeteUpload";
+import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUpload";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
 
@@ -36,6 +37,7 @@ export default function TraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["traspaso", id],
@@ -244,6 +246,7 @@ export default function TraspasoDetail() {
           traspasoId={t.id}
           existingUrl={docs?.find((d: any) => d.tipo === "marbete")?.file_url || null}
           onUploaded={refreshData}
+          onOcrResult={(result) => setMarbeteData(result)}
         />
       </div>
 
