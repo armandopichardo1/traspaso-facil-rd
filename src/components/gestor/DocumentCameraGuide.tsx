@@ -15,6 +15,7 @@ export default function DocumentCameraGuide({
   onCancel,
   aspectRatio = 1.586,
   label = "Coloca el documento dentro del marco",
+  facingMode = "environment",
 }: DocumentCameraGuideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
