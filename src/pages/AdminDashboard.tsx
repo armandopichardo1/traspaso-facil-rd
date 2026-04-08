@@ -508,8 +508,9 @@ const AdminDashboard = () => {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             ) : tab === "sla" ? (
               <div className="p-4">
                 <SlaConfig />
