@@ -15,7 +15,7 @@ import { useState } from "react";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock,
   MessageCircle, User, FileText, Download, ShieldCheck, ShieldAlert, ShieldX, PenTool,
-  Timer, TrendingUp, AlertTriangle,
+  Timer, TrendingUp, AlertTriangle, Sparkles,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
