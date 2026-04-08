@@ -186,7 +186,32 @@ export default function AdminTraspasoDetail() {
     });
   };
 
-  if (isLoading) {
+  const runAiVerification = async (role: "comprador" | "vendedor", selfieUrl: string, cedulaUrl: string) => {
+    setAiVerifying(role);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-face", {
+        body: { selfie_url: selfieUrl, cedula_url: cedulaUrl },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setAiResults(prev => ({ ...prev, [role]: data.data }));
+        const matchText = data.data.match ? "COINCIDEN ✓" : "NO COINCIDEN ✗";
+        setAntifraudeNotas(prev => {
+          const line = `[AI ${role}] ${matchText} (confianza: ${data.data.confidence}). ${data.data.notas}`;
+          return prev ? `${prev}\n${line}` : line;
+        });
+        toast({ title: `Verificación ${role}`, description: matchText });
+      } else {
+        toast({ title: "Error", description: data?.error || "No se pudo verificar", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: "Error al verificar identidad", variant: "destructive" });
+    } finally {
+      setAiVerifying(null);
+    }
+  };
+
+
     return (
       <div className="container py-6 space-y-4">
         <Skeleton className="h-8 w-48" />
