@@ -366,7 +366,7 @@ export type Database = {
           comprador_telefono: string | null
           comprador_tipo_persona: string
           created_at: string
-          customer_id: string
+          customer_id: string | null
           es_traspaso_familiar: boolean
           escrow_status: string
           fecha_acto_venta: string | null
@@ -407,7 +407,7 @@ export type Database = {
           comprador_telefono?: string | null
           comprador_tipo_persona?: string
           created_at?: string
-          customer_id: string
+          customer_id?: string | null
           es_traspaso_familiar?: boolean
           escrow_status?: string
           fecha_acto_venta?: string | null
@@ -448,7 +448,7 @@ export type Database = {
           comprador_telefono?: string | null
           comprador_tipo_persona?: string
           created_at?: string
-          customer_id?: string
+          customer_id?: string | null
           es_traspaso_familiar?: boolean
           escrow_status?: string
           fecha_acto_venta?: string | null

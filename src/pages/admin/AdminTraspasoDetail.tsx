@@ -20,16 +20,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
-
-const STATUS_STEPS = [
-  { key: "solicitud_recibida", label: "Solicitud Recibida" },
-  { key: "verificacion_antifraude", label: "Verificación Antifraude" },
-  { key: "contrato_firmado", label: "Contrato Firmado" },
-  { key: "matricula_recogida", label: "Matrícula Recogida" },
-  { key: "plan_piloto", label: "Plan Piloto + DGII" },
-  { key: "dgii_proceso", label: "Nueva Matrícula Lista" },
-  { key: "completado", label: "Completado" },
-];
+import { STATUS_STEPS, STATUS_LABELS } from "@/lib/traspaso-status";
 
 const ESCROW_OPTIONS = ["no_aplica", "depositado", "en_custodia", "liberado", "reembolsado"];
 const ANTIFRAUDE_OPTIONS = ["pendiente", "aprobado", "alerta", "rechazado"];

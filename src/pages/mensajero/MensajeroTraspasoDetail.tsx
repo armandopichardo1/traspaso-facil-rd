@@ -77,7 +77,7 @@ export default function MensajeroTraspasoDetail() {
     if (!traspaso) return;
     setAdvancing(true);
     try {
-      const nextStatus = "en_dgii";
+      const nextStatus = "dgii_proceso";
       const { error } = await supabase
         .from("traspasos")
         .update({ status: nextStatus })

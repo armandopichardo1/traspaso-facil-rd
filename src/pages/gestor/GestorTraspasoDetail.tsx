@@ -1,42 +1,27 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText } from "lucide-react";
+import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
+import { STATUS_STEPS, STATUS_LABELS, statusColor, getProgress } from "@/lib/traspaso-status";
+import { toast } from "sonner";
+import { useState } from "react";
 
-const STATUS_STEPS = [
-  "solicitud_recibida", "documentos_pendientes", "verificacion_antifraude", "contrato_firmado",
-  "matricula_recogida", "plan_piloto", "dgii_proceso", "completado"
-];
-
-const STATUS_LABELS: Record<string, string> = {
-  solicitud_recibida: "Solicitud Recibida",
-  documentos_pendientes: "Docs Pendientes",
-  verificacion_antifraude: "Verificación Antifraude",
-  contrato_firmado: "Contrato Firmado",
-  matricula_recogida: "Matrícula Recogida",
-  plan_piloto: "Plan Piloto",
-  dgii_proceso: "DGII en Proceso",
-  completado: "Completado",
-  cancelado: "Cancelado",
-};
-
-const statusColor = (s: string) => {
-  if (s === "completado") return "bg-green-100 text-green-800";
-  if (s === "cancelado") return "bg-red-100 text-red-800";
-  return "bg-blue-100 text-blue-800";
-};
 
 export default function GestorTraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [advancing, setAdvancing] = useState(false);
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["gestor-traspaso", id],
@@ -81,6 +66,33 @@ export default function GestorTraspasoDetail() {
     queryClient.invalidateQueries({ queryKey: ["gestor-signatures", id] });
   };
 
+  const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
+    if (!traspaso) return;
+    setAdvancing(true);
+    try {
+      const { error } = await supabase
+        .from("traspasos")
+        .update({ status: nextStatus })
+        .eq("id", traspaso.id);
+      if (error) throw error;
+
+      await supabase.from("traspaso_timeline").insert({
+        traspaso_id: traspaso.id,
+        status: nextStatus,
+        nota,
+        created_by: user?.id,
+      });
+
+      toast.success(`Traspaso avanzado a ${STATUS_LABELS[nextStatus] || nextStatus}`);
+      queryClient.invalidateQueries({ queryKey: ["gestor-traspaso", id] });
+      queryClient.invalidateQueries({ queryKey: ["gestor-timeline", id] });
+    } catch (err: any) {
+      toast.error(err.message || "Error al avanzar");
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
@@ -95,10 +107,6 @@ export default function GestorTraspasoDetail() {
   }
 
   const t = traspaso as any;
-  const getProgress = (status: string) => {
-    const idx = STATUS_STEPS.indexOf(status);
-    return idx === -1 ? 0 : ((idx + 1) / STATUS_STEPS.length) * 100;
-  };
 
   const whatsappLink = (phone: string | null) => {
     if (!phone) return "#";
@@ -233,6 +241,32 @@ export default function GestorTraspasoDetail() {
       <div className="mb-4">
         <DocumentUpload traspasoId={t.id} />
       </div>
+
+      {/* Gestor Actions */}
+      {t.status === "solicitud_recibida" && (
+        <Button
+          variant="teal"
+          className="w-full mb-4"
+          size="lg"
+          onClick={() => handleAdvanceStatus("documentos_completos", "Documentos verificados por gestor")}
+          disabled={advancing}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          {advancing ? "Avanzando..." : "Marcar Documentos Completos"}
+        </Button>
+      )}
+      {t.status === "documentos_completos" && (
+        <Button
+          variant="teal"
+          className="w-full mb-4"
+          size="lg"
+          onClick={() => handleAdvanceStatus("contrato_generado", "Contrato generado por gestor")}
+          disabled={advancing}
+        >
+          <ArrowRight className="h-4 w-4 mr-2" />
+          {advancing ? "Avanzando..." : "Avanzar a Contrato Generado"}
+        </Button>
+      )}
 
       {/* Status */}
       <Card className="mb-4">
