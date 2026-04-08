@@ -15,11 +15,6 @@ import { STATUS_STEPS, STATUS_LABELS, statusColor, getProgress } from "@/lib/tra
 import { toast } from "sonner";
 import { useState } from "react";
 
-const statusColor = (s: string) => {
-  if (s === "completado") return "bg-green-100 text-green-800";
-  if (s === "cancelado") return "bg-red-100 text-red-800";
-  return "bg-blue-100 text-blue-800";
-};
 
 export default function GestorTraspasoDetail() {
   const { id } = useParams();
