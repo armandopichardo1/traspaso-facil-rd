@@ -512,6 +512,23 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+      <AlertDialog open={!!pendingRoleChange} onOpenChange={(open) => !open && setPendingRoleChange(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cambiar rol de usuario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a cambiar el rol de <strong>{pendingRoleChange?.name}</strong> de{" "}
+              <Badge variant="outline" className="mx-1">{ROLE_LABELS[pendingRoleChange?.oldRole || ""]}</Badge> a{" "}
+              <Badge className="mx-1 bg-primary">{ROLE_LABELS[pendingRoleChange?.newRole || ""]}</Badge>.
+              Esta acción afectará los permisos del usuario de inmediato.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleChange}>Confirmar cambio</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
