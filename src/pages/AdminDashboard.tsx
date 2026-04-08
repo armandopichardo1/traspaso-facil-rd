@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog, Clock, BarChart3, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
 import ConsultaFilters from "@/components/admin/ConsultaFilters";
