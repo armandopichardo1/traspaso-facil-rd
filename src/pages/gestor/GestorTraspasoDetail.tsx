@@ -66,6 +66,33 @@ export default function GestorTraspasoDetail() {
     queryClient.invalidateQueries({ queryKey: ["gestor-signatures", id] });
   };
 
+  const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
+    if (!traspaso) return;
+    setAdvancing(true);
+    try {
+      const { error } = await supabase
+        .from("traspasos")
+        .update({ status: nextStatus })
+        .eq("id", traspaso.id);
+      if (error) throw error;
+
+      await supabase.from("traspaso_timeline").insert({
+        traspaso_id: traspaso.id,
+        status: nextStatus,
+        nota,
+        created_by: user?.id,
+      });
+
+      toast.success(`Traspaso avanzado a ${STATUS_LABELS[nextStatus] || nextStatus}`);
+      queryClient.invalidateQueries({ queryKey: ["gestor-traspaso", id] });
+      queryClient.invalidateQueries({ queryKey: ["gestor-timeline", id] });
+    } catch (err: any) {
+      toast.error(err.message || "Error al avanzar");
+    } finally {
+      setAdvancing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
@@ -214,6 +241,32 @@ export default function GestorTraspasoDetail() {
       <div className="mb-4">
         <DocumentUpload traspasoId={t.id} />
       </div>
+
+      {/* Gestor Actions */}
+      {t.status === "solicitud_recibida" && (
+        <Button
+          variant="teal"
+          className="w-full mb-4"
+          size="lg"
+          onClick={() => handleAdvanceStatus("documentos_completos", "Documentos verificados por gestor")}
+          disabled={advancing}
+        >
+          <CheckCircle className="h-4 w-4 mr-2" />
+          {advancing ? "Avanzando..." : "Marcar Documentos Completos"}
+        </Button>
+      )}
+      {t.status === "documentos_completos" && (
+        <Button
+          variant="teal"
+          className="w-full mb-4"
+          size="lg"
+          onClick={() => handleAdvanceStatus("contrato_generado", "Contrato generado por gestor")}
+          disabled={advancing}
+        >
+          <ArrowRight className="h-4 w-4 mr-2" />
+          {advancing ? "Avanzando..." : "Avanzar a Contrato Generado"}
+        </Button>
+      )}
 
       {/* Status */}
       <Card className="mb-4">
