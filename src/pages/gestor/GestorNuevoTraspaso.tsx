@@ -351,6 +351,10 @@ export default function GestorNuevoTraspaso() {
             {/* Step 3: Buyer */}
             {step === 3 && (
               <>
+                <CedulaCapture
+                  label="Cédula del Comprador"
+                  onResult={(result, base64) => handleCedulaResult("comprador", result, base64)}
+                />
                 <TipoPersonaToggle value={form.comprador_tipo_persona} onChange={(v) => update("comprador_tipo_persona", v)} />
                 <div><Label>Nombre del Comprador</Label><Input value={form.comprador_nombre} onChange={(e) => update("comprador_nombre", e.target.value)} /></div>
                 {form.comprador_tipo_persona === "fisica" ? (
