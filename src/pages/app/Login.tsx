@@ -221,6 +221,7 @@ export default function Login() {
               { label: "Gestor", email: "gestor@test.com", password: "Test1234!", icon: "💼" },
               { label: "Admin", email: "admin@traspasa.do", password: "Test1234!", icon: "🛡️" },
               { label: "Notario", email: "testnotario@traspasa.do", password: "Test1234!", icon: "📋" },
+              { label: "Mensajero", email: "mensajero@test.com", password: "Test1234!", icon: "🏍️" },
             ].map((acc) => (
               <Button
                 key={acc.label}
