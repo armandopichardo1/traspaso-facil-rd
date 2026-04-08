@@ -15,7 +15,7 @@ import { useState } from "react";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock,
   MessageCircle, User, FileText, Download, ShieldCheck, ShieldAlert, ShieldX, PenTool,
-  Timer, TrendingUp, AlertTriangle,
+  Timer, TrendingUp, AlertTriangle, Sparkles,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
@@ -32,6 +32,25 @@ const antifraudeStyle = (s: string) => {
   return "bg-blue-100 text-blue-800";
 };
 
+function AiResultCard({ result }: { result: any }) {
+  return (
+    <div className={`mt-2 rounded-lg border p-3 text-sm ${result.match ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
+      <div className="flex items-center gap-2 mb-1">
+        {result.match ? <ShieldCheck className="h-4 w-4 text-green-600" /> : <ShieldX className="h-4 w-4 text-red-600" />}
+        <span className="font-semibold">{result.match ? "Coinciden" : "No coinciden"}</span>
+        <Badge variant="secondary" className="text-xs">{result.confidence}</Badge>
+      </div>
+      {result.rasgos_coincidentes?.length > 0 && (
+        <p className="text-xs text-muted-foreground">✓ {result.rasgos_coincidentes.join(", ")}</p>
+      )}
+      {result.rasgos_diferentes?.length > 0 && (
+        <p className="text-xs text-destructive">✗ {result.rasgos_diferentes.join(", ")}</p>
+      )}
+      {result.notas && <p className="text-xs text-muted-foreground mt-1 italic">{result.notas}</p>}
+    </div>
+  );
+}
+
 export default function AdminTraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,6 +62,8 @@ export default function AdminTraspasoDetail() {
   const [mensajero, setMensajero] = useState("");
   const [notasInternas, setNotasInternas] = useState("");
   const [antifraudeNotas, setAntifraudeNotas] = useState("");
+  const [aiVerifying, setAiVerifying] = useState<"comprador" | "vendedor" | null>(null);
+  const [aiResults, setAiResults] = useState<Record<string, any>>({});
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["admin-traspaso", id],
@@ -182,6 +203,31 @@ export default function AdminTraspasoDetail() {
       antifraude_status: status,
       antifraude_notas: antifraudeNotas,
     });
+  };
+
+  const runAiVerification = async (role: "comprador" | "vendedor", selfieUrl: string, cedulaUrl: string) => {
+    setAiVerifying(role);
+    try {
+      const { data, error } = await supabase.functions.invoke("verify-face", {
+        body: { selfie_url: selfieUrl, cedula_url: cedulaUrl },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        setAiResults(prev => ({ ...prev, [role]: data.data }));
+        const matchText = data.data.match ? "COINCIDEN ✓" : "NO COINCIDEN ✗";
+        setAntifraudeNotas(prev => {
+          const line = `[AI ${role}] ${matchText} (confianza: ${data.data.confidence}). ${data.data.notas}`;
+          return prev ? `${prev}\n${line}` : line;
+        });
+        toast({ title: `Verificación ${role}`, description: matchText });
+      } else {
+        toast({ title: "Error", description: data?.error || "No se pudo verificar", variant: "destructive" });
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: "Error al verificar identidad", variant: "destructive" });
+    } finally {
+      setAiVerifying(null);
+    }
   };
 
   if (isLoading) {
@@ -324,6 +370,22 @@ export default function AdminTraspasoDetail() {
                     )}
                   </div>
                 </div>
+                {selfieComprador && cedulaComprador && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    disabled={aiVerifying === "comprador"}
+                    onClick={() => runAiVerification("comprador", selfieComprador.file_url, cedulaComprador.file_url)}
+                  >
+                    {aiVerifying === "comprador" ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Verificando…</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-1" /> Verificar con AI</>
+                    )}
+                  </Button>
+                )}
+                {aiResults.comprador && <AiResultCard result={aiResults.comprador} />}
               </div>
 
               {/* Vendedor: Selfie vs Cédula */}
@@ -345,6 +407,22 @@ export default function AdminTraspasoDetail() {
                     )}
                   </div>
                 </div>
+                {selfieVendedor && cedulaVendedor && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    disabled={aiVerifying === "vendedor"}
+                    onClick={() => runAiVerification("vendedor", selfieVendedor.file_url, cedulaVendedor.file_url)}
+                  >
+                    {aiVerifying === "vendedor" ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Verificando…</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-1" /> Verificar con AI</>
+                    )}
+                  </Button>
+                )}
+                {aiResults.vendedor && <AiResultCard result={aiResults.vendedor} />}
               </div>
 
               {/* Matrícula */}
