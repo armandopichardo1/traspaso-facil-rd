@@ -71,6 +71,7 @@ export default function GestorNuevoTraspaso() {
   const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [codigo, setCodigo] = useState("");
+  const [cedulaFiles, setCedulaFiles] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<FormData>({
     tipo_vehiculo: "vehiculo_motor",
