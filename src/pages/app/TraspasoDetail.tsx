@@ -16,15 +16,7 @@ import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUp
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
 
-const STATUS_STEPS = [
-  { key: "solicitud_recibida", label: "Solicitud Recibida", desc: "Tu solicitud fue registrada" },
-  { key: "verificacion_antifraude", label: "Verificación Antifraude", desc: "Validando identidad y documentos" },
-  { key: "contrato_firmado", label: "Contrato Firmado + Pago", desc: "Firma digital y fondos en custodia" },
-  { key: "matricula_recogida", label: "Matrícula Recogida", desc: "Gestor recogió la matrícula" },
-  { key: "plan_piloto", label: "Plan Piloto + DGII", desc: "Tramitando en la DGII" },
-  { key: "dgii_proceso", label: "Nueva Matrícula Lista", desc: "Esperando entrega de matrícula nueva" },
-  { key: "completado", label: "Entrega + Escrow Liberado", desc: "Traspaso completado exitosamente" },
-];
+import { STATUS_STEPS, STATUS_LABELS } from "@/lib/traspaso-status";
 
 const antifraudeBadge = (s: string) => {
   if (s === "aprobado") return { color: "bg-green-50 text-green-800 border-green-200", icon: Shield, label: "Aprobado" };
