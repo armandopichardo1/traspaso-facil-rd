@@ -70,6 +70,7 @@ const App = () => (
               <Route index element={<GestorDashboard />} />
               <Route path="nuevo" element={<GestorNuevoTraspaso />} />
               <Route path="traspaso/:id" element={<GestorTraspasoDetail />} />
+              <Route path="perfil" element={<Profile />} />
             </Route>
 
             {/* Notario routes */}

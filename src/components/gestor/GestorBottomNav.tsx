@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const items = [
   { icon: Home, label: "Traspasos", path: "/gestor" },
   { icon: PlusCircle, label: "Nuevo", path: "/gestor/nuevo" },
-  { icon: UserCircle, label: "Perfil", path: "/app/perfil" },
+  { icon: UserCircle, label: "Perfil", path: "/gestor/perfil" },
 ];
 
 export default function GestorBottomNav() {
