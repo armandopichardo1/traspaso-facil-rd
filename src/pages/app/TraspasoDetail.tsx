@@ -36,6 +36,7 @@ export default function TraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["traspaso", id],
