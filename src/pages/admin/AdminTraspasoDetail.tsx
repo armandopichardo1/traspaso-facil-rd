@@ -351,6 +351,22 @@ export default function AdminTraspasoDetail() {
                     )}
                   </div>
                 </div>
+                {selfieComprador && cedulaComprador && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    disabled={aiVerifying === "comprador"}
+                    onClick={() => runAiVerification("comprador", selfieComprador.file_url, cedulaComprador.file_url)}
+                  >
+                    {aiVerifying === "comprador" ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Verificando…</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-1" /> Verificar con AI</>
+                    )}
+                  </Button>
+                )}
+                {aiResults.comprador && <AiResultCard result={aiResults.comprador} />}
               </div>
 
               {/* Vendedor: Selfie vs Cédula */}
@@ -372,6 +388,22 @@ export default function AdminTraspasoDetail() {
                     )}
                   </div>
                 </div>
+                {selfieVendedor && cedulaVendedor && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2"
+                    disabled={aiVerifying === "vendedor"}
+                    onClick={() => runAiVerification("vendedor", selfieVendedor.file_url, cedulaVendedor.file_url)}
+                  >
+                    {aiVerifying === "vendedor" ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Verificando…</>
+                    ) : (
+                      <><Sparkles className="h-4 w-4 mr-1" /> Verificar con AI</>
+                    )}
+                  </Button>
+                )}
+                {aiResults.vendedor && <AiResultCard result={aiResults.vendedor} />}
               </div>
 
               {/* Matrícula */}
