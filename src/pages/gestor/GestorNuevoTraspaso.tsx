@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import MatriculaScanner, { type OcrResult } from "@/components/gestor/MatriculaScanner";
 import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
 import SelfieCapture from "@/components/app/SelfieCapture";
+import MarbeteCapture from "@/components/app/MarbeteCapture";
 
 const STEPS = [
   { title: "Matrícula", icon: ScanLine },
@@ -445,12 +446,38 @@ export default function GestorNuevoTraspaso() {
                 <p className="text-sm text-muted-foreground">Sube los documentos requeridos para el trámite DGII.</p>
                 
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Siempre requeridos</div>
-                <FileInput tipo="cedula_vendedor_frente" label="Cédula Vendedor (Frente)" />
+                {!cedulaFiles["cedula_vendedor_frente"] && <FileInput tipo="cedula_vendedor_frente" label="Cédula Vendedor (Frente)" />}
+                {cedulaFiles["cedula_vendedor_frente"] && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" /> Cédula del vendedor capturada por cámara
+                  </div>
+                )}
                 <FileInput tipo="cedula_vendedor_reverso" label="Cédula Vendedor (Reverso)" />
-                <FileInput tipo="cedula_comprador_frente" label="Cédula Comprador (Frente)" />
+                {!cedulaFiles["cedula_comprador_frente"] && <FileInput tipo="cedula_comprador_frente" label="Cédula Comprador (Frente)" />}
+                {cedulaFiles["cedula_comprador_frente"] && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" /> Cédula del comprador capturada por cámara
+                  </div>
+                )}
                 <FileInput tipo="cedula_comprador_reverso" label="Cédula Comprador (Reverso)" />
-                <FileInput tipo="selfie_vendedor" label="Selfie del Vendedor" />
-                <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />
+                {!cedulaFiles["selfie_vendedor"] && <FileInput tipo="selfie_vendedor" label="Selfie del Vendedor" />}
+                {cedulaFiles["selfie_vendedor"] && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" /> Selfie del vendedor capturada
+                  </div>
+                )}
+                {!cedulaFiles["selfie_comprador"] && <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />}
+                {cedulaFiles["selfie_comprador"] && (
+                  <div className="flex items-center gap-2 text-sm text-green-600">
+                    <CheckCircle className="h-4 w-4" /> Selfie del comprador capturada
+                  </div>
+                )}
+
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">Vehículo</div>
+                <MarbeteCapture
+                  onCapture={(base64) => setCedulaFiles(prev => ({ ...prev, marbete: base64 }))}
+                  captured={!!cedulaFiles["marbete"]}
+                />
                 <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
                 <FileInput tipo="certificacion_plan_piloto" label="Certificación Plan Piloto" />
 
