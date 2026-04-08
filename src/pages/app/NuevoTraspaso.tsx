@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, FileText, AlertTriangle, UserCheck } from "lucide-react";
 import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
+import MarbeteCapture from "@/components/app/MarbeteCapture";
 
 const STEPS = [
   { title: "Tu Rol", icon: UserCheck },
@@ -502,6 +503,10 @@ export default function NuevoTraspaso() {
                 <FileInput tipo="selfie_comprador" label="Selfie del Comprador" />
 
                 <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider pt-2">Vehículo</div>
+                <MarbeteCapture
+                  onCapture={(base64) => setCedulaFiles(prev => ({ ...prev, marbete: base64 }))}
+                  captured={!!cedulaFiles["marbete"]}
+                />
                 <FileInput tipo="matricula_foto" label="Foto de la Matrícula" />
                 <FileInput tipo="certificacion_plan_piloto" label="Certificación Plan Piloto" />
 
