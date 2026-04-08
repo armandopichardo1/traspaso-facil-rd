@@ -58,15 +58,14 @@ const HeroSection = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.15 }}
           >
-            <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-foreground/5 to-foreground/10 aspect-[4/3]">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="h-20 w-20 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-3">
-                    <Search className="h-10 w-10 text-accent" />
-                  </div>
-                  <p className="text-sm text-muted-foreground font-medium">TRASPASA.DO</p>
-                </div>
-              </div>
+            <div className="relative rounded-2xl overflow-hidden aspect-[4/3]">
+              <img
+                src={heroImage}
+                alt="Persona sonriente con llaves de carro y documentos digitales en su teléfono"
+                className="w-full h-full object-cover"
+                width={1024}
+                height={768}
+              />
             </div>
           </motion.div>
         </div>
