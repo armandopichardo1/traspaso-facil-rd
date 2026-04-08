@@ -11,7 +11,7 @@ import {
   ShieldCheck, MapPin, PenTool, DollarSign,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
-import MarbeteUpload from "@/components/app/MarbeteUpload";
+import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUpload";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
 
