@@ -202,7 +202,7 @@ export default function TraspasoDetail() {
                           </div>
                         </div>
                       )}
-                      {s.key === "plan_piloto" && isDone && (
+                      {s.key === "dgii_proceso" && isDone && (
                         <button
                           className="text-xs text-accent font-semibold hover:underline mt-1"
                           onClick={() => navigate(`/app/traspaso/${id}/escrow`)}
