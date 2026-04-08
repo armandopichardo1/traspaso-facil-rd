@@ -138,12 +138,32 @@ export default function GestorNuevoTraspaso() {
   };
 
   const uploadFiles = async (traspasoId: string) => {
+    // Upload regular files
     for (const [tipo, file] of Object.entries(files)) {
       if (!file) continue;
       const path = `${user!.id}/${traspasoId}/${tipo}_${Date.now()}`;
       const { error: uploadError } = await supabase.storage
         .from("documentos")
         .upload(path, file);
+      if (uploadError) continue;
+      const { data: urlData } = supabase.storage.from("documentos").getPublicUrl(path);
+      await supabase.from("traspaso_documentos").insert({
+        traspaso_id: traspasoId,
+        tipo,
+        file_url: urlData.publicUrl,
+      });
+    }
+    // Upload cedula captures (base64)
+    for (const [tipo, base64] of Object.entries(cedulaFiles)) {
+      if (!base64) continue;
+      const byteChars = atob(base64);
+      const byteArr = new Uint8Array(byteChars.length);
+      for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+      const blob = new Blob([byteArr], { type: "image/jpeg" });
+      const path = `${user!.id}/${traspasoId}/${tipo}_${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage
+        .from("documentos")
+        .upload(path, blob);
       if (uploadError) continue;
       const { data: urlData } = supabase.storage.from("documentos").getPublicUrl(path);
       await supabase.from("traspaso_documentos").insert({
@@ -173,7 +193,6 @@ export default function GestorNuevoTraspaso() {
     const { data, error } = await supabase
       .from("traspasos")
       .insert({
-        customer_id: user!.id,
         gestor_id: user!.id,
         tipo_vehiculo: form.tipo_vehiculo,
         vehiculo_marca: form.vehiculo_marca,

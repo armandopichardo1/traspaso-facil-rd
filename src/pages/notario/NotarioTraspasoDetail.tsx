@@ -86,7 +86,7 @@ export default function NotarioTraspasoDetail() {
     if (!traspaso) return;
     setAdvancing(true);
     try {
-      const nextStatus = "matricula_recogida";
+      const nextStatus = "verificacion_antifraude";
       const { error } = await supabase
         .from("traspasos")
         .update({ status: nextStatus })
@@ -96,11 +96,11 @@ export default function NotarioTraspasoDetail() {
       await supabase.from("traspaso_timeline").insert({
         traspaso_id: traspaso.id,
         status: nextStatus,
-        nota: "Contrato certificado por notario",
+        nota: "Contrato certificado por notario — pasa a verificación antifraude",
         created_by: user?.id,
       });
 
-      toast.success("Traspaso avanzado a recogida de matrícula");
+      toast.success("Traspaso avanzado a verificación antifraude");
       navigate("/notario");
     } catch (err: any) {
       toast.error(err.message || "Error al avanzar");
@@ -365,7 +365,7 @@ export default function NotarioTraspasoDetail() {
             onClick={handleAdvanceStatus}
             disabled={advancing}
           >
-            {advancing ? "Avanzando..." : "Avanzar a Recogida de Matrícula →"}
+            {advancing ? "Avanzando..." : "Avanzar a Verificación Antifraude →"}
           </Button>
         </motion.div>
       )}
