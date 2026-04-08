@@ -13,6 +13,8 @@ import AdminTraspasoDetail from "./pages/admin/AdminTraspasoDetail.tsx";
 import AdminHistoriales from "./pages/admin/AdminHistoriales.tsx";
 import Calculadora from "./pages/Calculadora.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import TerminosServicio from "./pages/TerminosServicio.tsx";
+import PoliticaPrivacidad from "./pages/PoliticaPrivacidad.tsx";
 import Seguimiento from "./pages/Seguimiento.tsx";
 import Login from "./pages/app/Login.tsx";
 import CompleteProfile from "./pages/app/CompleteProfile.tsx";
@@ -52,6 +54,8 @@ const App = () => (
             <Route path="/norma-03-25" element={<Norma0325 />} />
             <Route path="/calculadora" element={<Calculadora />} />
             <Route path="/seguimiento/:code" element={<Seguimiento />} />
+            <Route path="/terminos" element={<TerminosServicio />} />
+            <Route path="/privacidad" element={<PoliticaPrivacidad />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/traspaso/:id" element={<AdminTraspasoDetail />} />
