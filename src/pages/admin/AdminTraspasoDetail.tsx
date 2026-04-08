@@ -32,6 +32,25 @@ const antifraudeStyle = (s: string) => {
   return "bg-blue-100 text-blue-800";
 };
 
+function AiResultCard({ result }: { result: any }) {
+  return (
+    <div className={`mt-2 rounded-lg border p-3 text-sm ${result.match ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
+      <div className="flex items-center gap-2 mb-1">
+        {result.match ? <ShieldCheck className="h-4 w-4 text-green-600" /> : <ShieldX className="h-4 w-4 text-red-600" />}
+        <span className="font-semibold">{result.match ? "Coinciden" : "No coinciden"}</span>
+        <Badge variant="secondary" className="text-xs">{result.confidence}</Badge>
+      </div>
+      {result.rasgos_coincidentes?.length > 0 && (
+        <p className="text-xs text-muted-foreground">✓ {result.rasgos_coincidentes.join(", ")}</p>
+      )}
+      {result.rasgos_diferentes?.length > 0 && (
+        <p className="text-xs text-destructive">✗ {result.rasgos_diferentes.join(", ")}</p>
+      )}
+      {result.notas && <p className="text-xs text-muted-foreground mt-1 italic">{result.notas}</p>}
+    </div>
+  );
+}
+
 export default function AdminTraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
