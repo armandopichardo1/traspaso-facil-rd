@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Truck, MapPin, ArrowRight, RefreshCw } from "lucide-react";
+import { Truck, MapPin, ArrowRight, RefreshCw, Package, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,9 +38,12 @@ export default function MensajeroDashboard() {
     fetchTraspasos();
   }, []);
 
+  const pendientes = traspasos.filter(t => t.status !== "completado" && t.status !== "cancelado");
+  const completados = traspasos.filter(t => t.status === "completado");
+
   return (
     <div className="p-4 max-w-lg mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Truck className="h-5 w-5 text-accent" />
@@ -51,6 +54,31 @@ export default function MensajeroDashboard() {
         <Button variant="ghost" size="icon" onClick={fetchTraspasos}>
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
         </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <Card>
+          <CardContent className="p-3 text-center">
+            <Truck className="h-5 w-5 mx-auto mb-1 text-accent" />
+            <p className="text-lg font-bold">{traspasos.length}</p>
+            <p className="text-[10px] text-muted-foreground">Total</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <Package className="h-5 w-5 mx-auto mb-1 text-cta" />
+            <p className="text-lg font-bold">{pendientes.length}</p>
+            <p className="text-[10px] text-muted-foreground">Pendientes</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-green-600" />
+            <p className="text-lg font-bold">{completados.length}</p>
+            <p className="text-[10px] text-muted-foreground">Entregados</p>
+          </CardContent>
+        </Card>
       </div>
 
       {loading ? (
@@ -66,47 +94,52 @@ export default function MensajeroDashboard() {
         </Card>
       ) : (
         <div className="space-y-3">
-          {traspasos.map((t) => (
-            <Card
-              key={t.id}
-              className="cursor-pointer hover:border-accent/50 transition-colors"
-              onClick={() => navigate(`/mensajero/traspaso/${t.id}`)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-semibold">
-                        {t.vehiculo_marca} {t.vehiculo_modelo}
-                      </span>
+          {traspasos.map((t) => {
+            const isPending = t.status !== "completado" && t.status !== "cancelado";
+            return (
+              <Card
+                key={t.id}
+                className={`cursor-pointer hover:border-accent/50 transition-colors border-l-4 ${
+                  isPending ? "border-l-cta" : "border-l-green-500"
+                }`}
+                onClick={() => navigate(`/mensajero/traspaso/${t.id}`)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-accent" />
+                        <span className="font-semibold">
+                          {t.vehiculo_marca} {t.vehiculo_modelo}
+                        </span>
+                      </div>
+                      <p className="text-xs font-mono text-muted-foreground">
+                        Placa: {t.vehiculo_placa || "—"} · {t.codigo}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Vendedor: {t.vendedor_nombre || "—"}
+                        {t.vendedor_telefono && (
+                          <a
+                            href={`tel:${t.vendedor_telefono}`}
+                            className="ml-2 text-accent font-medium hover:underline"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {t.vendedor_telefono}
+                          </a>
+                        )}
+                      </p>
                     </div>
-                    <p className="text-xs font-mono text-muted-foreground">
-                      Placa: {t.vehiculo_placa || "—"} · {t.codigo}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Vendedor: {t.vendedor_nombre || "—"}
-                      {t.vendedor_telefono && (
-                        <a
-                          href={`tel:${t.vendedor_telefono}`}
-                          className="ml-2 text-accent hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {t.vendedor_telefono}
-                        </a>
-                      )}
-                    </p>
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge variant="secondary" className={`text-xs ${isPending ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}>
+                        {t.status.replace(/_/g, " ")}
+                      </Badge>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 text-xs">
-                      {t.status.replace(/_/g, " ")}
-                    </Badge>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

@@ -22,18 +22,18 @@ const ComparisonTable = () => (
 
       <AnimateOnScroll delay={100}>
         <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-          <div className="grid grid-cols-2 text-sm font-bold bg-muted">
-            <div className="p-4 text-muted-foreground">Hoy</div>
-            <div className="p-4 text-teal">Con TRASPASA.DO</div>
+          <div className="grid grid-cols-2 text-sm font-bold">
+            <div className="p-4 text-destructive bg-destructive/5">Hoy</div>
+            <div className="p-4 text-accent bg-accent/5">Con TRASPASA.DO</div>
           </div>
           {rows.map(([old, nuevo], i) => (
-            <div key={i} className={`grid grid-cols-2 text-sm ${i % 2 === 0 ? "" : "bg-muted/30"}`}>
-              <div className="p-4 flex items-start gap-2 text-muted-foreground">
+            <div key={i} className="grid grid-cols-2 text-sm">
+              <div className={`p-4 flex items-start gap-2 text-muted-foreground ${i % 2 === 0 ? "bg-destructive/[0.02]" : "bg-destructive/5"}`}>
                 <X className="text-destructive shrink-0 mt-0.5" size={14} />
                 {old}
               </div>
-              <div className="p-4 flex items-start gap-2 text-foreground font-medium">
-                <Check className="text-teal shrink-0 mt-0.5" size={14} />
+              <div className={`p-4 flex items-start gap-2 text-foreground font-medium ${i % 2 === 0 ? "bg-accent/[0.02]" : "bg-accent/5"}`}>
+                <Check className="text-accent shrink-0 mt-0.5" size={14} />
                 {nuevo}
               </div>
             </div>

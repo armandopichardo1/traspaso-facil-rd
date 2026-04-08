@@ -1,17 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
-import { Search } from "lucide-react";
+import { Search, Users, AlertTriangle, DollarSign, Tag, FileText, Siren, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 const reportItems = [
-  { emoji: "👤", label: "Historial de Propietarios" },
-  { emoji: "⚠️", label: "Oposiciones y Alertas (robo, embargo, prenda)" },
-  { emoji: "💰", label: "Valor Fidedigno DGII" },
-  { emoji: "🏷️", label: "Estado del Marbete" },
-  { emoji: "📝", label: "Traspasos Anteriores" },
-  { emoji: "🚨", label: "Multas Pendientes" },
+  { icon: Users, label: "Historial de Propietarios" },
+  { icon: AlertTriangle, label: "Oposiciones y Alertas (robo, embargo, prenda)" },
+  { icon: DollarSign, label: "Valor Fidedigno DGII" },
+  { icon: Tag, label: "Estado del Marbete" },
+  { icon: FileText, label: "Traspasos Anteriores" },
+  { icon: Siren, label: "Multas Pendientes" },
 ];
 
 const HistorialSection = () => {
@@ -56,8 +56,10 @@ const HistorialSection = () => {
 
         <AnimateOnScroll delay={100}>
           {submitted ? (
-            <div className="bg-teal/10 border border-teal/30 rounded-2xl p-8 text-center mb-10">
-              <span className="text-4xl block mb-3">📱</span>
+            <div className="bg-accent/10 border border-accent/30 rounded-2xl p-8 text-center mb-10">
+              <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center mx-auto mb-3">
+                <Search className="h-7 w-7 text-accent" />
+              </div>
               <h3 className="text-xl font-bold text-foreground mb-2">¡Consulta recibida!</h3>
               <p className="text-muted-foreground">
                 Te enviamos el informe por WhatsApp en menos de 30 minutos.
@@ -96,7 +98,9 @@ const HistorialSection = () => {
           {reportItems.map((item, i) => (
             <AnimateOnScroll key={item.label} delay={i * 50}>
               <div className="bg-card rounded-xl p-4 border border-border text-center">
-                <span className="text-2xl block mb-2">{item.emoji}</span>
+                <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-2">
+                  <item.icon className="h-5 w-5 text-accent" />
+                </div>
                 <p className="text-sm font-medium text-foreground">{item.label}</p>
               </div>
             </AnimateOnScroll>
@@ -104,9 +108,24 @@ const HistorialSection = () => {
         </div>
 
         <AnimateOnScroll delay={300}>
-          <div className="bg-card rounded-xl p-5 border border-border italic text-sm text-muted-foreground">
-            "Iba a comprar un carro que tenía una oposición por robo. Gracias al historial de TRASPASA.DO no perdí mi dinero."
-            <span className="block mt-2 not-italic font-medium text-foreground">— Cliente verificado</span>
+          <div className="bg-card rounded-xl p-6 border border-border">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                <Star className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <div className="flex items-center gap-1 mb-1">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="h-4 w-4 text-cta fill-cta" />
+                  ))}
+                </div>
+                <p className="text-sm text-muted-foreground italic">
+                  "Iba a comprar un carro que tenía una oposición por robo. Gracias al historial de TRASPASA.DO no perdí mi dinero."
+                </p>
+                <p className="mt-2 text-sm font-semibold text-foreground">Carlos M.</p>
+                <p className="text-xs text-muted-foreground">Cliente verificado · Santo Domingo</p>
+              </div>
+            </div>
           </div>
         </AnimateOnScroll>
       </div>
