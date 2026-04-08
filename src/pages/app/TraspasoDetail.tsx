@@ -246,6 +246,7 @@ export default function TraspasoDetail() {
           traspasoId={t.id}
           existingUrl={docs?.find((d: any) => d.tipo === "marbete")?.file_url || null}
           onUploaded={refreshData}
+          onOcrResult={(result) => setMarbeteData(result)}
         />
       </div>
 
