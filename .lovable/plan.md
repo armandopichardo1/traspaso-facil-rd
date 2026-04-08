@@ -1,118 +1,103 @@
 
 
-# Plan: Professional Redesign + Auth Bypass + Login Dropdown
+# Plan: Redisenar las pantallas principales basado en los mockups de Stitch
 
-## Summary
-Three changes: (1) enable auto-confirm email so no password verification is needed, (2) restructure the admin login tab with a role dropdown for notario/mensajero, (3) full professional redesign of the landing page and per-role dashboards.
+Analice las 10 capturas de pantalla y las compare con las paginas actuales. Aqui esta el plan de mejoras concretas por modulo:
 
----
+## 1. Dashboard del Cliente (`src/pages/app/Dashboard.tsx`)
+**Referencia: screen.png (imagen 1)**
 
-## 1. Enable Auto-Confirm Email Signups
-- Use `cloud--configure_auth` to enable auto-confirm so users can sign in immediately without email verification
-- No code changes needed — just a config toggle
+Cambios:
+- Agregar saludo con emoji de mano ("Hola, Juan") y subtitulo "Tu gestion vehicular a maxima velocidad"
+- Reemplazar las 3 stat cards por una barra de busqueda de historial por placa con boton "BUSCAR" prominente
+- Redisenar la card de traspaso activo: mostrar vehiculo grande (marca, modelo, ano), badge de status con emoji check, barra de progreso segmentada con labels (SOLICITUD, REVISION, PAGO, DGII, FINAL) y porcentaje
+- Agregar boton CTA grande naranja "CONTINUAR TRASPASO" dentro de la card activa
+- Agregar card oscura "Iniciar Nuevo Traspaso" con subtitulo "Completa tu tramite en minutos"
+- Seccion "ACTIVIDAD RECIENTE - Reportes e Historial" con link "Ver todo" y cards horizontales por vehiculo con placa y badge de estado (COMPLETADO/CANCELADO)
 
-## 2. Admin Login Tab — Role Dropdown
-**File: `src/pages/app/Login.tsx`**
-- Keep 3 tabs: Cliente, Gestor, Administrativo
-- Under the "Administrativo" tab, add a Select/dropdown with options: Admin, Notario, Mensajero
-- This is cosmetic/UX only — the actual redirect already works based on the profile role after login
-- Update the description text dynamically based on dropdown selection
+## 2. Panel Gestor/Dealer (`src/pages/gestor/GestorDashboard.tsx`)
+**Referencia: screen-2.png (imagen 2)**
 
-## 3. Landing Page Professional Redesign
+Cambios:
+- Redisenar para desktop: header con "Panel de Control" y boton "+ Nuevo Traspaso" a la derecha
+- 4 stat cards en fila: Traspasos Activos (con badge % vs mes ant), Completados Mes, Tiempo Promedio, Gastado Mes
+- Tabla de traspasos recientes con columnas: Vehiculo (con icono), Placa, Cliente, Estatus (badge color), Accion
+- Sidebar derecha con card "Informes de Historial" (verificar estatus legal) con CTA "Solicitar Acceso"
+- Badge "Dealer Verificado" con descripcion de acceso prioritario
 
-### 3a. Replace ALL emojis with Lucide icons (~8 files)
-This is the single biggest improvement. Every section uses emoji (🔍📋😰🚨📱📝🏍️🏛️✅👤⚠️💰🏷️📊⏱️). Replace each with a Lucide icon inside a styled circular container (teal/10 bg, teal border).
+## 3. Vista de Escrow (`src/pages/app/EscrowView.tsx`)
+**Referencia: screen-3.png (imagen 3)**
 
-**Files**: HeroSection, TrustBar, ProblemaSection, ComoFunciona, HistorialSection, DealersSection, GestoresSection, PricingSection
+Cambios:
+- Header "Tu dinero esta seguro." con subtitulo sobre custodia
+- Anillo de progreso mas grande con icono de candado y animacion
+- Badge "EN CUSTODIA - PENDIENTE DE TRASPASO" debajo del anillo
+- Monto grande centrado (RD$850,000) con "Pago del vehiculo"
+- Badge "VERIFICADO POR TRASPASA.DO"
+- Timeline vertical con 4 pasos: Comprador deposito, Fondos verificados, Traspaso en proceso, Liberacion al vendedor
+- Info box azul explicando que los fondos se liberan con codigo QR
+- Seccion "ESCANEA AL RECIBIR EL VEHICULO" con placeholder de QR code
+- Boton rojo "Necesito ayuda con mi pago"
 
-### 3b. Navbar — Add brand icon + polish
-**File: `src/components/Navbar.tsx`**
-- Add a small SVG shield icon before the TRASPASA.DO wordmark
-- Improve mobile menu transitions
+## 4. Firma Digital de Contrato (mejorar `NotarioTraspasoDetail.tsx` y crear nueva vista)
+**Referencia: screen-4.png y screen-5.png (imagenes 4-5)**
 
-### 3c. Hero Section — Social proof + polish
-**File: `src/components/HeroSection.tsx`**
-- Replace emoji with Lucide icons in the two cards
-- Add social proof row below cards: "500+ traspasos", "4.9★ calificación", "24h promedio"
-- Fix the spacer div hack with proper flex alignment
+Cambios:
+- Crear vista de firma stepped: Paso 1 "Identidad Verificada" (con badge biometria), Paso 2 "Revision del documento" (preview del contrato con texto real), Paso 3 "Finalizar Firma"
+- Boton "Firmar con un toque" naranja grande en lugar del signature pad canvas
+- Nota legal "Firma digital legal bajo Ley 126-02"
+- Bottom nav con tabs "Revisar" y "Firmar"
 
-### 3d. Section backgrounds — Visual variety
-**File: `src/pages/Index.tsx` + `src/index.css`**
-- Alternate sections between white, light gray (`bg-muted/30`), and one navy section (ProblemaSection)
-- Add `scroll-padding-top: 5rem` for smooth anchor scrolling under sticky nav
+## 5. Landing Page (`src/components/HeroSection.tsx`)
+**Referencia: screen-6.png (imagen 6)**
 
-### 3e. ProblemaSection — Dark navy variant
-**File: `src/components/ProblemaSection.tsx`**
-- Dark navy background with light text for visual contrast break
+Cambios:
+- Redisenar hero: titulo "Tu traspaso vehicular en 24 horas. Sin filas. Sin estres." con "en 24 horas" resaltado en naranja
+- Agregar imagen de vehiculo a la derecha del hero
+- Badge "Proceso Verificado - Avalado por el Colegio de Abogados"
+- Trust bar con iconos: Sistema Antifraude, Pago con Escrow, Firma Digital Legal, Soporte 24/7
+- Dos cards de producto lado a lado: "Historial Vehicular RD$350" y "Traspaso Completo Desde RD$3,500"
 
-### 3f. ComparisonTable — Column tints
-**File: `src/components/ComparisonTable.tsx`**
-- Light red tint on "Hoy" column, light teal tint on "Con TRASPASA.DO" column
+## 6. Historial Vehicular Detalle (`src/pages/app/HistorialDetail.tsx`)
+**Referencia: screen-10.png (imagen 10)**
 
-### 3g. HistorialSection — Testimonial card
-**File: `src/components/HistorialSection.tsx`**
-- Convert italic quote into proper testimonial card with avatar placeholder, star rating, name
+Cambios:
+- Agregar header con imagen placeholder del vehiculo con placa superpuesta
+- Nombre del vehiculo grande con badge "Verificado por TRASPASA.DO"
+- Secciones tipo card expandible: Datos del Vehiculo (grid), Oposiciones y Alertas (card roja si hay alertas), Historial de Propietarios (con avatares), Valor DGII (con valor de mercado e impuesto), Estado del Marbete (badge vigente/vencido), Multas Pendientes
+- Boton "Compartir este informe"
+- CTA final "Todo bien? Inicia el traspaso ahora" (ya existe, mejorar estilo)
 
-### 3h. Footer — Legitimacy signals
-**File: `src/components/Footer.tsx`**
-- Add RNC number, legal links (Términos, Privacidad)
-- Replace text social links with Lucide icons (Instagram, Facebook)
-- Add "Certificado por Notarios" badge area
+## 7. Tracking/Seguimiento Mejorado (`src/pages/app/TraspasoDetail.tsx`)
+**Referencia: screen-9.png (imagen 9)**
 
-### 3i. Favicon + OG
-**File: `index.html` + `public/favicon.svg`**
-- Create simple SVG favicon with shield/car mark
-- Clean up OG meta tags
+Cambios:
+- Header card con "Tu proceso esta en marcha" + vehiculo + barra de progreso con porcentaje
+- Badge "VERIFICADO POR TRASPASA.DO"
+- Timeline vertical mejorada con mas detalle por paso: fecha/hora, nombre del gestor, badges (FIRMA DIGITAL OK, FONDOS EN CUSTODIA)
+- En paso de matricula recogida: placeholder de mapa con ubicacion
+- Link "Rastrear pago en custodia (Escrow)" en el paso de Plan Piloto
+- Card "Necesitas ayuda? Habla con tu asesor por WhatsApp"
 
-### 3j. Delete App.css boilerplate
-**File: `src/App.css`** — Delete entirely (unused Vite boilerplate with logo-spin animation)
+## 8. Pagina de Exito Post-Firma (NUEVA: `src/pages/app/TraspasoFirmado.tsx`)
+**Referencia: screen-8.png (imagen 8)**
 
-## 4. Per-Role Dashboard Polish
+Crear nueva pagina:
+- Icono check grande con animacion
+- Titulo "Contrato Firmado Exitosamente!"
+- Subtitulo sobre Ley 126-02
+- Card con detalles: Documento, Vehiculo, Placa, Fecha, ID de Firma
+- Badge "VERIFICADO POR TRASPASA.DO"
+- Boton "Ver Progreso del Traspaso"
+- Link "Ir al Inicio"
+- Agregar ruta `/app/traspaso/:id/firmado` en App.tsx
 
-### 4a. Customer Dashboard (`src/pages/app/Dashboard.tsx`)
-- Add a welcome header with user name and greeting
-- Add quick-stats row (active traspasos count, last activity)
-- Improve empty state with illustration-style icon composition
+## Detalles tecnicos
 
-### 4b. Gestor Dashboard (`src/pages/gestor/GestorDashboard.tsx`)
-- Add summary stats bar (total, active, completed counts)
-- Improve card layout with better visual hierarchy
-
-### 4c. Notario Dashboard (`src/pages/notario/NotarioDashboard.tsx`)
-- Add header with "Certificaciones Pendientes" count badge
-- Improve card design — show contract type, parties involved more prominently
-
-### 4d. Mensajero Dashboard (`src/pages/mensajero/MensajeroDashboard.tsx`)
-- Add header with "Entregas Pendientes" count
-- Show pickup/delivery addresses more prominently in cards
-- Add status-colored left border on cards
-
----
-
-## Files Summary
-
-| Action | File |
-|--------|------|
-| Config | Auto-confirm email (auth setting) |
-| Edit | `src/pages/app/Login.tsx` — role dropdown in admin tab |
-| Edit | `src/components/Navbar.tsx` — brand icon |
-| Edit | `src/components/HeroSection.tsx` — icons + social proof |
-| Edit | `src/components/TrustBar.tsx` — icons |
-| Edit | `src/components/ProblemaSection.tsx` — icons + dark bg |
-| Edit | `src/components/ComoFunciona.tsx` — icons |
-| Edit | `src/components/HistorialSection.tsx` — icons + testimonial |
-| Edit | `src/components/ComparisonTable.tsx` — column tints |
-| Edit | `src/components/DealersSection.tsx` — icons |
-| Edit | `src/components/GestoresSection.tsx` — icons |
-| Edit | `src/components/PricingSection.tsx` — icons |
-| Edit | `src/components/Footer.tsx` — legitimacy |
-| Edit | `src/pages/Index.tsx` — section bg variety |
-| Edit | `src/index.css` — scroll-padding, utilities |
-| Edit | `src/pages/app/Dashboard.tsx` — welcome + stats |
-| Edit | `src/pages/gestor/GestorDashboard.tsx` — stats bar |
-| Edit | `src/pages/notario/NotarioDashboard.tsx` — header + cards |
-| Edit | `src/pages/mensajero/MensajeroDashboard.tsx` — header + cards |
-| Create | `public/favicon.svg` |
-| Edit | `index.html` — favicon + OG |
-| Delete | `src/App.css` |
+- Todos los cambios son en componentes React/TypeScript con Tailwind CSS
+- Se usa framer-motion para animaciones (ya instalado)
+- No requiere cambios de base de datos ni migraciones
+- No requiere nuevas dependencias
+- Se mantiene el sistema de colores existente (navy, teal, orange/CTA)
+- Estimado: 8 archivos modificados + 1 archivo nuevo
 
