@@ -7,6 +7,7 @@ interface DocumentCameraGuideProps {
   onCancel: () => void;
   aspectRatio?: number;
   label?: string;
+  facingMode?: "environment" | "user";
 }
 
 export default function DocumentCameraGuide({
@@ -14,6 +15,7 @@ export default function DocumentCameraGuide({
   onCancel,
   aspectRatio = 1.586,
   label = "Coloca el documento dentro del marco",
+  facingMode = "environment",
 }: DocumentCameraGuideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -26,7 +28,7 @@ export default function DocumentCameraGuide({
   const startCamera = useCallback(async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       setStream(mediaStream);
       if (videoRef.current) {

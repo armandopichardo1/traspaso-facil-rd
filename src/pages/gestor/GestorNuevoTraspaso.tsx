@@ -13,6 +13,7 @@ import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Uplo
 import { Badge } from "@/components/ui/badge";
 import MatriculaScanner, { type OcrResult } from "@/components/gestor/MatriculaScanner";
 import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
+import SelfieCapture from "@/components/app/SelfieCapture";
 
 const STEPS = [
   { title: "Matrícula", icon: ScanLine },
@@ -356,6 +357,10 @@ export default function GestorNuevoTraspaso() {
                   label="Cédula del Vendedor"
                   onResult={(result, base64) => handleCedulaResult("vendedor", result, base64)}
                 />
+                <SelfieCapture
+                  label="Selfie del Vendedor"
+                  onCapture={(base64) => setCedulaFiles(prev => ({ ...prev, selfie_vendedor: base64 }))}
+                />
                 <TipoPersonaToggle value={form.vendedor_tipo_persona} onChange={(v) => update("vendedor_tipo_persona", v)} />
                 <div><Label>Nombre del Vendedor</Label><Input value={form.vendedor_nombre} onChange={(e) => update("vendedor_nombre", e.target.value)} /></div>
                 {form.vendedor_tipo_persona === "fisica" ? (
@@ -373,6 +378,10 @@ export default function GestorNuevoTraspaso() {
                 <CedulaCapture
                   label="Cédula del Comprador"
                   onResult={(result, base64) => handleCedulaResult("comprador", result, base64)}
+                />
+                <SelfieCapture
+                  label="Selfie del Comprador"
+                  onCapture={(base64) => setCedulaFiles(prev => ({ ...prev, selfie_comprador: base64 }))}
                 />
                 <TipoPersonaToggle value={form.comprador_tipo_persona} onChange={(v) => update("comprador_tipo_persona", v)} />
                 <div><Label>Nombre del Comprador</Label><Input value={form.comprador_nombre} onChange={(e) => update("comprador_nombre", e.target.value)} /></div>
