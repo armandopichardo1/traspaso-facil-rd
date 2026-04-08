@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { LogOut, RefreshCw, Car, FileText, Users, ArrowRight, UserCog, Clock, BarChart3, TrendingUp } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import type { Session } from "@supabase/supabase-js";
 import LeadFilters from "@/components/admin/LeadFilters";
 import ConsultaFilters from "@/components/admin/ConsultaFilters";
@@ -158,8 +159,21 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleRoleChange = async (profileId: string, newRole: string) => {
+  const [pendingRoleChange, setPendingRoleChange] = useState<{ profileId: string; name: string; oldRole: string; newRole: string } | null>(null);
+
+  const ROLE_LABELS: Record<string, string> = { customer: "Cliente", gestor: "Gestor", notario: "Notario", mensajero: "Mensajero", admin: "Admin" };
+
+  const requestRoleChange = (profileId: string, newRole: string) => {
+    const profile = profiles.find((p) => p.id === profileId);
+    if (!profile || profile.role === newRole) return;
+    setPendingRoleChange({ profileId, name: profile.nombre || profile.email || profileId, oldRole: profile.role, newRole });
+  };
+
+  const confirmRoleChange = async () => {
+    if (!pendingRoleChange) return;
+    const { profileId, newRole } = pendingRoleChange;
     const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", profileId);
+    setPendingRoleChange(null);
     if (error) {
       toast.error("Error al cambiar rol");
       return;
@@ -469,7 +483,7 @@ const AdminDashboard = () => {
                       <td className="p-3">{p.email || "—"}</td>
                       <td className="p-3 font-mono">{p.cedula || "—"}</td>
                       <td className="p-3">
-                        <Select value={p.role} onValueChange={(v) => handleRoleChange(p.id, v)}>
+                        <Select value={p.role} onValueChange={(v) => requestRoleChange(p.id, v)}>
                           <SelectTrigger className="h-7 w-[140px] text-xs font-medium">
                             <SelectValue />
                           </SelectTrigger>
@@ -498,6 +512,23 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div>
+      <AlertDialog open={!!pendingRoleChange} onOpenChange={(open) => !open && setPendingRoleChange(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cambiar rol de usuario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Vas a cambiar el rol de <strong>{pendingRoleChange?.name}</strong> de{" "}
+              <Badge variant="outline" className="mx-1">{ROLE_LABELS[pendingRoleChange?.oldRole || ""]}</Badge> a{" "}
+              <Badge className="mx-1 bg-primary">{ROLE_LABELS[pendingRoleChange?.newRole || ""]}</Badge>.
+              Esta acción afectará los permisos del usuario de inmediato.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleChange}>Confirmar cambio</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
