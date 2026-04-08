@@ -127,6 +127,16 @@ export default function GestorNuevoTraspaso() {
     setStep(1);
   };
 
+  const handleCedulaResult = (side: "vendedor" | "comprador", result: CedulaOcrResult, imageBase64: string) => {
+    const prefix = side;
+    setForm(prev => ({
+      ...prev,
+      [`${prefix}_nombre`]: result.nombre_completo || prev[`${prefix}_nombre` as keyof FormData],
+      [`${prefix}_cedula`]: result.cedula || prev[`${prefix}_cedula` as keyof FormData],
+    }));
+    setCedulaFiles(prev => ({ ...prev, [`cedula_${side}_frente`]: imageBase64 }));
+  };
+
   const uploadFiles = async (traspasoId: string) => {
     for (const [tipo, file] of Object.entries(files)) {
       if (!file) continue;
@@ -323,6 +333,10 @@ export default function GestorNuevoTraspaso() {
             {/* Step 2: Seller */}
             {step === 2 && (
               <>
+                <CedulaCapture
+                  label="Cédula del Vendedor"
+                  onResult={(result, base64) => handleCedulaResult("vendedor", result, base64)}
+                />
                 <TipoPersonaToggle value={form.vendedor_tipo_persona} onChange={(v) => update("vendedor_tipo_persona", v)} />
                 <div><Label>Nombre del Vendedor</Label><Input value={form.vendedor_nombre} onChange={(e) => update("vendedor_nombre", e.target.value)} /></div>
                 {form.vendedor_tipo_persona === "fisica" ? (
