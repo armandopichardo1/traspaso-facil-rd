@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, ArrowRight, User, Briefcase, Shield } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, Briefcase, Shield, Zap } from "lucide-react";
 
 type RoleTab = "cliente" | "gestor" | "admin";
 type AdminSubRole = "admin" | "notario" | "mensajero";
