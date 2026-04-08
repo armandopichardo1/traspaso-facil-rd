@@ -127,6 +127,33 @@ export type Database = {
         }
         Relationships: []
       }
+      role_audit_log: {
+        Row: {
+          changed_by: string
+          created_at: string
+          id: string
+          new_role: string
+          old_role: string
+          profile_id: string
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string
+          id?: string
+          new_role: string
+          old_role: string
+          profile_id: string
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string
+          id?: string
+          new_role?: string
+          old_role?: string
+          profile_id?: string
+        }
+        Relationships: []
+      }
       sla_config: {
         Row: {
           descripcion: string | null

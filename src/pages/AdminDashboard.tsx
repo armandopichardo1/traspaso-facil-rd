@@ -172,12 +172,22 @@ const AdminDashboard = () => {
 
   const confirmRoleChange = async () => {
     if (!pendingRoleChange) return;
-    const { profileId, newRole } = pendingRoleChange;
+    const { profileId, oldRole, newRole } = pendingRoleChange;
     const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", profileId);
     setPendingRoleChange(null);
     if (error) {
       toast.error("Error al cambiar rol");
       return;
+    }
+    // Log audit entry
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("role_audit_log" as any).insert({
+        profile_id: profileId,
+        old_role: oldRole,
+        new_role: newRole,
+        changed_by: user.id,
+      });
     }
     setProfiles((prev) => prev.map((p) => p.id === profileId ? { ...p, role: newRole } : p));
     toast.success("Rol actualizado");
