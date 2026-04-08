@@ -1,31 +1,19 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText } from "lucide-react";
+import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
-
-const STATUS_STEPS = [
-  "solicitud_recibida", "documentos_pendientes", "verificacion_antifraude", "contrato_firmado",
-  "matricula_recogida", "plan_piloto", "dgii_proceso", "completado"
-];
-
-const STATUS_LABELS: Record<string, string> = {
-  solicitud_recibida: "Solicitud Recibida",
-  documentos_pendientes: "Docs Pendientes",
-  verificacion_antifraude: "Verificación Antifraude",
-  contrato_firmado: "Contrato Firmado",
-  matricula_recogida: "Matrícula Recogida",
-  plan_piloto: "Plan Piloto",
-  dgii_proceso: "DGII en Proceso",
-  completado: "Completado",
-  cancelado: "Cancelado",
-};
+import { STATUS_STEPS, STATUS_LABELS, statusColor, getProgress } from "@/lib/traspaso-status";
+import { toast } from "sonner";
+import { useState } from "react";
 
 const statusColor = (s: string) => {
   if (s === "completado") return "bg-green-100 text-green-800";
@@ -37,6 +25,8 @@ export default function GestorTraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const [advancing, setAdvancing] = useState(false);
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["gestor-traspaso", id],
