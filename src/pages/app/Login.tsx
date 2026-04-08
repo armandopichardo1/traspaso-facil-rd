@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Mail, Lock, ArrowRight, User, Briefcase, Shield } from "lucide-react";
+import { Mail, Lock, ArrowRight, User, Briefcase, Shield, Zap } from "lucide-react";
 
 type RoleTab = "cliente" | "gestor" | "admin";
 type AdminSubRole = "admin" | "notario" | "mensajero";
@@ -210,7 +210,56 @@ export default function Login() {
           </CardContent>
         </Card>
 
-        <div className="text-center mt-6">
+        {/* Quick access buttons */}
+        <div className="mt-6 p-4 rounded-xl border border-dashed border-accent/40 bg-accent/5">
+          <p className="text-xs font-bold text-accent uppercase tracking-wider mb-3 flex items-center gap-1.5">
+            <Zap className="h-3.5 w-3.5" /> Acceso Rápido (Dev)
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { label: "Cliente", email: "cliente@test.com", password: "Test1234!", icon: "👤" },
+              { label: "Gestor", email: "gestor@test.com", password: "Test1234!", icon: "💼" },
+              { label: "Admin", email: "admin@traspasa.do", password: "Test1234!", icon: "🛡️" },
+              { label: "Notario", email: "testnotario@traspasa.do", password: "Test1234!", icon: "📋" },
+            ].map((acc) => (
+              <Button
+                key={acc.label}
+                variant="outline"
+                size="sm"
+                className="text-xs justify-start gap-1.5"
+                disabled={submitting}
+                onClick={async () => {
+                  setSubmitting(true);
+                  const { error, data } = await signIn(acc.email, acc.password);
+                  if (error) {
+                    toast({ title: "Error", description: `${acc.label}: ${error.message}`, variant: "destructive" });
+                    setSubmitting(false);
+                    return;
+                  }
+                  const userId = data?.user?.id;
+                  if (userId) {
+                    const { data: profileData } = await supabase
+                      .from("profiles")
+                      .select("role")
+                      .eq("id", userId)
+                      .single();
+                    const role = profileData?.role;
+                    if (role === "gestor") { navigate("/gestor"); setSubmitting(false); return; }
+                    if (role === "admin") { navigate("/admin"); setSubmitting(false); return; }
+                    if (role === "notario") { navigate("/notario"); setSubmitting(false); return; }
+                    if (role === "mensajero") { navigate("/mensajero"); setSubmitting(false); return; }
+                  }
+                  navigate("/app");
+                  setSubmitting(false);
+                }}
+              >
+                <span>{acc.icon}</span> {acc.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mt-4">
           <button onClick={() => navigate("/")} className="text-sm text-muted-foreground hover:text-foreground">
             ← Volver al inicio
           </button>
