@@ -62,6 +62,7 @@ const AdminDashboard = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"traspasos" | "leads" | "consultas" | "equipo" | "sla" | "metricas" | "tendencias">("traspasos");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   const [leads, setLeads] = useState<Lead[]>([]);
   const [consultas, setConsultas] = useState<Consulta[]>([]);
   const [traspasos, setTraspasos] = useState<Traspaso[]>([]);
@@ -465,19 +466,28 @@ const AdminDashboard = () => {
                 </table>
               </>
             ) : tab === "equipo" ? (
-              <table className="w-full text-sm">
-                <thead className="bg-muted text-muted-foreground text-left">
-                  <tr>
-                    <th className="p-3 font-medium">Nombre</th>
-                    <th className="p-3 font-medium">Email</th>
-                    <th className="p-3 font-medium">Cédula</th>
-                    <th className="p-3 font-medium">Rol</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {profiles.length === 0 ? (
-                    <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No hay perfiles</td></tr>
-                  ) : profiles.map((p) => (
+              <div className="space-y-3">
+                <div className="flex flex-wrap gap-2 px-3 pt-3">
+                  {[{ value: "all", label: "Todos" }, { value: "customer", label: "Cliente" }, { value: "gestor", label: "Gestor" }, { value: "notario", label: "Notario" }, { value: "mensajero", label: "Mensajero" }, { value: "admin", label: "Admin" }].map((r) => (
+                    <Button key={r.value} size="sm" variant={roleFilter === r.value ? "default" : "outline"} className="h-7 text-xs" onClick={() => setRoleFilter(r.value)}>
+                      {r.label}
+                      {r.value !== "all" && <Badge variant="secondary" className="ml-1.5 h-4 px-1 text-[10px]">{profiles.filter((p) => p.role === r.value).length}</Badge>}
+                    </Button>
+                  ))}
+                </div>
+                <table className="w-full text-sm">
+                  <thead className="bg-muted text-muted-foreground text-left">
+                    <tr>
+                      <th className="p-3 font-medium">Nombre</th>
+                      <th className="p-3 font-medium">Email</th>
+                      <th className="p-3 font-medium">Cédula</th>
+                      <th className="p-3 font-medium">Rol</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border">
+                    {profiles.filter((p) => roleFilter === "all" || p.role === roleFilter).length === 0 ? (
+                      <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No hay perfiles con este rol</td></tr>
+                    ) : profiles.filter((p) => roleFilter === "all" || p.role === roleFilter).map((p) => (
                     <tr key={p.id} className="hover:bg-muted/30">
                       <td className="p-3 font-medium text-foreground">{p.nombre || "—"}</td>
                       <td className="p-3">{p.email || "—"}</td>
@@ -498,8 +508,9 @@ const AdminDashboard = () => {
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
+                  </tbody>
+                </table>
+              </div>
             ) : tab === "sla" ? (
               <div className="p-4">
                 <SlaConfig />
