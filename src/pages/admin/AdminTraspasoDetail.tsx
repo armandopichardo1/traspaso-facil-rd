@@ -43,6 +43,8 @@ export default function AdminTraspasoDetail() {
   const [mensajero, setMensajero] = useState("");
   const [notasInternas, setNotasInternas] = useState("");
   const [antifraudeNotas, setAntifraudeNotas] = useState("");
+  const [aiVerifying, setAiVerifying] = useState<"comprador" | "vendedor" | null>(null);
+  const [aiResults, setAiResults] = useState<Record<string, any>>({});
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["admin-traspaso", id],
