@@ -1,44 +1,59 @@
 
-# Plan: Historial como solicitud + Marbete con guia de camara y OCR
 
-## 1. Historial por placa = solicitud manual (no busqueda instantanea)
+# Plan: Flujo por rol (comprador/vendedor) + Cédula con cámara y OCR
 
-El dashboard del cliente actualmente inserta en `historial_consultas` y navega a un detalle. Hay que cambiar el flujo para que sea una **solicitud** que el equipo procesa manualmente.
+## Problema actual
+1. En `NuevoTraspaso.tsx` (cliente), se asume que el usuario siempre es el **comprador** (campos pre-llenados con datos del perfil en comprador). Pero el cliente podría ser el vendedor.
+2. La cédula se sube como archivo plano sin guía de cámara ni OCR para extraer nombre y número automáticamente.
 
-**Cambios en `src/pages/app/Dashboard.tsx`:**
-- Cambiar `handleHistorial` para que al insertar muestre un toast de confirmacion ("Solicitud recibida. Te enviaremos el informe por WhatsApp en menos de 30 minutos") en vez de navegar al detalle
-- Cambiar el boton "BUSCAR" por "SOLICITAR INFORME - RD$350"
-- Agregar campo de telefono/WhatsApp si el perfil no tiene uno guardado
-- Despues del submit, mostrar un estado de confirmacion inline en vez de redirigir
+## 1. Pregunta inicial: "¿Eres comprador o vendedor?"
 
-**Cambios en `src/pages/app/Dashboard.tsx` seccion de actividad reciente:**
-- Mostrar las consultas pendientes con badge "EN PROCESO" y las completadas con badge "COMPLETADO"
+**Archivo: `src/pages/app/NuevoTraspaso.tsx`**
 
-## 2. Marbete: camara con bordes guia + OCR
+- Agregar un paso 0 nuevo antes de Vehículo: **"Tu Rol"** con dos botones grandes: "Soy el Vendedor" / "Soy el Comprador"
+- Guardar en estado `miRol: "vendedor" | "comprador"`
+- Pre-llenar los datos del perfil (`profile.nombre`, `profile.cedula`, `profile.telefono`) en el lado correcto:
+  - Si `miRol === "vendedor"` → pre-llenar campos `vendedor_*`
+  - Si `miRol === "comprador"` → pre-llenar campos `comprador_*` (comportamiento actual)
+- En el paso de documentos, marcar claramente cuáles son "tus" documentos vs los de la contraparte
 
-Ya existe `DocumentCameraGuide` con marco rectangular y crop. Se reutilizara para el marbete con el aspect ratio correcto.
+## 2. Edge function OCR para cédula
 
-Se creara una nueva edge function `ocr-marbete` similar a `ocr-matricula` pero con prompt para marbete.
+**Archivo nuevo: `supabase/functions/ocr-cedula/index.ts`**
 
-### 2a. Crear edge function `supabase/functions/ocr-marbete/index.ts`
-- Copia del patron de `ocr-matricula`
-- Prompt: "Eres un experto en lectura de marbetes vehiculares de Republica Dominicana. Extrae: numero de placa, fecha de vencimiento, tipo de vehiculo, ano fiscal"
-- Tool function `extraer_marbete` con campos: placa, fecha_vencimiento, ano_fiscal, tipo_vehiculo, vigente (boolean)
+- Mismo patrón que `ocr-matricula` y `ocr-marbete`
+- Prompt: experto en cédulas dominicanas (frente y reverso)
+- Campos a extraer: `nombre_completo`, `cedula` (número), `fecha_nacimiento`, `nacionalidad`, `sexo`, `lado` (frente/reverso)
+- Modelo: `google/gemini-2.5-flash`
 
-### 2b. Redisenar `src/components/app/MarbeteUpload.tsx`
-- Agregar estado `showCamera` que muestra `DocumentCameraGuide` con aspect ratio ~1.5 (formato tarjeta horizontal del marbete) y label "Coloca el marbete dentro del marco"
-- Boton "Tomar Foto" abre la camara con guia de bordes
-- Al capturar foto, enviar base64 a la edge function `ocr-marbete`
-- Mostrar datos extraidos (placa, vencimiento, vigencia) en una card de resultados debajo de la foto
-- Agregar prop `onOcrResult` para pasar los datos al componente padre
-- Subir la foto a storage como antes
+## 3. Componente de captura de cédula con cámara guiada
 
-### 2c. Actualizar `src/pages/app/TraspasoDetail.tsx`
-- Pasar callback `onOcrResult` a MarbeteUpload para recibir los datos del OCR
-- Mostrar los datos del marbete extraidos en la vista del traspaso
+**Archivo nuevo: `src/components/app/CedulaCapture.tsx`**
 
-## Detalles tecnicos
+- Reutiliza `DocumentCameraGuide` con aspect ratio de cédula (~1.586, formato ID card)
+- Flujo: Botón "Tomar foto de cédula" → cámara con marco → captura → OCR automático → muestra datos extraídos editables
+- Props: `onResult({ nombre, cedula, imagen_base64 })`, `label` ("Cédula del Vendedor" / "Cédula del Comprador")
+- Los datos extraídos se muestran en una card de confirmación con campos editables (por si el OCR falla parcialmente)
+- También guarda la imagen para subirla como documento
 
-- Edge function usa Lovable AI Gateway con `google/gemini-2.5-flash` (mismo patron que ocr-matricula)
-- No requiere cambios de base de datos (los datos OCR se muestran en UI, no se guardan en tabla nueva)
-- Archivos: 1 nuevo (ocr-marbete), 2 editados (MarbeteUpload, Dashboard), 1 edit menor (TraspasoDetail)
+## 4. Integrar cédula OCR en los pasos de Vendedor y Comprador
+
+**Archivo: `src/pages/app/NuevoTraspaso.tsx`**
+
+- En Step Vendedor: si NO es mi rol, mostrar `CedulaCapture` con label "Cédula del Vendedor (Frente)" que al capturar auto-llena `vendedor_nombre` y `vendedor_cedula`
+- En Step Comprador: igual para el comprador
+- Si ES mi rol, los campos ya están pre-llenados desde el perfil
+- La foto capturada se agrega automáticamente a `files` para subirla como documento
+
+**Archivo: `src/pages/gestor/GestorNuevoTraspaso.tsx`**
+
+- Aplicar el mismo componente `CedulaCapture` en los pasos de Vendedor y Comprador (el gestor no es ni comprador ni vendedor, así que ambos usan cámara+OCR)
+
+## Detalles técnicos
+
+- 1 edge function nueva (`ocr-cedula`)
+- 1 componente nuevo (`CedulaCapture`)
+- 2 archivos editados (`NuevoTraspaso.tsx`, `GestorNuevoTraspaso.tsx`)
+- No requiere cambios de base de datos
+- Usa `DocumentCameraGuide` existente y el mismo patrón de AI Gateway
+
