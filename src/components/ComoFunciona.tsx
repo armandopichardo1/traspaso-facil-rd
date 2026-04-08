@@ -1,5 +1,6 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Smartphone, PenLine, Bike, Landmark, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 
 const steps = [
   { icon: Smartphone, title: "Regístrate y verifica", desc: "Ingresa datos del vehículo y sube cédulas. Nuestro sistema antifraude verifica identidades y cruza con DGII para detectar oposiciones o alertas." },
@@ -24,11 +25,15 @@ const ComoFunciona = () => (
 
         <div className="space-y-8">
           {steps.map((step, i) => (
-            <AnimateOnScroll key={step.title} delay={i * 100}>
+            <AnimateOnScroll key={step.title} delay={i * 100} direction={i % 2 === 0 ? "left" : "right"}>
               <div className="flex gap-5 items-start">
-                <div className="shrink-0 w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center relative z-10">
+                <motion.div
+                  className="shrink-0 w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center relative z-10"
+                  whileHover={{ scale: 1.1, rotate: -5 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                >
                   <step.icon className="h-7 w-7 text-accent" />
-                </div>
+                </motion.div>
                 <div className="pt-2">
                   <p className="text-xs font-bold text-teal uppercase mb-1">Paso {i + 1}</p>
                   <h3 className="font-bold text-foreground mb-1">{step.title}</h3>

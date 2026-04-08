@@ -1,6 +1,7 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Button } from "@/components/ui/button";
 import { Check, Zap } from "lucide-react";
+import { motion } from "framer-motion";
 
 const plans = [
   {
@@ -47,8 +48,12 @@ const PricingSection = () => (
 
       <div className="grid md:grid-cols-3 gap-6 mb-10">
         {plans.map((plan, i) => (
-          <AnimateOnScroll key={plan.name} delay={i * 100}>
-            <div className={`bg-card rounded-2xl p-6 border shadow-sm h-full flex flex-col ${plan.highlight ? "border-cta border-2 relative" : "border-border"}`}>
+          <AnimateOnScroll key={plan.name} delay={i * 120}>
+            <motion.div
+              className={`bg-card rounded-2xl p-6 border shadow-sm h-full flex flex-col ${plan.highlight ? "border-cta border-2 relative" : "border-border"}`}
+              whileHover={{ y: -6, boxShadow: "0 20px 40px -12px rgba(0,0,0,0.12)" }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
               {plan.highlight && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cta text-cta-foreground text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
                   <Zap className="h-3 w-3" /> MÁS POPULAR
@@ -68,7 +73,7 @@ const PricingSection = () => (
               <Button variant={plan.variant} className="w-full" asChild>
                 <a href={plan.href}>{plan.cta}</a>
               </Button>
-            </div>
+            </motion.div>
           </AnimateOnScroll>
         ))}
       </div>

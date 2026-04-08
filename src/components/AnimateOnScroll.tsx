@@ -1,36 +1,41 @@
-import { useState, useEffect, useRef, ReactNode } from "react";
+import { ReactNode } from "react";
+import { motion } from "framer-motion";
 
 interface AnimateOnScrollProps {
   children: ReactNode;
   className?: string;
   delay?: number;
+  direction?: "up" | "down" | "left" | "right";
 }
 
-export const AnimateOnScroll = ({ children, className = "", delay = 0 }: AnimateOnScrollProps) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+const directionOffset = {
+  up: { y: 40, x: 0 },
+  down: { y: -40, x: 0 },
+  left: { x: 40, y: 0 },
+  right: { x: -40, y: 0 },
+};
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setIsVisible(true), delay);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [delay]);
+export const AnimateOnScroll = ({
+  children,
+  className = "",
+  delay = 0,
+  direction = "up",
+}: AnimateOnScrollProps) => {
+  const offset = directionOffset[direction];
 
   return (
-    <div
-      ref={ref}
-      className={`transition-all duration-700 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"} ${className}`}
+    <motion.div
+      initial={{ opacity: 0, ...offset }}
+      whileInView={{ opacity: 1, x: 0, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{
+        duration: 0.6,
+        delay: delay / 1000,
+        ease: [0.25, 0.1, 0.25, 1],
+      }}
+      className={className}
     >
       {children}
-    </div>
+    </motion.div>
   );
 };

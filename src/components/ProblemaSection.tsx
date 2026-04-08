@@ -1,5 +1,6 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { ClipboardList, ShieldAlert, AlertTriangle, AlertOctagon } from "lucide-react";
+import { motion } from "framer-motion";
 
 const painCards = [
   {
@@ -31,14 +32,22 @@ const ProblemaSection = () => (
 
       <div className="grid md:grid-cols-3 gap-6 mb-8">
         {painCards.map((card, i) => (
-          <AnimateOnScroll key={card.title} delay={i * 100}>
-            <div className="bg-primary-foreground/5 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/10 h-full">
-              <div className="w-12 h-12 rounded-xl bg-destructive/20 flex items-center justify-center mb-3">
+          <AnimateOnScroll key={card.title} delay={i * 120}>
+            <motion.div
+              className="bg-primary-foreground/5 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/10 h-full"
+              whileHover={{ scale: 1.03, borderColor: "rgba(255,255,255,0.2)" }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              <motion.div
+                className="w-12 h-12 rounded-xl bg-destructive/20 flex items-center justify-center mb-3"
+                whileHover={{ rotate: -8, scale: 1.1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+              >
                 <card.icon className="h-6 w-6 text-destructive" />
-              </div>
+              </motion.div>
               <h3 className="font-bold text-primary-foreground mb-2">{card.title}</h3>
               <p className="text-sm text-primary-foreground/60">{card.desc}</p>
-            </div>
+            </motion.div>
           </AnimateOnScroll>
         ))}
       </div>
