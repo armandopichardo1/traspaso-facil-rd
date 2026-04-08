@@ -2,13 +2,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, PlusCircle, Car, Clock, ArrowRight } from "lucide-react";
+import { Search, PlusCircle, Car, Clock, ArrowRight, FileText, Activity } from "lucide-react";
 import { useState } from "react";
 
 const STATUS_STEPS = [
@@ -82,23 +82,56 @@ export default function Dashboard() {
     return ((idx + 1) / STATUS_STEPS.length) * 100;
   };
 
+  const activeTraspasos = traspasos?.filter(t => t.status !== "completado" && t.status !== "cancelado") || [];
+
   return (
     <div className="max-w-lg mx-auto px-4 pt-6">
-      <h1 className="text-xl font-bold text-foreground">
-        Hola, {profile?.nombre || "Usuario"} 👋
-      </h1>
-      <p className="text-sm text-muted-foreground mb-6">Bienvenido a TRASPASA.DO</p>
+      {/* Welcome header */}
+      <div className="mb-6">
+        <h1 className="text-xl font-bold text-foreground">
+          Hola, {profile?.nombre || "Usuario"}
+        </h1>
+        <p className="text-sm text-muted-foreground">Bienvenido a TRASPASA.DO</p>
+      </div>
+
+      {/* Quick stats */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <Card>
+          <CardContent className="p-3 text-center">
+            <FileText className="h-5 w-5 mx-auto mb-1 text-accent" />
+            <p className="text-lg font-bold">{traspasos?.length || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Total</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <Activity className="h-5 w-5 mx-auto mb-1 text-cta" />
+            <p className="text-lg font-bold">{activeTraspasos.length}</p>
+            <p className="text-[10px] text-muted-foreground">Activos</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-3 text-center">
+            <Search className="h-5 w-5 mx-auto mb-1 text-muted-foreground" />
+            <p className="text-lg font-bold">{historiales?.length || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Consultas</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Quick actions */}
       <div className="space-y-3 mb-8">
         <div className="flex gap-2">
-          <Input
-            placeholder="🔍 Consultar historial por placa"
-            value={placa}
-            onChange={(e) => setPlaca(e.target.value.toUpperCase())}
-            className="flex-1"
-            onKeyDown={(e) => e.key === "Enter" && handleHistorial()}
-          />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Consultar historial por placa"
+              value={placa}
+              onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+              className="pl-10"
+              onKeyDown={(e) => e.key === "Enter" && handleHistorial()}
+            />
+          </div>
           <Button variant="teal" onClick={handleHistorial}>
             <Search className="h-4 w-4" />
           </Button>
@@ -149,8 +182,9 @@ export default function Dashboard() {
           </div>
         ) : (
           <Card>
-            <CardContent className="p-6 text-center text-muted-foreground text-sm">
-              No tienes traspasos activos. ¡Crea tu primer traspaso!
+            <CardContent className="p-6 text-center text-muted-foreground">
+              <Car className="h-10 w-10 mx-auto mb-3 opacity-30" />
+              <p className="text-sm">No tienes traspasos activos. ¡Crea tu primer traspaso!</p>
             </CardContent>
           </Card>
         )}

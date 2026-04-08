@@ -5,10 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Mail, Lock, ArrowRight, User, Briefcase, Shield } from "lucide-react";
 
 type RoleTab = "cliente" | "gestor" | "admin";
+type AdminSubRole = "admin" | "notario" | "mensajero";
 
 const roleTabs: { key: RoleTab; label: string; icon: React.ReactNode; desc: string }[] = [
   { key: "cliente", label: "Cliente", icon: <User className="h-4 w-4" />, desc: "Gestiona tus traspasos" },
@@ -16,8 +18,15 @@ const roleTabs: { key: RoleTab; label: string; icon: React.ReactNode; desc: stri
   { key: "admin", label: "Administrativo", icon: <Shield className="h-4 w-4" />, desc: "Admin, Notario, Mensajero" },
 ];
 
+const adminSubRoleLabels: Record<AdminSubRole, { label: string; desc: string }> = {
+  admin: { label: "Administrador", desc: "Panel de administración general" },
+  notario: { label: "Notario", desc: "Certificación y firma de contratos" },
+  mensajero: { label: "Mensajero", desc: "Recogida y entrega de matrículas" },
+};
+
 export default function Login() {
   const [activeRole, setActiveRole] = useState<RoleTab>("cliente");
+  const [adminSubRole, setAdminSubRole] = useState<AdminSubRole>("admin");
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +46,7 @@ export default function Login() {
       } else {
         toast({
           title: "¡Cuenta creada!",
-          description: "Revisa tu correo para verificar tu cuenta.",
+          description: "Ya puedes iniciar sesión.",
         });
       }
     } else {
@@ -79,13 +88,24 @@ export default function Login() {
     setSubmitting(false);
   };
 
+  const getDescription = () => {
+    if (activeRole === "cliente") return "Accede a tu panel de traspasos";
+    if (activeRole === "gestor") return "Accede al panel de gestión";
+    return adminSubRoleLabels[adminSubRole].desc;
+  };
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <a href="/" className="text-2xl font-extrabold tracking-tight">
-            <span className="text-primary">TRASPASA</span>
-            <span className="text-teal">.DO</span>
+          <a href="/" className="inline-flex items-center gap-2 text-2xl font-extrabold tracking-tight">
+            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+              <Shield className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span>
+              <span className="text-primary">TRASPASA</span>
+              <span className="text-teal">.DO</span>
+            </span>
           </a>
           <p className="text-muted-foreground mt-1">Tu traspaso vehicular, simplificado</p>
         </div>
@@ -115,19 +135,32 @@ export default function Login() {
         <Card>
           <CardHeader className="text-center pb-4">
             <CardTitle className="text-lg">
-              {isSignUp ? "Crear Cuenta" : `Iniciar Sesión como ${roleTabs.find(t => t.key === activeRole)?.label}`}
+              {isSignUp ? "Crear Cuenta" : `Iniciar Sesión`}
             </CardTitle>
             <CardDescription>
               {isSignUp
                 ? "Regístrate para gestionar tus traspasos"
-                : activeRole === "cliente"
-                ? "Accede a tu panel de traspasos"
-                : activeRole === "gestor"
-                ? "Accede al panel de gestión"
-                : "Accede al panel de administración"}
+                : getDescription()}
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Admin sub-role dropdown */}
+            {activeRole === "admin" && (
+              <div className="mb-4">
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Tipo de acceso</label>
+                <Select value={adminSubRole} onValueChange={(v) => setAdminSubRole(v as AdminSubRole)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Administrador</SelectItem>
+                    <SelectItem value="notario">Notario</SelectItem>
+                    <SelectItem value="mensajero">Mensajero</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -171,7 +204,7 @@ export default function Login() {
 
             {activeRole !== "cliente" && (
               <p className="mt-4 text-xs text-center text-muted-foreground">
-                Las cuentas de {activeRole === "gestor" ? "gestores" : "administradores"} son creadas por un administrador.
+                Las cuentas de {activeRole === "gestor" ? "gestores" : "administradores, notarios y mensajeros"} son creadas por un administrador.
               </p>
             )}
           </CardContent>
