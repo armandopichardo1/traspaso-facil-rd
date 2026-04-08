@@ -1,59 +1,100 @@
 
 
-# Plan: Flujo por rol (comprador/vendedor) + Cédula con cámara y OCR
+# Plan: Alinear flujos de traspaso con proceso DGII real
 
-## Problema actual
-1. En `NuevoTraspaso.tsx` (cliente), se asume que el usuario siempre es el **comprador** (campos pre-llenados con datos del perfil en comprador). Pero el cliente podría ser el vendedor.
-2. La cédula se sube como archivo plano sin guía de cámara ni OCR para extraer nombre y número automáticamente.
+## Análisis del proceso DGII real vs lo implementado
 
-## 1. Pregunta inicial: "¿Eres comprador o vendedor?"
+El proceso real de traspaso vehicular en República Dominicana sigue este orden:
 
-**Archivo: `src/pages/app/NuevoTraspaso.tsx`**
+```text
+1. Acuerdo de venta (comprador + vendedor)
+2. Acto de venta (contrato notariado)
+3. Verificación antifraude / identidad
+4. Pago de impuestos (2% del valor + timbres)
+5. Entrega de matrícula vieja + documentos a DGII
+6. DGII procesa y emite nueva matrícula
+7. Entrega de nueva matrícula al comprador
+```
 
-- Agregar un paso 0 nuevo antes de Vehículo: **"Tu Rol"** con dos botones grandes: "Soy el Vendedor" / "Soy el Comprador"
-- Guardar en estado `miRol: "vendedor" | "comprador"`
-- Pre-llenar los datos del perfil (`profile.nombre`, `profile.cedula`, `profile.telefono`) en el lado correcto:
-  - Si `miRol === "vendedor"` → pre-llenar campos `vendedor_*`
-  - Si `miRol === "comprador"` → pre-llenar campos `comprador_*` (comportamiento actual)
-- En el paso de documentos, marcar claramente cuáles son "tus" documentos vs los de la contraparte
+## Problemas detectados por rol
 
-## 2. Edge function OCR para cédula
+### 1. Cliente (customer) — `NuevoTraspaso.tsx` / `TraspasoDetail.tsx`
+- **OK**: Selección de rol (vendedor/comprador), captura de cédula con OCR
+- **Problema**: El cliente sube marbete desde `TraspasoDetail`, pero el marbete debería capturarse al crear el traspaso (paso de documentos), no después
+- **Problema**: El `customer_id` siempre es el usuario logueado, pero si el gestor crea el traspaso, el `customer_id` no debería ser el gestor
+- **Problema**: Falta paso de selfie para verificación antifraude (el admin espera `selfie_comprador` y `selfie_vendedor` pero nunca se piden)
 
-**Archivo nuevo: `supabase/functions/ocr-cedula/index.ts`**
+### 2. Gestor — `GestorNuevoTraspaso.tsx` / `GestorTraspasoDetail.tsx`
+- **Problema crítico**: `customer_id: user!.id` — el gestor se pone a sí mismo como customer. Esto viola las policies RLS y confunde los datos. Debería usar `gestor_id: user!.id` y `customer_id` debería ser null o un UUID del cliente real
+- **Problema**: El gestor no puede avanzar el status del traspaso desde su detalle (no tiene botones de acción para mover status)
+- **Problema**: El gestor no sube cédulas base64 al storage (la función `uploadFiles` del gestor no maneja `cedulaFiles`)
+- **Problema**: No sube selfies ni marbete
 
-- Mismo patrón que `ocr-matricula` y `ocr-marbete`
-- Prompt: experto en cédulas dominicanas (frente y reverso)
-- Campos a extraer: `nombre_completo`, `cedula` (número), `fecha_nacimiento`, `nacionalidad`, `sexo`, `lado` (frente/reverso)
-- Modelo: `google/gemini-2.5-flash`
+### 3. Notario — `NotarioTraspasoDetail.tsx`
+- **Problema**: El notario avanza el status a `matricula_recogida` después de firmar. Según DGII, después de la certificación notarial viene la verificación antifraude, NO la recogida de matrícula
+- **Problema**: El notario ve TODOS los traspasos (RLS filtra solo por status `contrato_firmado`, `verificacion_antifraude`, `contrato_generado`), pero `contrato_generado` no existe en los STATUS_STEPS
+- **Problema**: El flujo del notario debería ser: revisar contrato → firmar → avanzar a `verificacion_antifraude`
 
-## 3. Componente de captura de cédula con cámara guiada
+### 4. Mensajero — `MensajeroTraspasoDetail.tsx`
+- **Problema**: El mensajero avanza a `en_dgii`, pero este status no existe en los STATUS_STEPS definidos. Debería ser `dgii_proceso`
+- **Problema menor**: Solo ve traspasos en status `matricula_recogida` y `en_dgii`, pero `en_dgii` no es un status válido
 
-**Archivo nuevo: `src/components/app/CedulaCapture.tsx`**
+### 5. Admin — `AdminTraspasoDetail.tsx`
+- **OK general**: Puede cambiar cualquier status, ver documentos, hacer antifraude
+- **Problema**: Los STATUS_STEPS no incluyen `documentos_pendientes` que sí aparece en el gestor
 
-- Reutiliza `DocumentCameraGuide` con aspect ratio de cédula (~1.586, formato ID card)
-- Flujo: Botón "Tomar foto de cédula" → cámara con marco → captura → OCR automático → muestra datos extraídos editables
-- Props: `onResult({ nombre, cedula, imagen_base64 })`, `label` ("Cédula del Vendedor" / "Cédula del Comprador")
-- Los datos extraídos se muestran en una card de confirmación con campos editables (por si el OCR falla parcialmente)
-- También guarda la imagen para subirla como documento
+## Flujo correcto propuesto (alineado con DGII)
 
-## 4. Integrar cédula OCR en los pasos de Vendedor y Comprador
+```text
+STATUS PIPELINE:
+solicitud_recibida → documentos_completos → contrato_generado → contrato_firmado → verificacion_antifraude → matricula_recogida → dgii_proceso → completado
 
-**Archivo: `src/pages/app/NuevoTraspaso.tsx`**
+DUEÑO DE CADA PASO:
+1. solicitud_recibida      → CLIENTE o GESTOR crea el traspaso
+2. documentos_completos    → GESTOR verifica docs completos, avanza
+3. contrato_generado       → GESTOR genera contrato, avanza
+4. contrato_firmado        → NOTARIO certifica firma + sello, avanza
+5. verificacion_antifraude → ADMIN revisa selfie vs cédula, aprueba/rechaza
+6. matricula_recogida      → MENSAJERO recoge matrícula vieja, sube evidencia
+7. dgii_proceso            → ADMIN/GESTOR confirma entrada en DGII
+8. completado              → ADMIN confirma nueva matrícula lista + entregada
+```
 
-- En Step Vendedor: si NO es mi rol, mostrar `CedulaCapture` con label "Cédula del Vendedor (Frente)" que al capturar auto-llena `vendedor_nombre` y `vendedor_cedula`
-- En Step Comprador: igual para el comprador
-- Si ES mi rol, los campos ya están pre-llenados desde el perfil
-- La foto capturada se agrega automáticamente a `files` para subirla como documento
+## Cambios propuestos
 
-**Archivo: `src/pages/gestor/GestorNuevoTraspaso.tsx`**
+### A. Unificar STATUS_STEPS en un solo archivo compartido
+- Crear `src/lib/traspaso-status.ts` con los statuses, labels, y quién es dueño de cada paso
+- Reemplazar las definiciones duplicadas en cada página
 
-- Aplicar el mismo componente `CedulaCapture` en los pasos de Vendedor y Comprador (el gestor no es ni comprador ni vendedor, así que ambos usan cámara+OCR)
+### B. Corregir GestorNuevoTraspaso — customer_id
+- Cambiar `customer_id: user!.id` por un campo opcional o null
+- Agregar upload de `cedulaFiles` base64 al storage (como en NuevoTraspaso del cliente)
+- Necesita migración: hacer `customer_id` nullable en `traspasos`
+
+### C. Agregar acciones de avance al GestorTraspasoDetail
+- Botón "Marcar docs completos" (→ `documentos_completos`)
+- Botón "Generar contrato" ya existe, agregar avance a `contrato_generado`
+- RLS: gestor ya puede hacer UPDATE en sus traspasos
+
+### D. Corregir flujo del Notario
+- Después de firmar, avanzar a `verificacion_antifraude` (no `matricula_recogida`)
+- Actualizar RLS del notario para incluir `documentos_completos` y `contrato_generado` en los statuses visibles
+
+### E. Corregir flujo del Mensajero
+- Cambiar `en_dgii` por `dgii_proceso` (status que sí existe)
+- Actualizar RLS para reflejar los statuses correctos
+
+### F. Agregar captura de selfie en NuevoTraspaso
+- Paso de documentos: agregar selfie del comprador y vendedor
+- Reutilizar `DocumentCameraGuide` con aspect ratio de retrato
+
+### G. Mover MarbeteUpload al flujo de creación
+- Sacar MarbeteUpload de TraspasoDetail y ponerlo en el paso de documentos de NuevoTraspaso
 
 ## Detalles técnicos
 
-- 1 edge function nueva (`ocr-cedula`)
-- 1 componente nuevo (`CedulaCapture`)
-- 2 archivos editados (`NuevoTraspaso.tsx`, `GestorNuevoTraspaso.tsx`)
-- No requiere cambios de base de datos
-- Usa `DocumentCameraGuide` existente y el mismo patrón de AI Gateway
+- 1 archivo nuevo: `src/lib/traspaso-status.ts`
+- 1 migración: `customer_id` nullable + actualizar RLS del notario y mensajero
+- 6 archivos editados: NuevoTraspaso, GestorNuevoTraspaso, GestorTraspasoDetail, NotarioTraspasoDetail, MensajeroTraspasoDetail, AdminTraspasoDetail
+- Todos los STATUS_STEPS unificados desde el archivo compartido
 
