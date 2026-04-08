@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const Navbar = () => {
@@ -15,9 +15,14 @@ const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
       <div className="container flex items-center justify-between h-16">
-        <a href="/" className="flex items-center gap-0 text-xl font-extrabold tracking-tight">
-          <span className="text-primary">TRASPASA</span>
-          <span className="text-teal">.DO</span>
+        <a href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <Shield className="h-4 w-4 text-primary-foreground" />
+          </div>
+          <span>
+            <span className="text-primary">TRASPASA</span>
+            <span className="text-teal">.DO</span>
+          </span>
         </a>
 
         <div className="hidden md:flex items-center gap-6">
@@ -43,7 +48,7 @@ const Navbar = () => {
       </div>
 
       {open && (
-        <div className="md:hidden bg-card border-b border-border px-4 pb-4 space-y-3">
+        <div className="md:hidden bg-card border-b border-border px-4 pb-4 space-y-3 animate-fade-in">
           {links.map((l) => (
             <a key={l.href} href={l.href} onClick={() => setOpen(false)} className="block text-sm font-medium text-muted-foreground hover:text-foreground py-2">
               {l.label}

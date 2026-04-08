@@ -1,11 +1,12 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Button } from "@/components/ui/button";
+import { DollarSign, Smartphone, Shield, BarChart3 } from "lucide-react";
 
 const benefits = [
-  { emoji: "💰", text: "Gana más por traspaso con mejor servicio" },
-  { emoji: "📱", text: "Plataforma profesional para tus clientes" },
-  { emoji: "🛡️", text: "Seguro y antifraude que te dan credibilidad" },
-  { emoji: "📊", text: "Dashboard con todos tus traspasos" },
+  { icon: DollarSign, text: "Gana más por traspaso con mejor servicio" },
+  { icon: Smartphone, text: "Plataforma profesional para tus clientes" },
+  { icon: Shield, text: "Seguro y antifraude que te dan credibilidad" },
+  { icon: BarChart3, text: "Dashboard con todos tus traspasos" },
 ];
 
 const GestoresSection = () => (
@@ -25,7 +26,9 @@ const GestoresSection = () => (
         {benefits.map((b, i) => (
           <AnimateOnScroll key={b.text} delay={i * 80}>
             <div className="flex items-start gap-3 bg-card p-4 rounded-xl border border-border">
-              <span className="text-xl">{b.emoji}</span>
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                <b.icon className="h-4 w-4 text-accent" />
+              </div>
               <p className="text-sm font-medium text-foreground">{b.text}</p>
             </div>
           </AnimateOnScroll>

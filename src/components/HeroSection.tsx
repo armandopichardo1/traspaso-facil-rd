@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, FileText, Clock, Star, Users } from "lucide-react";
+
+const socialProof = [
+  { icon: Users, value: "500+", label: "Traspasos completados" },
+  { icon: Star, value: "4.9★", label: "Calificación promedio" },
+  { icon: Clock, value: "24h", label: "Tiempo promedio" },
+];
 
 const HeroSection = () => {
   const [placa, setPlaca] = useState("");
@@ -20,7 +26,9 @@ const HeroSection = () => {
         <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
           {/* Card A - Historial */}
           <div className="bg-card rounded-2xl p-6 shadow-xl border border-border/50">
-            <div className="text-3xl mb-3">🔍</div>
+            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-3">
+              <Search className="h-6 w-6 text-accent" />
+            </div>
             <h2 className="text-xl font-bold text-foreground mb-1">Consulta Historial Vehicular</h2>
             <p className="text-muted-foreground text-sm mb-4">Conoce todo antes de comprar</p>
             <div className="flex gap-2 mb-3">
@@ -45,12 +53,13 @@ const HeroSection = () => {
           </div>
 
           {/* Card B - Traspaso */}
-          <div className="bg-card rounded-2xl p-6 shadow-xl border border-border/50">
-            <div className="text-3xl mb-3">📋</div>
+          <div className="bg-card rounded-2xl p-6 shadow-xl border border-border/50 flex flex-col">
+            <div className="w-12 h-12 rounded-xl bg-cta/10 flex items-center justify-center mb-3">
+              <FileText className="h-6 w-6 text-cta" />
+            </div>
             <h2 className="text-xl font-bold text-foreground mb-1">Traspaso Vehicular</h2>
             <p className="text-muted-foreground text-sm mb-4">Sin filas. Sin estrés. En 24 horas.</p>
             <div className="flex-1 flex flex-col justify-end">
-              <div className="mb-3 h-11" /> {/* spacer to align with other card */}
               <Button variant="cta" className="w-full" size="lg" asChild>
                 <a href="#solicitud">Iniciar Traspaso →</a>
               </Button>
@@ -59,6 +68,17 @@ const HeroSection = () => {
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Social proof */}
+        <div className="flex flex-wrap justify-center gap-8 mt-10">
+          {socialProof.map((item) => (
+            <div key={item.label} className="flex items-center gap-2 text-primary-foreground/80">
+              <item.icon className="h-5 w-5 text-accent" />
+              <span className="font-extrabold text-primary-foreground">{item.value}</span>
+              <span className="text-sm">{item.label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </section>

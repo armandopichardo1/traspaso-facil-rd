@@ -1,6 +1,6 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Zap } from "lucide-react";
 
 const plans = [
   {
@@ -32,7 +32,6 @@ const plans = [
     href: "#solicitud",
     variant: "cta" as const,
     highlight: true,
-    badge: "⚡ MÁS POPULAR",
   },
 ];
 
@@ -51,8 +50,8 @@ const PricingSection = () => (
           <AnimateOnScroll key={plan.name} delay={i * 100}>
             <div className={`bg-card rounded-2xl p-6 border shadow-sm h-full flex flex-col ${plan.highlight ? "border-cta border-2 relative" : "border-border"}`}>
               {plan.highlight && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cta text-cta-foreground text-xs font-bold px-3 py-1 rounded-full">
-                  {plan.badge}
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cta text-cta-foreground text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                  <Zap className="h-3 w-3" /> MÁS POPULAR
                 </span>
               )}
               <h3 className="font-bold text-foreground mb-1">{plan.name}</h3>
@@ -61,7 +60,7 @@ const PricingSection = () => (
               <ul className="space-y-2 mb-6 flex-1">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-center gap-2 text-sm text-foreground">
-                    <Check className="text-teal shrink-0" size={16} />
+                    <Check className="text-accent shrink-0" size={16} />
                     {f}
                   </li>
                 ))}

@@ -1,11 +1,12 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Button } from "@/components/ui/button";
+import { BarChart3, Clock, Search, FileText } from "lucide-react";
 
 const benefits = [
-  { emoji: "📊", text: "Dashboard multi-traspaso con status en tiempo real" },
-  { emoji: "⏱️", text: "Ahorra 60+ horas al mes en filas y trámites" },
-  { emoji: "🔍", text: "Informes de historial al por mayor con descuento" },
-  { emoji: "📄", text: "Reportes y facturación para tu contabilidad" },
+  { icon: BarChart3, text: "Dashboard multi-traspaso con status en tiempo real" },
+  { icon: Clock, text: "Ahorra 60+ horas al mes en filas y trámites" },
+  { icon: Search, text: "Informes de historial al por mayor con descuento" },
+  { icon: FileText, text: "Reportes y facturación para tu contabilidad" },
 ];
 
 const tiers = [
@@ -28,7 +29,9 @@ const DealersSection = () => (
         {benefits.map((b, i) => (
           <AnimateOnScroll key={b.text} delay={i * 80}>
             <div className="flex items-start gap-3 bg-card p-4 rounded-xl border border-border">
-              <span className="text-xl">{b.emoji}</span>
+              <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                <b.icon className="h-4 w-4 text-accent" />
+              </div>
               <p className="text-sm font-medium text-foreground">{b.text}</p>
             </div>
           </AnimateOnScroll>
