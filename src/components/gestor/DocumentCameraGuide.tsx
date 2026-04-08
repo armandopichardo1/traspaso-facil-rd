@@ -7,6 +7,7 @@ interface DocumentCameraGuideProps {
   onCancel: () => void;
   aspectRatio?: number;
   label?: string;
+  facingMode?: "environment" | "user";
 }
 
 export default function DocumentCameraGuide({
