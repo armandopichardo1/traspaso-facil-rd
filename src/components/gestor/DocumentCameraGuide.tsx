@@ -28,7 +28,7 @@ export default function DocumentCameraGuide({
   const startCamera = useCallback(async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } },
+        video: { facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       setStream(mediaStream);
       if (videoRef.current) {
