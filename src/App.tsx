@@ -54,6 +54,8 @@ const App = () => (
             <Route path="/norma-03-25" element={<Norma0325 />} />
             <Route path="/calculadora" element={<Calculadora />} />
             <Route path="/seguimiento/:code" element={<Seguimiento />} />
+            <Route path="/terminos" element={<TerminosServicio />} />
+            <Route path="/privacidad" element={<PoliticaPrivacidad />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/traspaso/:id" element={<AdminTraspasoDetail />} />
