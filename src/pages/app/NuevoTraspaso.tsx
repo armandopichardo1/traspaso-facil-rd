@@ -507,8 +507,8 @@ export default function NuevoTraspaso() {
                   onCapture={(base64) => setCedulaFiles(prev => ({ ...prev, marbete: base64 }))}
                   captured={!!cedulaFiles["marbete"]}
                   onOcrResult={(ocrData) => {
-                    if (ocrData.placa && !vehiculo.placa) {
-                      setVehiculo(prev => ({ ...prev, placa: ocrData.placa }));
+                    if (ocrData.placa && !form.vehiculo_placa) {
+                      update("vehiculo_placa", ocrData.placa.toUpperCase());
                     }
                   }}
                 />
