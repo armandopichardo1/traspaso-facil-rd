@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, BadgePercent, ScanLine, FileText, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import MatriculaScanner, { type OcrResult } from "@/components/gestor/MatriculaScanner";
+import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
 
 const STEPS = [
   { title: "Matrícula", icon: ScanLine },
