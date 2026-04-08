@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, FileText, Shield, Lock, PenTool, Headphones, CheckCircle } from "lucide-react";
+import heroImage from "@/assets/hero-traspaso.jpg";
 import { motion } from "framer-motion";
 
 const trustItems = [
