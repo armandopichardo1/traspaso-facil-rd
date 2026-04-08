@@ -211,7 +211,7 @@ export default function AdminTraspasoDetail() {
     }
   };
 
-
+  if (isLoading) {
     return (
       <div className="container py-6 space-y-4">
         <Skeleton className="h-8 w-48" />
