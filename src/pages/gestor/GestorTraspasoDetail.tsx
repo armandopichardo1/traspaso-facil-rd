@@ -85,10 +85,6 @@ export default function GestorTraspasoDetail() {
   }
 
   const t = traspaso as any;
-  const getProgress = (status: string) => {
-    const idx = STATUS_STEPS.indexOf(status);
-    return idx === -1 ? 0 : ((idx + 1) / STATUS_STEPS.length) * 100;
-  };
 
   const whatsappLink = (phone: string | null) => {
     if (!phone) return "#";
