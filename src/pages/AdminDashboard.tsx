@@ -483,7 +483,7 @@ const AdminDashboard = () => {
                       <td className="p-3">{p.email || "—"}</td>
                       <td className="p-3 font-mono">{p.cedula || "—"}</td>
                       <td className="p-3">
-                        <Select value={p.role} onValueChange={(v) => handleRoleChange(p.id, v)}>
+                        <Select value={p.role} onValueChange={(v) => requestRoleChange(p.id, v)}>
                           <SelectTrigger className="h-7 w-[140px] text-xs font-medium">
                             <SelectValue />
                           </SelectTrigger>
