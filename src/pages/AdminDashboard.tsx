@@ -159,8 +159,21 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleRoleChange = async (profileId: string, newRole: string) => {
+  const [pendingRoleChange, setPendingRoleChange] = useState<{ profileId: string; name: string; oldRole: string; newRole: string } | null>(null);
+
+  const ROLE_LABELS: Record<string, string> = { customer: "Cliente", gestor: "Gestor", notario: "Notario", mensajero: "Mensajero", admin: "Admin" };
+
+  const requestRoleChange = (profileId: string, newRole: string) => {
+    const profile = profiles.find((p) => p.id === profileId);
+    if (!profile || profile.role === newRole) return;
+    setPendingRoleChange({ profileId, name: profile.nombre || profile.email || profileId, oldRole: profile.role, newRole });
+  };
+
+  const confirmRoleChange = async () => {
+    if (!pendingRoleChange) return;
+    const { profileId, newRole } = pendingRoleChange;
     const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", profileId);
+    setPendingRoleChange(null);
     if (error) {
       toast.error("Error al cambiar rol");
       return;
