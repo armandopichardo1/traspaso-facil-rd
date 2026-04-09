@@ -22,6 +22,7 @@ const Index = () => (
     <main>
       <HeroSection />
       <TrustBar />
+      <StatsCounter />
       <ProblemaSection />
       <HistorialSection />
       <ComoFunciona />
