@@ -373,7 +373,9 @@ export type Database = {
           gestor_id: string | null
           id: string
           medio_pago: string | null
+          mensajero_id: string | null
           mensajero_nombre: string | null
+          notario_id: string | null
           notas_internas: string | null
           pago_servicio_status: string
           plan: string
@@ -414,7 +416,9 @@ export type Database = {
           gestor_id?: string | null
           id?: string
           medio_pago?: string | null
+          mensajero_id?: string | null
           mensajero_nombre?: string | null
+          notario_id?: string | null
           notas_internas?: string | null
           pago_servicio_status?: string
           plan?: string
@@ -455,7 +459,9 @@ export type Database = {
           gestor_id?: string | null
           id?: string
           medio_pago?: string | null
+          mensajero_id?: string | null
           mensajero_nombre?: string | null
+          notario_id?: string | null
           notas_internas?: string | null
           pago_servicio_status?: string
           plan?: string
@@ -488,6 +494,20 @@ export type Database = {
           {
             foreignKeyName: "traspasos_gestor_id_fkey"
             columns: ["gestor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspasos_mensajero_id_fkey"
+            columns: ["mensajero_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspasos_notario_id_fkey"
+            columns: ["notario_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]

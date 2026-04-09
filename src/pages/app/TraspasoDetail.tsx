@@ -9,9 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
-  ShieldCheck, MapPin, PenTool, DollarSign,
+  ShieldCheck, MapPin, PenTool, DollarSign, Upload,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
+import DocumentUpload from "@/components/gestor/DocumentUpload";
 import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUpload";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
@@ -219,18 +220,32 @@ export default function TraspasoDetail() {
         </Card>
       </motion.div>
 
-      {/* Contracts & Signatures */}
-      <Card className="mb-4 rounded-xl">
-        <CardContent className="p-4">
-          <ContractGenerator
-            traspasoId={t.id}
-            contractData={contractData}
-            contracts={contracts as any}
-            signatures={signatures as any}
-            onRefresh={refreshData}
-          />
-        </CardContent>
-      </Card>
+      {/* Contracts & Signatures — client can sign when contrato_generado */}
+      {(t.status === "contrato_generado" || t.status === "contrato_firmado" || contracts.length > 0) && (
+        <Card className="mb-4 rounded-xl">
+          <CardContent className="p-4">
+            {t.status === "contrato_generado" && (
+              <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-sm text-accent mb-3">
+                ✍️ Tu contrato está listo. Puedes firmarlo digitalmente a continuación.
+              </div>
+            )}
+            <ContractGenerator
+              traspasoId={t.id}
+              contractData={contractData}
+              contracts={contracts as any}
+              signatures={signatures as any}
+              onRefresh={refreshData}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Client document upload — can upload additional docs */}
+      {t.status !== "completado" && t.status !== "cancelado" && (
+        <div className="mb-4">
+          <DocumentUpload traspasoId={t.id} />
+        </div>
+      )}
 
       {/* Marbete upload */}
       <div className="mb-4">

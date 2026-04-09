@@ -11,29 +11,7 @@ import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-
-const STATUS_STEPS = [
-  { key: "solicitud_recibida", label: "SOLICITUD" },
-  { key: "verificacion_antifraude", label: "REVISIÓN" },
-  { key: "contrato_firmado", label: "PAGO" },
-  { key: "matricula_recogida", label: "DGII" },
-  { key: "plan_piloto", label: "DGII" },
-  { key: "dgii_proceso", label: "DGII" },
-  { key: "completado", label: "FINAL" },
-];
-
-const PROGRESS_LABELS = ["SOLICITUD", "REVISIÓN", "PAGO", "DGII", "FINAL"];
-
-const STATUS_LABELS: Record<string, string> = {
-  solicitud_recibida: "Solicitud Recibida",
-  verificacion_antifraude: "En Revisión",
-  contrato_firmado: "Contrato Firmado",
-  matricula_recogida: "Matrícula Recogida",
-  plan_piloto: "Plan Piloto",
-  dgii_proceso: "DGII en Proceso",
-  completado: "Completado",
-  cancelado: "Cancelado",
-};
+import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS } from "@/lib/traspaso-status";
 
 export default function Dashboard() {
   const { profile } = useAuth();
@@ -102,20 +80,12 @@ export default function Dashboard() {
     }
   };
 
-  const getProgressPercent = (status: string) => {
-    const idx = STATUS_STEPS.findIndex((s) => s.key === status);
-    if (idx === -1) return 0;
-    return Math.round(((idx + 1) / STATUS_STEPS.length) * 100);
-  };
+  const getProgressPercent = (status: string) => Math.round(getProgress(status));
 
   const getProgressStep = (status: string) => {
     const idx = STATUS_STEPS.findIndex((s) => s.key === status);
     if (idx === -1) return 0;
-    if (idx <= 0) return 0;
-    if (idx <= 1) return 1;
-    if (idx <= 2) return 2;
-    if (idx <= 5) return 3;
-    return 4;
+    return idx;
   };
 
   const activeTraspasos = traspasos?.filter(t => t.status !== "completado" && t.status !== "cancelado") || [];
@@ -252,7 +222,7 @@ export default function Dashboard() {
                   <span className="text-sm font-bold text-accent">{getProgressPercent(activeOne.status)}%</span>
                 </div>
                 <div className="flex gap-1">
-                  {PROGRESS_LABELS.map((label, i) => {
+                  {CLIENT_PROGRESS_LABELS.map((label, i) => {
                     const step = getProgressStep(activeOne.status);
                     const filled = i <= step;
                     return (
@@ -262,7 +232,7 @@ export default function Dashboard() {
                             filled ? "bg-accent" : "bg-muted"
                           }`}
                         />
-                        <p className={`text-[9px] mt-1 text-center font-medium ${
+                        <p className={`text-[8px] mt-1 text-center font-medium ${
                           filled ? "text-accent" : "text-muted-foreground"
                         }`}>
                           {label}
