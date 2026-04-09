@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
+import { getNextStatus, canAdvanceTo } from "@/lib/traspaso-status";
+import type { UserRole } from "@/lib/traspaso-status";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
