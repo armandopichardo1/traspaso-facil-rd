@@ -17,6 +17,53 @@ const Calculadora = () => {
   const servicio = plan === "express" ? 5000 : 3500;
   const total = impuesto + matricula + servicio;
 
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "¿Cuánto es el impuesto de transferencia vehicular en República Dominicana?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El impuesto de transferencia vehicular es el 2% del valor del vehículo, calculado sobre el mayor valor entre el precio de venta y la tabla de valores fidedignos de la DGII."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuánto cuesta el traspaso de un vehículo en RD?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El costo total incluye el impuesto 2% DGII, la matrícula nueva (RD$100) y el servicio de gestión. Con TRASPASA.DO el servicio cuesta RD$3,500 (plan básico, 2-3 días) o RD$5,000 (plan express, 24 horas)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Qué incluye el servicio de TRASPASA.DO?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "El servicio incluye contrato de compraventa, notarización, recogida de matrícula, gestión completa ante la DGII y entrega a domicilio de la nueva matrícula."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "¿Cuánto tiempo tarda un traspaso vehicular?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Con el plan básico de TRASPASA.DO tarda 2-3 días hábiles. Con el plan express se completa en 24 horas."
+        }
+      }
+    ]
+  };
+
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.text = JSON.stringify(faqSchema);
+    document.head.appendChild(script);
+    return () => { document.head.removeChild(script); };
+  }, []);
+
   return (
     <>
       <Navbar />
