@@ -6,6 +6,7 @@ import HistorialSection from "@/components/HistorialSection";
 import ComoFunciona from "@/components/ComoFunciona";
 import PricingSection from "@/components/PricingSection";
 import ComparisonTable from "@/components/ComparisonTable";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import DealersSection from "@/components/DealersSection";
 import GestoresSection from "@/components/GestoresSection";
 import SolicitudForm from "@/components/SolicitudForm";
@@ -25,6 +26,7 @@ const Index = () => (
       <ComoFunciona />
       <PricingSection />
       <ComparisonTable />
+      <TestimonialsSection />
       <DealersSection />
       <GestoresSection />
       <SolicitudForm />
