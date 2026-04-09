@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import avatarCarlos from "@/assets/avatar-carlos.jpg";
 import avatarMaria from "@/assets/avatar-maria.jpg";
 import avatarAutomax from "@/assets/avatar-automax.jpg";
+import avatarRoberto from "@/assets/avatar-roberto.jpg";
 
 const testimonials = [
   {
@@ -19,6 +20,14 @@ const testimonials = [
     avatar: avatarMaria,
     quote:
       "El historial vehicular me salvó. El carro que iba a comprar tenía una oposición por robo. Casi pierdo RD$400,000.",
+    stars: 5,
+  },
+  {
+    name: "Roberto S.",
+    role: "Gestor Vehicular",
+    avatar: avatarRoberto,
+    quote:
+      "Como gestor manejo 20+ traspasos al mes. Antes era un caos de papeles y filas. Con la plataforma tengo todo digitalizado, mis clientes ven el progreso en tiempo real y yo cobro más rápido.",
     stars: 5,
   },
   {
