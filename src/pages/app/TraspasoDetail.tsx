@@ -14,6 +14,7 @@ import {
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
 import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUpload";
+import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
 
@@ -256,6 +257,13 @@ export default function TraspasoDetail() {
           onOcrResult={(result) => setMarbeteData(result)}
         />
       </div>
+
+      {/* Chat */}
+      {t.status !== "completado" && t.status !== "cancelado" && (
+        <div className="mb-4">
+          <TraspasoChat traspasoId={t.id} />
+        </div>
+      )}
 
       {/* Escrow card */}
       {t.escrow_status !== "no_aplica" && (
