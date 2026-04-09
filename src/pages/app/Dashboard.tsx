@@ -177,7 +177,7 @@ export default function Dashboard() {
                     onClick={handleHistorial}
                     disabled={submitting}
                   >
-                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-transparent via-accent/20 to-transparent animate-shimmer" />
                     <Search className="h-5 w-5 mr-2 relative z-10" />
                     <span className="relative z-10">{submitting ? "Enviando..." : "Obtener Informe"}</span>
                   </Button>
