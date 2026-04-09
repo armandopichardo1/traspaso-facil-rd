@@ -109,7 +109,7 @@ export default function Dashboard() {
         </p>
       </motion.div>
 
-      {/* Historial request */}
+      {/* Historial Vehicular — Hero Card */}
       <motion.div
         className="mb-6"
         initial={{ opacity: 0, y: 10 }}
@@ -118,15 +118,15 @@ export default function Dashboard() {
       >
         {submitted ? (
           <Card className="rounded-2xl border-green-200 bg-green-50">
-            <CardContent className="p-5 text-center">
-              <CheckCircle className="h-10 w-10 text-green-600 mx-auto mb-2" />
-              <h3 className="font-bold text-green-800">¡Solicitud Recibida!</h3>
+            <CardContent className="p-6 text-center">
+              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
+              <h3 className="font-bold text-lg text-green-800">¡Solicitud Recibida!</h3>
               <p className="text-sm text-green-700 mt-1">
                 Te enviaremos el informe del historial por WhatsApp en menos de 30 minutos.
               </p>
               <Button
                 variant="outline"
-                className="mt-3"
+                className="mt-4"
                 onClick={() => setSubmitted(false)}
               >
                 Solicitar otro informe
@@ -134,44 +134,60 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-2">
-            <div className="flex gap-0 rounded-full border border-border bg-card shadow-sm overflow-hidden">
-              <div className="relative flex-1">
-                <Car className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="Placa del vehículo"
-                  value={placa}
-                  onChange={(e) => setPlaca(e.target.value.toUpperCase())}
-                  className="pl-12 border-0 rounded-none shadow-none focus-visible:ring-0 h-12 bg-transparent"
-                  onKeyDown={(e) => e.key === "Enter" && handleHistorial()}
-                />
-              </div>
-              <Button
-                variant="default"
-                className="rounded-none rounded-r-full h-12 px-4 font-bold text-xs bg-cta text-white hover:bg-cta/90 whitespace-nowrap"
-                onClick={handleHistorial}
-                disabled={submitting}
-              >
-                {submitting ? "ENVIANDO..." : "SOLICITAR INFORME"}
-              </Button>
-            </div>
-            {needsTelefono && placa.trim() && (
-              <div className="flex gap-0 rounded-full border border-border bg-card shadow-sm overflow-hidden">
-                <div className="relative flex-1">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Tu WhatsApp (ej: 809-555-1234)"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    className="pl-12 border-0 rounded-none shadow-none focus-visible:ring-0 h-11 bg-transparent text-sm"
-                  />
+          <Card className="rounded-2xl border-0 overflow-hidden shadow-lg">
+            <CardContent className="p-0">
+              <div className="bg-gradient-to-br from-[hsl(var(--navy))] via-[hsl(var(--accent))] to-[hsl(var(--navy))] p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-12 w-12 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center">
+                    <Search className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-extrabold text-white leading-tight">
+                      Consulta Historial Vehicular
+                    </h2>
+                    <p className="text-white/70 text-xs">
+                      Conoce todo sobre un vehículo antes de comprar — RD$350
+                    </p>
+                  </div>
                 </div>
+
+                <div className="space-y-3">
+                  <Input
+                    placeholder="Ingresa la placa (ej: A123456)"
+                    value={placa}
+                    onChange={(e) => setPlaca(e.target.value.toUpperCase())}
+                    className="h-14 text-base font-semibold rounded-xl border-0 bg-white/95 text-foreground placeholder:text-muted-foreground/60 shadow-md focus-visible:ring-2 focus-visible:ring-white/50"
+                    onKeyDown={(e) => e.key === "Enter" && handleHistorial()}
+                  />
+
+                  {needsTelefono && placa.trim() && (
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Tu WhatsApp (ej: 809-555-1234)"
+                        value={telefono}
+                        onChange={(e) => setTelefono(e.target.value)}
+                        className="pl-11 h-12 rounded-xl border-0 bg-white/95 text-foreground text-sm shadow-md"
+                      />
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full h-14 rounded-xl font-bold text-base bg-white text-[hsl(var(--accent))] hover:bg-white/90 shadow-md transition-all"
+                    onClick={handleHistorial}
+                    disabled={submitting}
+                  >
+                    <Search className="h-5 w-5 mr-2" />
+                    {submitting ? "Enviando..." : "Obtener Informe"}
+                  </Button>
+                </div>
+
+                <p className="text-white/60 text-[11px] text-center mt-3">
+                  ✅ Propietarios · Oposiciones · Valor DGII · Multas · Marbete
+                </p>
               </div>
-            )}
-            <p className="text-[11px] text-muted-foreground text-center">
-              Investigamos el historial del vehículo y te enviamos el informe por WhatsApp · RD$350
-            </p>
-          </div>
+            </CardContent>
+          </Card>
         )}
       </motion.div>
 
