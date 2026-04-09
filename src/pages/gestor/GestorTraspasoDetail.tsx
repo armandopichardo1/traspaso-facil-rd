@@ -12,6 +12,7 @@ import { getNextStatus, canAdvanceTo } from "@/lib/traspaso-status";
 import type { UserRole } from "@/lib/traspaso-status";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
+import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { STATUS_STEPS, STATUS_LABELS, statusColor, getProgress } from "@/lib/traspaso-status";
 import { toast } from "sonner";
@@ -299,6 +300,13 @@ export default function GestorTraspasoDetail() {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Chat with client */}
+      {t.status !== "completado" && t.status !== "cancelado" && (
+        <div className="mb-4">
+          <TraspasoChat traspasoId={t.id} />
+        </div>
       )}
     </div>
   );
