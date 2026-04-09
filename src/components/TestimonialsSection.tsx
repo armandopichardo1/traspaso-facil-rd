@@ -1,10 +1,14 @@
 import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Star } from "lucide-react";
+import avatarCarlos from "@/assets/avatar-carlos.jpg";
+import avatarMaria from "@/assets/avatar-maria.jpg";
+import avatarAutomax from "@/assets/avatar-automax.jpg";
 
 const testimonials = [
   {
     name: "Carlos M.",
     role: "Comprador",
+    avatar: avatarCarlos,
     quote:
       "Vendí mi Toyota y el comprador no quería ir a DGII. Con TRASPASA.DO se resolvió en 2 días sin moverme de mi casa. El tracking de la matrícula me dio mucha paz.",
     stars: 5,
@@ -12,6 +16,7 @@ const testimonials = [
   {
     name: "María P.",
     role: "Compradora",
+    avatar: avatarMaria,
     quote:
       "El historial vehicular me salvó. El carro que iba a comprar tenía una oposición por robo. Casi pierdo RD$400,000.",
     stars: 5,
@@ -19,6 +24,7 @@ const testimonials = [
   {
     name: "AutoMax RD",
     role: "Concesionario",
+    avatar: avatarAutomax,
     quote:
       "Antes perdíamos 2 empleados cada semana haciendo filas en DGII. Ahora gestionamos 15 traspasos al mes desde el showroom.",
     stars: 5,
@@ -53,9 +59,19 @@ const TestimonialsSection = () => (
               <p className="text-foreground text-sm leading-relaxed flex-1 mb-5">
                 "{t.quote}"
               </p>
-              <div>
-                <p className="font-bold text-foreground text-sm">{t.name}</p>
-                <p className="text-xs text-muted-foreground">{t.role}</p>
+              <div className="flex items-center gap-3">
+                <img
+                  src={t.avatar}
+                  alt={t.name}
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-bold text-foreground text-sm">{t.name}</p>
+                  <p className="text-xs text-muted-foreground">{t.role}</p>
+                </div>
               </div>
             </div>
           </AnimateOnScroll>
