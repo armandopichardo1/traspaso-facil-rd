@@ -52,7 +52,7 @@ const TestimonialsSection = () => (
         </h2>
       </AnimateOnScroll>
 
-      <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex md:grid md:grid-cols-4 gap-6 overflow-x-auto pb-4 md:pb-0 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         {testimonials.map((t, i) => (
           <AnimateOnScroll key={t.name} delay={i * 120}>
             <div className="min-w-[280px] md:min-w-0 snap-start bg-card rounded-2xl p-6 border border-border shadow-sm h-full flex flex-col">
