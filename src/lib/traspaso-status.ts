@@ -1,13 +1,14 @@
 // Unified status pipeline aligned with DGII process
 export const STATUS_STEPS = [
-  { key: "solicitud_recibida", label: "Solicitud Recibida", owner: "cliente/gestor", desc: "Solicitud registrada en el sistema" },
-  { key: "documentos_completos", label: "Documentos Completos", owner: "gestor", desc: "Gestor verificó que todos los docs están listos" },
-  { key: "contrato_generado", label: "Contrato Generado", owner: "gestor", desc: "Contrato de compraventa generado" },
-  { key: "contrato_firmado", label: "Contrato Firmado", owner: "notario", desc: "Notario certificó la firma del contrato" },
+  { key: "solicitud_recibida", label: "Solicitud Recibida", owner: "cliente", desc: "Solicitud registrada en el sistema" },
   { key: "verificacion_antifraude", label: "Verificación Antifraude", owner: "admin", desc: "Admin revisa selfie vs cédula" },
+  { key: "documentos_completos", label: "Documentos Completos", owner: "gestor", desc: "Gestor verificó que todos los docs están listos" },
+  { key: "contrato_generado", label: "Contrato Generado", owner: "sistema", desc: "Contrato de compraventa generado automáticamente" },
+  { key: "contrato_firmado", label: "Contrato Firmado y Notariado", owner: "notario", desc: "Notario certificó la firma del contrato" },
   { key: "matricula_recogida", label: "Matrícula Recogida", owner: "mensajero", desc: "Mensajero recogió la matrícula vieja" },
-  { key: "dgii_proceso", label: "DGII en Proceso", owner: "admin/gestor", desc: "Documentos entregados a DGII" },
-  { key: "completado", label: "Completado", owner: "admin", desc: "Nueva matrícula entregada" },
+  { key: "plan_piloto", label: "Plan Piloto + Impuesto 2%", owner: "gestor/admin", desc: "Pago de impuesto 2% y plan piloto DGII" },
+  { key: "dgii_proceso", label: "Expediente en DGII", owner: "admin", desc: "Expediente entregado a DGII para procesamiento" },
+  { key: "completado", label: "Completado — Nueva Matrícula Entregada", owner: "admin", desc: "Nueva matrícula entregada al cliente" },
 ] as const;
 
 export type TraspasoStatus = typeof STATUS_STEPS[number]["key"] | "cancelado";
@@ -20,7 +21,7 @@ export const STATUS_LABELS: Record<string, string> = Object.fromEntries([
 ]);
 
 // Friendly labels for client-facing progress
-export const CLIENT_PROGRESS_LABELS = ["SOLICITUD", "DOCUMENTOS", "CONTRATO", "FIRMA", "VERIFICACIÓN", "RECOGIDA", "DGII", "COMPLETADO"];
+export const CLIENT_PROGRESS_LABELS = ["SOLICITUD", "ANTIFRAUDE", "DOCUMENTOS", "CONTRATO", "FIRMA", "RECOGIDA", "PLAN PILOTO", "DGII", "COMPLETADO"];
 
 export const statusColor = (s: string) => {
   if (s === "completado") return "bg-green-100 text-green-800";
@@ -35,12 +36,13 @@ export const getProgress = (status: string) => {
 
 // Workflow: which role can advance to which next status
 const TRANSITIONS: Record<string, { next: string; roles: UserRole[] }> = {
-  solicitud_recibida: { next: "documentos_completos", roles: ["admin", "gestor"] },
+  solicitud_recibida: { next: "verificacion_antifraude", roles: ["admin"] },
+  verificacion_antifraude: { next: "documentos_completos", roles: ["admin", "gestor"] },
   documentos_completos: { next: "contrato_generado", roles: ["admin", "gestor"] },
   contrato_generado: { next: "contrato_firmado", roles: ["admin", "notario"] },
-  contrato_firmado: { next: "verificacion_antifraude", roles: ["admin"] },
-  verificacion_antifraude: { next: "matricula_recogida", roles: ["admin", "mensajero"] },
-  matricula_recogida: { next: "dgii_proceso", roles: ["admin", "gestor"] },
+  contrato_firmado: { next: "matricula_recogida", roles: ["admin", "mensajero"] },
+  matricula_recogida: { next: "plan_piloto", roles: ["admin", "gestor"] },
+  plan_piloto: { next: "dgii_proceso", roles: ["admin"] },
   dgii_proceso: { next: "completado", roles: ["admin"] },
 };
 
