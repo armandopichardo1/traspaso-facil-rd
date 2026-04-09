@@ -46,8 +46,8 @@ const HeroSection = () => {
             {/* Verified badge */}
             <div className="inline-flex items-center gap-2 bg-accent/5 border border-accent/20 rounded-full px-4 py-2">
               <CheckCircle className="h-4 w-4 text-accent" />
-              <span className="text-xs font-semibold text-accent">Proceso Verificado</span>
-              <span className="text-xs text-muted-foreground">· Avalado por el Colegio de Abogados</span>
+              <span className="text-xs font-semibold text-accent">Proceso Legal Verificado</span>
+              <span className="text-xs text-muted-foreground">· Contrato notariado con validez legal conforme a la Ley 126-02</span>
             </div>
           </motion.div>
 
