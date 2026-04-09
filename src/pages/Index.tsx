@@ -26,6 +26,7 @@ const Index = () => (
       <ComoFunciona />
       <PricingSection />
       <ComparisonTable />
+      <TestimonialsSection />
       <DealersSection />
       <GestoresSection />
       <SolicitudForm />
