@@ -10,10 +10,12 @@ import {
 const STATUS_LABELS: Record<string, string> = {
   solicitud_recibida: "Solicitud Recibida",
   verificacion_antifraude: "Verificación Antifraude",
-  contrato_firmado: "Contrato Firmado",
+  documentos_completos: "Documentos Completos",
+  contrato_generado: "Contrato Generado",
+  contrato_firmado: "Contrato Firmado y Notariado",
   matricula_recogida: "Matrícula Recogida",
-  plan_piloto: "Plan Piloto + DGII",
-  dgii_proceso: "Nueva Matrícula Lista",
+  plan_piloto: "Plan Piloto + Impuesto 2%",
+  dgii_proceso: "Expediente en DGII",
   completado: "Completado",
 };
 
