@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Outer circle - navy -->
+  <circle cx="32" cy="32" r="32" fill="#0F172A"/>
+  <!-- Inner circle - teal accent -->
+  <circle cx="32" cy="32" r="26" fill="#0891B2"/>
+  <!-- T letter -->
+  <text x="32" y="42" font-family="system-ui, sans-serif" font-size="30" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="-1">T</text>
+  <!-- Dot accent - orange -->
+  <circle cx="46" cy="44" r="4" fill="#EA580C"/>
+</svg>
