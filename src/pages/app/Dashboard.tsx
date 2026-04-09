@@ -173,12 +173,13 @@ export default function Dashboard() {
                   )}
 
                   <Button
-                    className="w-full h-14 rounded-xl font-bold text-base bg-white text-[hsl(var(--accent))] hover:bg-white/90 shadow-md transition-all"
+                    className="w-full h-14 rounded-xl font-bold text-base bg-white text-[hsl(var(--accent))] hover:bg-white/90 shadow-md transition-all relative overflow-hidden group"
                     onClick={handleHistorial}
                     disabled={submitting}
                   >
-                    <Search className="h-5 w-5 mr-2" />
-                    {submitting ? "Enviando..." : "Obtener Informe"}
+                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer" />
+                    <Search className="h-5 w-5 mr-2 relative z-10" />
+                    <span className="relative z-10">{submitting ? "Enviando..." : "Obtener Informe"}</span>
                   </Button>
                 </div>
 
