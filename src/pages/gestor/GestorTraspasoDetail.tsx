@@ -245,30 +245,22 @@ export default function GestorTraspasoDetail() {
       </div>
 
       {/* Gestor Actions */}
-      {t.status === "solicitud_recibida" && (
-        <Button
-          variant="teal"
-          className="w-full mb-4"
-          size="lg"
-          onClick={() => handleAdvanceStatus("documentos_completos", "Documentos verificados por gestor")}
-          disabled={advancing}
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          {advancing ? "Avanzando..." : "Marcar Documentos Completos"}
-        </Button>
-      )}
-      {t.status === "documentos_completos" && (
-        <Button
-          variant="teal"
-          className="w-full mb-4"
-          size="lg"
-          onClick={() => handleAdvanceStatus("contrato_generado", "Contrato generado por gestor")}
-          disabled={advancing}
-        >
-          <ArrowRight className="h-4 w-4 mr-2" />
-          {advancing ? "Avanzando..." : "Avanzar a Contrato Generado"}
-        </Button>
-      )}
+      {(() => {
+        const next = getNextStatus(t.status, "gestor");
+        if (!next) return null;
+        return (
+          <Button
+            variant="teal"
+            className="w-full mb-4"
+            size="lg"
+            onClick={() => handleAdvanceStatus(next, `Gestor avanzó a ${STATUS_LABELS[next]}`)}
+            disabled={advancing}
+          >
+            <ArrowRight className="h-4 w-4 mr-2" />
+            {advancing ? "Avanzando..." : `Avanzar a ${STATUS_LABELS[next]}`}
+          </Button>
+        );
+      })()}
 
       {/* Status */}
       <Card className="mb-4">
