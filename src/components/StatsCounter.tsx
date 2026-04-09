@@ -4,7 +4,7 @@ import { motion, useInView } from "framer-motion";
 const stats = [
   { value: 6600000, display: "6.6M+", label: "Vehículos en RD" },
   { value: 150000, display: "150K+", label: "Traspasos por año" },
-  { value: 0, display: "0", label: "Plataformas digitales (hasta ahora)" },
+  { value: 1, display: "1", label: "Plataforma digital", highlight: true },
 ];
 
 function AnimatedCounter({ value, display, label }: { value: number; display: string; label: string }) {
