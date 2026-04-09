@@ -311,6 +311,41 @@ export type Database = {
           },
         ]
       }
+      traspaso_mensajes: {
+        Row: {
+          created_at: string
+          id: string
+          leido: boolean
+          mensaje: string
+          sender_id: string
+          traspaso_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          leido?: boolean
+          mensaje: string
+          sender_id: string
+          traspaso_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          leido?: boolean
+          mensaje?: string
+          sender_id?: string
+          traspaso_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "traspaso_mensajes_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       traspaso_timeline: {
         Row: {
           created_at: string
