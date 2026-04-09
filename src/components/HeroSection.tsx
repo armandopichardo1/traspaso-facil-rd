@@ -35,8 +35,11 @@ const HeroSection = () => {
               Gestionamos todo el papeleo legal de tu vehículo en la DGII de forma 100% digital y segura. La velocidad de un clic con la confianza de un experto legal.
             </p>
             <div className="flex flex-wrap gap-3 mb-6">
-              <Button variant="cta" size="lg" className="font-bold" asChild>
-                <a href="#solicitud">Empezar ahora</a>
+              <Button variant="cta" size="lg" className="font-bold relative overflow-hidden group" asChild>
+                <a href="#solicitud">
+                  <span className="absolute inset-0 -translate-x-full group-hover:translate-x-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+                  <span className="relative z-10">Empezar ahora</span>
+                </a>
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <a href="#precios">Ver precios</a>
