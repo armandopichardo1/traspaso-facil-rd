@@ -9,9 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
-  ShieldCheck, MapPin, PenTool, DollarSign,
+  ShieldCheck, MapPin, PenTool, DollarSign, Upload,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
+import DocumentUpload from "@/components/gestor/DocumentUpload";
 import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUpload";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
