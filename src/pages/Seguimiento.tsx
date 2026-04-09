@@ -5,16 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Car, CheckCircle, Clock, Loader2, Shield } from "lucide-react";
-
-const STATUS_STEPS = [
-  { key: "solicitud_recibida", label: "Solicitud Recibida" },
-  { key: "verificacion_antifraude", label: "Verificación Antifraude" },
-  { key: "contrato_firmado", label: "Contrato Firmado" },
-  { key: "matricula_recogida", label: "Matrícula Recogida" },
-  { key: "plan_piloto", label: "Plan Piloto + DGII" },
-  { key: "dgii_proceso", label: "Nueva Matrícula Lista" },
-  { key: "completado", label: "Entrega Completada" },
-];
+import { STATUS_STEPS } from "@/lib/traspaso-status";
 
 export default function Seguimiento() {
   const { code } = useParams();

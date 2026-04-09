@@ -27,16 +27,20 @@ type Granularity = "week" | "month";
 const STATUS_LABELS: Record<string, string> = {
   solicitud_recibida: "Solicitud",
   verificacion_antifraude: "Antifraude",
-  contrato_firmado: "Contrato",
+  documentos_completos: "Documentos",
+  contrato_generado: "Contrato",
+  contrato_firmado: "Firma",
   matricula_recogida: "Matrícula",
   plan_piloto: "Plan Piloto",
-  dgii_proceso: "Nueva Matrícula",
+  dgii_proceso: "DGII",
   completado: "Completado",
 };
 
 const STATUS_COLORS: Record<string, string> = {
   solicitud_recibida: "hsl(199, 89%, 48%)",
   verificacion_antifraude: "hsl(38, 92%, 50%)",
+  documentos_completos: "hsl(180, 60%, 45%)",
+  contrato_generado: "hsl(220, 70%, 55%)",
   contrato_firmado: "hsl(142, 71%, 45%)",
   matricula_recogida: "hsl(262, 83%, 58%)",
   plan_piloto: "hsl(330, 81%, 60%)",

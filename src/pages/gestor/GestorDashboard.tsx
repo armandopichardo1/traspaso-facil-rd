@@ -12,10 +12,12 @@ import {
 import { motion } from "framer-motion";
 
 const STATUS_LABELS: Record<string, string> = {
-  solicitud_recibida: "EN PROCESO",
+  solicitud_recibida: "SOLICITUD",
+  verificacion_antifraude: "ANTIFRAUDE",
+  documentos_completos: "DOCUMENTOS",
   documentos_pendientes: "DOCS PENDIENTES",
-  verificacion_antifraude: "VERIFICACIÓN",
-  contrato_firmado: "PENDIENTE FIRMA",
+  contrato_generado: "CONTRATO",
+  contrato_firmado: "FIRMADO",
   matricula_recogida: "RECOGIDA",
   plan_piloto: "PLAN PILOTO",
   dgii_proceso: "DGII",
