@@ -43,12 +43,14 @@ function getAvailableContracts(data: ContractData): ContractType[] {
   return contracts;
 }
 
-export default function ContractGenerator({ traspasoId, contractData, contracts, signatures, onRefresh }: ContractGeneratorProps) {
+export default function ContractGenerator({ traspasoId, contractData, onRefresh }: ContractGeneratorProps) {
   const { toast } = useToast();
   const [generating, setGenerating] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [signingContract, setSigningContract] = useState<{ id: string; tipo: string } | null>(null);
 
+  const { data: contracts = [] } = useContratos(traspasoId);
+  const { data: signatures = [] } = useFirmas(traspasoId);
   const generateContractMutation = useGenerateContract(traspasoId);
   const saveFirmaMutation = useSaveFirma(traspasoId);
 
