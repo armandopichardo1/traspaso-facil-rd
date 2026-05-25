@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
-  ShieldCheck, MapPin, PenTool, DollarSign, Upload,
+  ShieldCheck, MapPin,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
@@ -17,8 +17,9 @@ import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUp
 import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
+import { useTraspaso, useDocumentos } from "@/hooks/useTraspasoServices";
 
-import { STATUS_STEPS, STATUS_LABELS } from "@/lib/traspaso-status";
+import { STATUS_STEPS } from "@/lib/traspaso-status";
 
 const antifraudeBadge = (s: string) => {
   if (s === "aprobado") return { color: "bg-green-50 text-green-800 border-green-200", icon: Shield, label: "Aprobado" };
