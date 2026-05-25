@@ -129,11 +129,12 @@ export default function GestorDashboard() {
           </div>
 
           {isLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-16 w-full rounded-xl" />
-              <Skeleton className="h-16 w-full rounded-xl" />
-              <Skeleton className="h-16 w-full rounded-xl" />
-            </div>
+            <LoadingSkeleton rows={3} className="space-y-3" rowClassName="h-16 w-full rounded-xl" />
+          ) : isError ? (
+            <ErrorState
+              message={(error as Error)?.message || "No se pudieron cargar los traspasos."}
+              onRetry={() => refetch()}
+            />
           ) : traspasos && traspasos.length > 0 ? (
             <Card className="rounded-xl overflow-hidden">
               <div className="divide-y divide-border">
@@ -176,12 +177,16 @@ export default function GestorDashboard() {
               </div>
             </Card>
           ) : (
-            <Card className="rounded-xl">
-              <CardContent className="p-8 text-center text-muted-foreground">
-                <Car className="h-10 w-10 mx-auto mb-3 opacity-30" />
-                <p className="text-sm">No hay traspasos aún.</p>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={Car}
+              title="No hay traspasos aún"
+              description="Comienza creando tu primer traspaso desde el botón arriba."
+              action={
+                <Button variant="cta" size="sm" onClick={() => navigate("/gestor/nuevo")}>
+                  <PlusCircle className="h-4 w-4 mr-1.5" /> Nuevo Traspaso
+                </Button>
+              }
+            />
           )}
         </motion.div>
 
