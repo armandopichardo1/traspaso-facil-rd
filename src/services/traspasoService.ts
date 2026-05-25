@@ -218,6 +218,9 @@ export async function createTraspaso(
       comprador_rnc: input.comprador?.rnc ?? null,
       precio_vehiculo: input.precioVehiculo ?? null,
       es_traspaso_familiar: input.esTraspasoFamiliar ?? false,
+      tipo_vehiculo: input.tipoVehiculo ?? "vehiculo_motor",
+      precio_servicio: input.precioServicio ?? (input.plan === "express" ? 5000 : 3500),
+      escrow_status: input.escrowStatus ?? "no_aplica",
     })
     .select("*")
     .single();
