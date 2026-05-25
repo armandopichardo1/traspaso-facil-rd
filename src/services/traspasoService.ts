@@ -335,7 +335,7 @@ export async function cancelTraspaso(
   reason: string,
 ): Promise<ServiceResult<{ traspaso: Traspaso; refundTriggered: boolean }>> {
   const current = await getTraspaso(id);
-  if (!current.ok) return current;
+  if (!current.ok) return { ok: false, error: current.error };
 
   const decision = evaluateCancel(current.data.status, actor.role, reason);
   if (!decision.ok) return { ok: false, error: decision.error ?? "No autorizado" };
@@ -360,7 +360,7 @@ export async function cancelTraspaso(
   }
 
   const refreshed = await getTraspaso(id);
-  if (!refreshed.ok) return refreshed;
+  if (!refreshed.ok) return { ok: false, error: refreshed.error };
   return { ok: true, data: { traspaso: refreshed.data, refundTriggered } };
 }
 
