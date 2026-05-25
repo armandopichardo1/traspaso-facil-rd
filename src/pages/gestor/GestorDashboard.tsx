@@ -155,13 +155,13 @@ export default function GestorDashboard() {
                       <Car className="h-4 w-4 text-accent flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium truncate">
-                          {t.vehiculo_marca} {t.vehiculo_modelo}
+                          {t.vehiculoMarca} {t.vehiculoModelo}
                         </p>
-                        <p className="text-[10px] text-muted-foreground">{timeSince(t.created_at)}</p>
+                        <p className="text-[10px] text-muted-foreground">{timeSince(t.createdAt)}</p>
                       </div>
                     </div>
-                    <div className="col-span-2 text-sm font-mono">{t.vehiculo_placa || "—"}</div>
-                    <div className="col-span-3 text-sm truncate">{t.comprador_nombre || "—"}</div>
+                    <div className="col-span-2 text-sm font-mono">{t.vehiculoPlaca || "—"}</div>
+                    <div className="col-span-3 text-sm truncate">{t.compradorNombre || "—"}</div>
                     <div className="col-span-2">
                       <Badge className={`text-[9px] font-bold border ${statusBadgeColor(t.status)}`}>
                         <span className={`h-1.5 w-1.5 rounded-full ${statusDot(t.status)} mr-1`} />
