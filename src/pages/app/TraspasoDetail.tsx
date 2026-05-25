@@ -219,10 +219,8 @@ export default function TraspasoDetail() {
             <ContractGenerator
               traspasoId={t.id}
               contractData={contractData}
-              contracts={contracts as any}
-              signatures={signatures as any}
-              onRefresh={refreshData}
             />
+
           </CardContent>
         </Card>
       )}

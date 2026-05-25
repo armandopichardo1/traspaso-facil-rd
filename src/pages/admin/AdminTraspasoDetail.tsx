@@ -667,13 +667,8 @@ export default function AdminTraspasoDetail() {
                   apoderado_nombre: traspaso.apoderado_nombre || "", apoderado_cedula: traspaso.apoderado_cedula || "",
                   codigo: traspaso.codigo || "",
                 } as ContractData}
-                contracts={contratos || []}
-                signatures={firmas || []}
-                onRefresh={() => {
-                  queryClient.invalidateQueries({ queryKey: ["admin-contratos", id] });
-                  queryClient.invalidateQueries({ queryKey: ["admin-firmas", id] });
-                }}
               />
+
             </CardContent>
           </Card>
 

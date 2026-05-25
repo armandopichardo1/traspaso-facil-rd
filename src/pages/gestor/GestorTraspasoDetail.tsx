@@ -234,10 +234,8 @@ export default function GestorTraspasoDetail() {
         <ContractGenerator
           traspasoId={t.id}
           contractData={contractData}
-          contracts={contracts as any}
-          signatures={signatures as any}
-          onRefresh={refreshContracts}
         />
+
       </div>
 
       {/* Documents */}
