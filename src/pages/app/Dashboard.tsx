@@ -17,11 +17,10 @@ import {
 } from "@/hooks/useTraspasoServices";
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [placa, setPlaca] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
   const { data: traspasos, isLoading: loadingTraspasos } = useQuery({
