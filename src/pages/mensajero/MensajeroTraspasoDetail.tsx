@@ -57,19 +57,27 @@ export default function MensajeroTraspasoDetail() {
   };
 
   if (isLoading) {
+    return <LoadingSkeleton rows={2} className="p-4 max-w-lg mx-auto space-y-4" rowClassName="h-40 w-full rounded-2xl" />;
+  }
+
+  if (isError) {
     return (
-      <div className="p-4 max-w-lg mx-auto space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full" />
+      <div className="p-4 max-w-lg mx-auto">
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar el traspaso."}
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!traspaso) {
     return (
-      <div className="p-4 max-w-lg mx-auto text-center text-muted-foreground">
-        Traspaso no encontrado
-      </div>
+      <NotFoundView
+        title="Traspaso no encontrado"
+        description="Este traspaso no existe o ya no está asignado a ti."
+        onBack={() => navigate("/mensajero")}
+      />
     );
   }
 
