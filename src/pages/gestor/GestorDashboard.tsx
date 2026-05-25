@@ -42,7 +42,7 @@ export default function GestorDashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
 
-  const { data: traspasos, isLoading } = useTraspasosForRole("gestor", profile?.id);
+  const { data: traspasos, isLoading, isError, error, refetch } = useTraspasosForRole("gestor", profile?.id);
 
   const activos = traspasos?.filter(t => t.status !== "completado" && t.status !== "cancelado") || [];
   const completados = traspasos?.filter(t => t.status === "completado") || [];
