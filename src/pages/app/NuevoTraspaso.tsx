@@ -118,30 +118,6 @@ export default function NuevoTraspaso() {
     setFiles((prev) => ({ ...prev, [tipo]: file }));
   };
 
-  const uploadAllFiles = async (createdId: string) => {
-    // Sube archivos seleccionados desde el FileInput.
-    for (const [tipo, file] of Object.entries(files)) {
-      if (!file) continue;
-      try {
-        await uploadDoc.mutateAsync({ tipo: tipo as never, file });
-      } catch (e) {
-        console.warn("upload fallo", tipo, e);
-      }
-    }
-    // Sube cédulas/marbete capturadas por cámara (base64 -> File).
-    for (const [tipo, base64] of Object.entries(cedulaFiles)) {
-      if (!base64) continue;
-      const byteChars = atob(base64);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
-      const file = new File([byteArr], `${tipo}_${Date.now()}.jpg`, { type: "image/jpeg" });
-      try {
-        await uploadDoc.mutateAsync({ tipo: tipo as never, file });
-      } catch (e) {
-        console.warn("upload fallo", tipo, e);
-      }
-    }
-  };
 
   const handleSubmit = async () => {
     if (!form.acepta_terminos) {
