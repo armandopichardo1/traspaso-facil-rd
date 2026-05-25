@@ -65,16 +65,18 @@ export default function NotarioDashboard() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
-        </div>
+        <LoadingSkeleton rows={3} className="space-y-3" rowClassName="h-28 w-full rounded-xl" />
+      ) : isError ? (
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar la cola."}
+          onRetry={() => refetch()}
+        />
       ) : traspasos.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <Scale className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p>No hay traspasos pendientes de firma</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Scale}
+          title="No hay traspasos pendientes de firma"
+          description="Cuando un gestor envíe un contrato a certificar, aparecerá aquí."
+        />
       ) : (
         <div className="space-y-3">
           {traspasos.map((t) => {
