@@ -19,112 +19,130 @@
 
 ## 2. Design System: "Premium Government-Tech"
 
-Aesthetic: **confident, clean, trustworthy** — modern fintech polish applied to Dominican vehicle bureaucracy. Reference points: Revolut, Linear, TurboTax. Every screen should feel **premium, calm, and authoritative** — never busy, never generic.
+Aesthetic: **confident, refined, trustworthy** — luxury fintech polish applied to Dominican vehicle bureaucracy. Reference points: Revolut Metal, Linear, Mercury, Stripe. Every screen should feel **premium, calm, and authoritative** — never busy, never generic.
 
-### 2.1 Color Palette (HSL tokens only — never raw hex in components)
+### 2.1 Premium Color Palette (HSL tokens only — never raw hex in components)
 
-Brand spine: **Navy (authority) + Teal (action) + Orange (urgency)** on a warm off-white canvas. All tokens live in `src/index.css` under `:root` and are mapped in `tailwind.config.ts`.
+Brand spine: **Deep Navy (authority) + Emerald (action/success) + Champagne Gold (premium accent)** on a warm ivory canvas. Teal moves to a supporting role; orange is reserved for true urgency only. All tokens live in `src/index.css` under `:root` and are mapped in `tailwind.config.ts`.
 
 | Role | Token | HSL | Hex ref | Usage |
 |------|-------|-----|---------|-------|
-| Primary / Navy | `--navy` | `222 47% 11%` | `#0F172A` | Headlines, sticky nav, dark hero sections, trust copy |
-| Navy Light | `--navy-light` | `217 33% 17%` | `#1E293B` | Gradient stops, hover on dark surfaces |
-| Accent / Teal | `--teal` / `--accent` | `192 91% 37%` | `#0891B2` | Primary actions, progress, active states, links |
-| Teal Light | `--teal-light` | `192 91% 47%` | `#06B6D4` | Hover state for teal buttons, focus rings |
-| CTA / Orange | `--cta` / `--orange` | `21 90% 48%` | `#EA580C` | Hero CTA, pricing highlights, urgency badges |
-| Orange Light | `--orange-light` | `21 90% 55%` | `#F97316` | Hover state for CTA, gradient highlights |
-| Background | `--background` | `210 20% 98%` | `#F8FAFC` | Page canvas (warm off-white — never `#FFFFFF`) |
-| Card | `--card` | `0 0% 100%` | `#FFFFFF` | Elevated surfaces only (cards, modals, popovers) |
-| Foreground | `--foreground` | `215 25% 10%` | `#0F1419` | Body text (never pure black) |
-| Muted FG | `--muted-foreground` | `215 16% 47%` | `#64748B` | Secondary text, labels, captions |
-| Border | `--border` | `214 32% 91%` | `#E2E8F0` | Dividers, input borders at rest |
-| Success | (inline `green-600`) | — | `#16A34A` | Verification ticks, completed steps |
-| Warning | (inline `amber-500`) | — | `#F59E0B` | Pending, in-review states |
-| Destructive | `--destructive` | `0 84% 60%` | `#EF4444` | Errors, cancel actions |
+| Ink / Navy 950 | `--navy` | `222 47% 9%` | `#0B1220` | Headlines, dark hero, sticky nav |
+| Navy 800 | `--navy-light` | `220 39% 16%` | `#1A2236` | Gradient stop, hover on dark surfaces |
+| Navy 600 | `--navy-soft` | `218 27% 28%` | `#39455C` | Secondary dark text on light bg |
+| Primary / Emerald 600 | `--primary` / `--emerald` | `158 64% 28%` | `#1A7A55` | Primary actions, links, progress, active |
+| Emerald 500 | `--emerald-light` | `158 64% 38%` | `#239A6B` | Hover state for primary, focus rings |
+| Accent / Gold 500 | `--accent` / `--gold` | `41 60% 52%` | `#C9A24A` | Premium accents, badges, hairline dividers on dark, "Pro" tags |
+| Gold 300 | `--gold-light` | `43 76% 74%` | `#EAD49A` | Hover sheen, subtle highlights on dark hero |
+| Teal 600 | `--teal` | `192 80% 34%` | `#0E8AA8` | Info, secondary actions, document/file chips |
+| CTA / Orange 600 | `--cta` | `21 90% 48%` | `#EA580C` | Urgency only: hero CTA, "última oportunidad" |
+| Background / Ivory | `--background` | `40 30% 98%` | `#FAF8F3` | Page canvas (warm ivory — never `#FFFFFF`) |
+| Surface | `--surface` | `40 24% 96%` | `#F4F1EA` | Section bands, alt rows |
+| Card | `--card` | `0 0% 100%` | `#FFFFFF` | Elevated surfaces (cards, modals, popovers) |
+| Foreground | `--foreground` | `222 47% 11%` | `#0F172A` | Body text (never pure black) |
+| Muted FG | `--muted-foreground` | `218 16% 42%` | `#5A6678` | Secondary text, labels, captions |
+| Border | `--border` | `38 22% 88%` | `#E6E0D2` | Hairlines, input borders at rest (warm) |
+| Border Strong | `--border-strong` | `38 18% 78%` | `#CFC6B2` | Card outlines, table dividers |
+| Success | `--success` | `158 64% 32%` | `#1F8A5F` | Verification ticks, completed steps |
+| Warning | `--warning` | `36 92% 50%` | `#F59E0B` | Pending, in-review states |
+| Destructive | `--destructive` | `0 72% 51%` | `#DC2626` | Errors, cancel actions |
 
 **Hard rules:**
-- **Never** use raw Tailwind palette utilities (`bg-blue-500`, `text-gray-600`). Always semantic: `bg-navy`, `text-cta`, `bg-accent`, `text-muted-foreground`.
+- **Never** use raw Tailwind palette utilities (`bg-blue-500`, `text-gray-600`). Always semantic: `bg-navy`, `text-primary`, `bg-gold`, `text-muted-foreground`.
 - **Never** hardcode hex in components. Use `hsl(var(--token))` if you must drop to CSS.
 - Light mode only — no dark mode toggle.
-- Signature gradients: `bg-navy-gradient` (135deg navy → navy-light) for hero, and `bg-gradient-to-r from-cta to-orange-light` for CTA buttons only.
+- Signature gradients:
+  - `--gradient-navy`: `linear-gradient(135deg, hsl(var(--navy)) 0%, hsl(var(--navy-light)) 100%)` — hero, sticky dark nav.
+  - `--gradient-emerald`: `linear-gradient(135deg, hsl(var(--emerald)) 0%, hsl(var(--emerald-light)) 100%)` — primary buttons.
+  - `--gradient-gold`: `linear-gradient(135deg, hsl(43 76% 74%) 0%, hsl(41 60% 52%) 100%)` — premium badges, hairline accents on dark.
 
 ### 2.2 Typography
 
 - **Font:** `DM Sans` (Google Fonts) — single family, headings + body. Loaded via `<link>` in `index.html`.
 - **Weights:** 400 body, 500 labels, 600 subheads/buttons, 700 section heads, 800 hero.
 - **Scale:**
-  - Display / hero: `text-3xl md:text-5xl lg:text-[3.5rem]` · `font-extrabold` · `leading-[1.1]` · `tracking-tight`
-  - Section H2: `text-2xl md:text-3xl` · `font-bold` · `tracking-tight`
-  - Card title H3: `text-lg md:text-xl` · `font-semibold`
-  - Body: `text-sm md:text-base` · `leading-relaxed` · `text-foreground` or `text-muted-foreground`
-  - Caption / label: `text-xs` · `font-semibold` · `uppercase` · `tracking-wider` · `text-muted-foreground`
-- **Rule:** Headlines = tight tracking + heavy weight (authority). Body = relaxed leading + muted color (calm).
+  - Display / hero: `text-3xl md:text-5xl lg:text-[3.5rem]` · `font-extrabold` · `leading-[1.05]` · `tracking-[-0.02em]`
+  - Section H2: `text-2xl md:text-4xl` · `font-bold` · `tracking-[-0.015em]`
+  - Card title H3: `text-lg md:text-xl` · `font-semibold` · `tracking-tight`
+  - Body: `text-sm md:text-base` · `leading-[1.65]` · `text-foreground` or `text-muted-foreground`
+  - Eyebrow / label: `text-[11px]` · `font-semibold` · `uppercase` · `tracking-[0.18em]` · `text-gold`
+- **Rule:** Headlines = tight tracking + heavy weight (authority). Body = generous leading + muted color (calm). Eyebrows = gold, all-caps, wide-tracked (premium signal).
 
-### 2.3 Spacing Scale (4px base)
+### 2.3 Spacing Scale (4px base, 8px rhythm)
 
-All spacing is a multiple of `4px`. Stick to Tailwind's default scale — never invent values like `gap-[13px]`.
+All spacing is a multiple of `4px`, with `8px` as the primary rhythm. Stick to Tailwind's default scale — never invent values like `gap-[13px]`.
 
 | Token | px | Use |
 |-------|-----|-----|
-| `1` | 4 | Icon ↔ text inline |
-| `2` | 8 | Tight stacks, badge padding |
-| `3` | 12 | Form field internal padding |
-| `4` | 16 | Default card padding, list gaps |
-| `6` | 24 | Standard grid gap, card padding md+ |
-| `8` | 32 | Hero grid gap, section sub-blocks |
+| `1` | 4 | Icon ↔ text inline, hairline offsets |
+| `2` | 8 | Tight stacks, badge padding (`px-2 py-0.5`) |
+| `3` | 12 | Form field inner padding y |
+| `4` | 16 | Default card padding sm, list gaps |
+| `6` | 24 | Standard grid gap, card padding md |
+| `8` | 32 | Card padding lg, hero grid gap, section sub-blocks |
 | `12` | 48 | Vertical rhythm between minor sections |
-| `16` / `20` | 64 / 80 | `py-16 md:py-20` between major page sections |
-| `24` | 96 | Hero top/bottom on desktop |
+| `16` | 64 | `py-16` between standard sections (mobile) |
+| `20` / `24` | 80 / 96 | `md:py-20 lg:py-24` between major sections (desktop) |
+| `32` | 128 | Hero top/bottom on large desktop only |
 
-- **Page wrapper:** `container mx-auto px-4 md:px-6` + `py-12 md:py-20` per section.
-- **Grids:** `gap-6` default, `gap-8` hero, `gap-4` dense lists.
-- **Stack rhythm:** Use `space-y-4` or `space-y-6` — avoid manual margins.
+- **Page wrapper:** `container mx-auto px-4 md:px-6 lg:px-8` + `py-16 md:py-20 lg:py-24` per section.
+- **Max content width:** `max-w-7xl` page, `max-w-3xl` prose, `max-w-2xl` forms.
+- **Grids:** `gap-6` default, `gap-8` hero/feature, `gap-4` dense lists.
+- **Stack rhythm:** Use `space-y-4` / `space-y-6` / `space-y-8` — avoid manual margins.
 
 ### 2.4 Border Radius
 
-Premium feel comes from **generous, consistent** rounding. Never mix `rounded-md` with `rounded-2xl` in the same component.
+Premium feel comes from **generous, consistent** rounding. Never mix `rounded-md` with `rounded-2xl` in the same component. Defined as tokens in `tailwind.config.ts` `borderRadius`.
 
-| Element | Class | Value |
-|---------|-------|-------|
-| Buttons, inputs, selects | `rounded-lg` | 0.75rem (12px) |
-| Cards, modals, popovers | `rounded-xl` | 1rem (16px) |
-| Hero images, feature cards | `rounded-2xl` | 1.5rem (24px) |
-| Hero illustration frames | `rounded-3xl` | 2rem (32px) |
-| Pills, badges, avatars, trust bar | `rounded-full` | full |
-| Tooltip, tag chips | `rounded-md` | 0.5rem (8px) — exception only |
+| Element | Class | Token | Value |
+|---------|-------|-------|-------|
+| Tooltip, tag chips | `rounded-md` | `--radius-sm` | 0.5rem (8px) |
+| Buttons, inputs, selects | `rounded-xl` | `--radius` | 0.875rem (14px) |
+| Cards, modals, popovers, dropdowns | `rounded-2xl` | `--radius-lg` | 1.25rem (20px) |
+| Hero images, feature cards, premium panels | `rounded-3xl` | `--radius-xl` | 1.75rem (28px) |
+| Hero illustration frames, decorative blocks | `rounded-[2rem]` | `--radius-2xl` | 2rem (32px) |
+| Pills, badges, avatars, trust bar | `rounded-full` | — | full |
 
-### 2.5 Shadows (Elevation System)
+**Rule:** Inputs and their containing card must differ by exactly one step (e.g. `rounded-xl` input inside `rounded-2xl` card). No sharp corners anywhere except table cells.
 
-Soft, **navy-tinted** shadows. No harsh black drops. Define reusable values in `index.css`.
+### 2.5 Shadows (Premium Elevation System)
 
-| Level | Value | Use |
-|-------|-------|-----|
-| Flat | (none) | Inline elements, list items |
-| `shadow-sm` | `0 1px 2px hsl(222 47% 11% / 0.05)` | Cards at rest, inputs |
-| `shadow-md` | `0 4px 12px hsl(222 47% 11% / 0.08)` | Sticky nav, dropdowns |
-| `shadow-lg` | `0 12px 28px hsl(222 47% 11% / 0.10)` | Hover on cards, hero CTA |
-| `shadow-xl` | `0 24px 48px hsl(222 47% 11% / 0.12)` | Modals, floating drawers |
-| CTA glow | `0 8px 24px hsl(21 90% 48% / 0.30)` | Orange hero button at rest |
-| Teal glow | `0 8px 24px hsl(192 91% 37% / 0.25)` | Primary teal button on hover |
+Soft, **navy-tinted** layered shadows — two-stop for realism. No harsh black drops. Define reusable values in `index.css` as `--shadow-*` tokens and map in `tailwind.config.ts` `boxShadow`.
 
-**Rule:** Elevation must always pair with a radius ≥ `rounded-lg`. No shadowed sharp corners.
+| Level | Token | Value | Use |
+|-------|-------|-------|-----|
+| Flat | — | (none) | Inline elements, list items, row hovers |
+| `shadow-xs` | `--shadow-xs` | `0 1px 2px hsl(222 47% 9% / 0.04)` | Inputs at rest, chips |
+| `shadow-sm` | `--shadow-sm` | `0 1px 2px hsl(222 47% 9% / 0.04), 0 2px 4px hsl(222 47% 9% / 0.04)` | Cards at rest |
+| `shadow-md` | `--shadow-md` | `0 2px 4px hsl(222 47% 9% / 0.05), 0 6px 16px hsl(222 47% 9% / 0.08)` | Sticky nav, dropdowns, popovers |
+| `shadow-lg` | `--shadow-lg` | `0 4px 8px hsl(222 47% 9% / 0.06), 0 16px 32px hsl(222 47% 9% / 0.10)` | Card hover, hero CTA, floating panels |
+| `shadow-xl` | `--shadow-xl` | `0 8px 16px hsl(222 47% 9% / 0.08), 0 32px 56px hsl(222 47% 9% / 0.14)` | Modals, drawers, premium spotlight |
+| `shadow-emerald` | `--shadow-emerald` | `0 8px 24px hsl(158 64% 28% / 0.28)` | Primary button at rest |
+| `shadow-cta` | `--shadow-cta` | `0 10px 28px hsl(21 90% 48% / 0.32)` | Hero urgency CTA |
+| `shadow-gold` | `--shadow-gold` | `0 6px 20px hsl(41 60% 52% / 0.30)` | Premium "Pro" badges, gold-accented cards |
+| `shadow-inset` | `--shadow-inset` | `inset 0 1px 0 hsl(0 0% 100% / 0.6)` | Top highlight on dark surfaces (luxury sheen) |
+
+**Rule:** Elevation must always pair with a radius ≥ `rounded-xl`. No shadowed sharp corners. Hover state lifts exactly one shadow step (`sm` → `lg`).
 
 ### 2.6 Motion & Interactions
 
 - **Library:** `framer-motion` only. No GSAP; raw CSS keyframes allowed only as Tailwind utilities (e.g. `shimmer`).
-- **Entrance:** `initial={{ opacity: 0, y: 20 }}` → `animate={{ opacity: 1, y: 0 }}` · `duration: 0.6` · stagger `0.1s`.
-- **Hover lift:** Cards `whileHover={{ y: -4 }}` + `shadow-sm` → `shadow-lg` · `transition: 0.2s ease`.
-- **Buttons:** `hover:-translate-y-0.5` + shadow grow. CTA adds `animate-shimmer` (2s loop, white/30% sweep).
-- **Reduce motion:** Respect `prefers-reduced-motion`.
+- **Easing:** Use `[0.22, 1, 0.36, 1]` (out-expo) for entrances, `[0.4, 0, 0.2, 1]` (standard) for hovers.
+- **Entrance:** `initial={{ opacity: 0, y: 24 }}` → `animate={{ opacity: 1, y: 0 }}` · `duration: 0.7` · stagger `0.08s`.
+- **Hover lift:** Cards `whileHover={{ y: -6 }}` + `shadow-sm` → `shadow-lg` · `transition: 0.25s`.
+- **Buttons:** `hover:-translate-y-0.5` + shadow grow. CTA adds `animate-shimmer` (2s loop, gold/30% sweep).
+- **Reduce motion:** Respect `prefers-reduced-motion` — disable y-translations, keep opacity only.
 
 ### 2.7 Components & UI Patterns
 
-- **Buttons:** Always `<Button>` from `@/components/ui/button`. Primary = `variant="cta"` (orange). Secondary = `variant="teal"`. Quiet = `outline` / `ghost`. Never raw `<button>` with utility classes.
-- **Cards:** `bg-card rounded-xl border border-border/50 shadow-sm p-6`; hover adds `shadow-lg` + `-translate-y-1`.
-- **Inputs:** `h-12` min, `rounded-lg`, `bg-card`, `border-border`, focus `ring-2 ring-teal/40`.
-- **Badges:** Pill, `text-xs font-semibold uppercase tracking-wider`. Success `bg-green-50 text-green-700`, pending `bg-amber-50 text-amber-700`, active `bg-teal/10 text-teal`, danger `bg-red-50 text-red-700`.
-- **Icons:** `lucide-react` only. `h-4 w-4` inline, `h-5 w-5` button, `h-6 w-6` feature, `h-10 w-10` hero accent inside a tinted rounded square.
-- **Sections:** Wrap in `<section className="container py-12 md:py-20">` with an optional eyebrow (`text-xs uppercase tracking-wider text-teal`) above the H2.
+- **Buttons:** Always `<Button>` from `@/components/ui/button`. Primary = `variant="default"` (emerald gradient + `shadow-emerald`). Urgency = `variant="cta"` (orange + `shadow-cta`). Premium = `variant="gold"` (gold gradient + `shadow-gold`, white text). Quiet = `outline` / `ghost`. Min height `h-11` standard, `h-12` hero, `h-9` compact. Never raw `<button>` with utility classes.
+- **Cards:** `bg-card rounded-2xl border border-border shadow-sm p-6 md:p-8`; hover adds `shadow-lg` + `-translate-y-1`. Premium card variant adds `border-gold/30` + `shadow-gold` + inset top highlight.
+- **Inputs:** `h-12` min, `rounded-xl`, `bg-card`, `border-border`, focus `ring-2 ring-emerald/40 border-emerald`. Label sits above with `text-sm font-medium mb-2`.
+- **Badges:** Pill, `text-[11px] font-semibold uppercase tracking-[0.14em]`. Success `bg-emerald/10 text-emerald`, pending `bg-warning/10 text-warning`, active `bg-teal/10 text-teal`, danger `bg-destructive/10 text-destructive`, premium `bg-gold/15 text-gold-700 ring-1 ring-gold/30`.
+- **Inputs in dark hero:** `bg-white/8 backdrop-blur-md border border-white/15` with `text-white placeholder:text-white/60`, focus `ring-gold/50`.
+- **Icons:** `lucide-react` only. `h-4 w-4` inline, `h-5 w-5` button, `h-6 w-6` feature, `h-10 w-10` hero accent inside a tinted rounded-2xl square (`bg-emerald/10` or `bg-gold/10`).
+- **Sections:** Wrap in `<section className="container py-16 md:py-20 lg:py-24">` with an optional eyebrow (`text-[11px] uppercase tracking-[0.18em] text-gold font-semibold`) above the H2.
+- **Dividers:** Prefer a 1px hairline `bg-gradient-to-r from-transparent via-border-strong to-transparent` over solid borders for premium feel.
 
 ---
 
