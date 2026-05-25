@@ -2,6 +2,7 @@ import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Button } from "@/components/ui/button";
 import { Check, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import PricingDisclosure from "@/components/PricingDisclosure";
 
 const plans = [
   {
@@ -82,6 +83,9 @@ const PricingSection = () => (
         <div className="text-center space-y-2 text-sm text-muted-foreground">
           <p>¿Eres concesionario? Planes desde RD$15,000/mes → <a href="#dealers" className="text-teal font-medium hover:underline">Contáctanos</a></p>
           <p>¿Eres gestor? Únete a nuestra red de aliados y gana más → <a href="#gestores" className="text-teal font-medium hover:underline">Contáctanos</a></p>
+          <div className="pt-4 max-w-2xl mx-auto">
+            <PricingDisclosure className="justify-center text-center" />
+          </div>
         </div>
       </AnimateOnScroll>
     </div>

@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import PricingDisclosure from "@/components/PricingDisclosure";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { FileText, AlertTriangle, Calculator, Clock, Shield, HelpCircle, ArrowRight } from "lucide-react";
@@ -256,9 +257,10 @@ const GuiaTraspaso = () => (
                 </p>
 
                 <div className="bg-accent/10 border border-accent/20 rounded-xl p-5">
-                  <p className="text-foreground font-bold mb-1">Con TRASPASA.DO: desde RD$3,500 + impuestos del gobierno</p>
-                  <p className="text-sm">Nuestro servicio incluye contrato, notaría, recogida de matrícula, gestión completa en DGII y entrega a domicilio. Solo pagas aparte el impuesto 2% y la matrícula (RD$100), que son pagos directos al gobierno.</p>
-                  <Button variant="teal" size="sm" className="mt-3" asChild>
+                  <p className="text-foreground font-bold mb-1">Con TRASPASA.DO: desde RD$3,500</p>
+                  <p className="text-sm mb-3">Nuestro servicio incluye contrato, recogida de matrícula, gestión completa en DGII y entrega a domicilio.</p>
+                  <PricingDisclosure className="mb-3" />
+                  <Button variant="teal" size="sm" asChild>
                     <Link to="/calculadora">Calcular mi costo total →</Link>
                   </Button>
                 </div>

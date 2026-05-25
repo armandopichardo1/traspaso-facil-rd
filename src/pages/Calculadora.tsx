@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import PricingDisclosure from "@/components/PricingDisclosure";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -139,9 +140,7 @@ const Calculadora = () => {
           </div>
 
           <div className="space-y-4 text-muted-foreground text-sm mb-10">
-            <p>
-              <strong className="text-foreground">Nota:</strong> El impuesto 2% y la matrícula (RD$100) son pagos al gobierno. El servicio TRASPASA.DO incluye contrato, notaría, recogida de matrícula, gestión DGII y entrega a domicilio.
-            </p>
+            <PricingDisclosure />
             <p>
               El impuesto se calcula sobre el mayor valor entre el precio de venta y la tabla de valores fidedignos de la DGII.
             </p>

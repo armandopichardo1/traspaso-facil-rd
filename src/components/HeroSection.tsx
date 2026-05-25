@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Search, FileText, Shield, Lock, PenTool, Headphones, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/hero-traspaso-v2.jpg";
 import { motion } from "framer-motion";
+import PricingDisclosure from "@/components/PricingDisclosure";
 
 const trustItems = [
   { icon: Shield, label: "Sistema Antifraude" },
@@ -32,7 +33,7 @@ const HeroSection = () => {
               Sin filas. Sin estrés.
             </h1>
             <p className="text-muted-foreground text-base md:text-lg mb-6 max-w-md">
-              Gestionamos todo el papeleo legal de tu vehículo en la DGII de forma 100% digital y segura. La velocidad de un clic con la confianza de un experto legal.
+              Gestionamos todo el papeleo legal de tu vehículo en la DGII con gestión digital de punta a punta: tú no haces filas y coordinas todo desde tu celular. Tú solo llevas el vehículo al Plan Piloto; del resto nos encargamos nosotros.
             </p>
             <div className="flex flex-wrap gap-3 mb-6">
               <Button variant="cta" size="lg" className="font-bold relative overflow-hidden group" asChild>
@@ -154,6 +155,9 @@ const HeroSection = () => {
               >
                 <a href="#solicitud">Iniciar trámite 🚀</a>
               </Button>
+              <div className="mt-4">
+                <PricingDisclosure variant="onDark" />
+              </div>
             </div>
           </motion.div>
         </div>
