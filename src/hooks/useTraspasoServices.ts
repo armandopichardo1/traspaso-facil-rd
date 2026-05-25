@@ -38,6 +38,13 @@ export const useTraspaso = (id: string | undefined) =>
     queryFn: () => unwrap(svc.getTraspaso(id!)),
   });
 
+export const useTraspasoByCodigo = (codigo: string | undefined) =>
+  useQuery({
+    queryKey: ["traspaso", "codigo", codigo],
+    enabled: !!codigo,
+    queryFn: () => unwrap(svc.getTraspasoByCodigo(codigo!)),
+  });
+
 export const useTraspasosForRole = (
   role: UserRole | undefined,
   userId: string | undefined,
