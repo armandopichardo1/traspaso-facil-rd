@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, Eye, PenTool, CheckCircle } from "lucide-react";
 import { generateContract, CONTRACT_LABELS, type ContractType, type ContractData } from "@/lib/contract-templates";
+import { useGenerateContract, useSaveFirma } from "@/hooks/useTraspasoServices";
 import SignaturePad, { type SignatureData } from "./SignaturePad";
 
 interface ContractGeneratorProps {
