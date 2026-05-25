@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
@@ -16,6 +15,7 @@ import {
   useSaveFirma,
   useAdvanceStatus,
 } from "@/hooks/useTraspasoServices";
+import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 
 const STEPS = [
   { key: "identity", label: "Identidad Verificada", icon: ShieldCheck },
@@ -28,7 +28,7 @@ export default function NotarioTraspasoDetail() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
   const { data: contratos = [] } = useContratos(id);
   const { data: firmas = [] } = useFirmas(id);
   const saveFirmaMutation = useSaveFirma(id ?? "");
@@ -70,20 +70,27 @@ export default function NotarioTraspasoDetail() {
   };
 
   if (isLoading) {
+    return <LoadingSkeleton rows={2} className="p-4 max-w-lg mx-auto space-y-4" rowClassName="h-40 w-full rounded-2xl" />;
+  }
+
+  if (isError) {
     return (
-      <div className="p-4 max-w-lg mx-auto space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full rounded-2xl" />
-        <Skeleton className="h-40 w-full rounded-2xl" />
+      <div className="p-4 max-w-lg mx-auto">
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar el traspaso."}
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!traspaso) {
     return (
-      <div className="p-4 max-w-lg mx-auto text-center text-muted-foreground">
-        Traspaso no encontrado
-      </div>
+      <NotFoundView
+        title="Traspaso no encontrado"
+        description="Este traspaso no existe o ya no está asignado a ti."
+        onBack={() => navigate("/notario")}
+      />
     );
   }
 

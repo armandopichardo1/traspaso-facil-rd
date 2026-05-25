@@ -6,18 +6,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Scale, Car, ArrowRight, RefreshCw, FileCheck, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState, ErrorState, LoadingSkeleton } from "@/components/shared/StateView";
 
 export default function NotarioDashboard() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const qc = useQueryClient();
 
-  const { data, isLoading, isFetching } = useTraspasosForRole("notario", profile?.id);
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useTraspasosForRole("notario", profile?.id);
   const traspasos = data ?? [];
 
-  const refresh = () =>
+  const refresh = () => {
     qc.invalidateQueries({ queryKey: ["traspasos", "notario", profile?.id] });
+    refetch();
+  };
 
   const pendientes = traspasos.filter(t => t.status !== "completado" && t.status !== "cancelado");
   const completados = traspasos.filter(t => t.status === "completado");
@@ -62,16 +65,18 @@ export default function NotarioDashboard() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
-        </div>
+        <LoadingSkeleton rows={3} className="space-y-3" rowClassName="h-28 w-full rounded-xl" />
+      ) : isError ? (
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar la cola."}
+          onRetry={() => refetch()}
+        />
       ) : traspasos.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <Scale className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p>No hay traspasos pendientes de firma</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Scale}
+          title="No hay traspasos pendientes de firma"
+          description="Cuando un gestor envíe un contrato a certificar, aparecerá aquí."
+        />
       ) : (
         <div className="space-y-3">
           {traspasos.map((t) => {

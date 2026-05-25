@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
 import { getNextStatus, canAdvanceTo } from "@/lib/traspaso-status";
 import type { UserRole } from "@/lib/traspaso-status";
@@ -26,7 +26,7 @@ export default function GestorTraspasoDetail() {
   const { user } = useAuth();
   const [advancing, setAdvancing] = useState(false);
 
-  const { data: traspaso, isLoading } = useQuery({
+  const { data: traspaso, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["gestor-traspaso", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("traspasos").select("*").eq("id", id!).single();
@@ -73,16 +73,27 @@ export default function GestorTraspasoDetail() {
   };
 
   if (isLoading) {
+    return <LoadingSkeleton rows={2} className="max-w-lg mx-auto px-4 pt-6 space-y-4" rowClassName="h-40 w-full rounded-xl" />;
+  }
+
+  if (isError) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full" />
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar el traspaso."}
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!traspaso) {
-    return <div className="max-w-lg mx-auto px-4 pt-10 text-center"><p className="text-muted-foreground">Traspaso no encontrado</p></div>;
+    return (
+      <NotFoundView
+        title="Traspaso no encontrado"
+        onBack={() => navigate("/gestor")}
+      />
+    );
   }
 
   const t = traspaso as any;

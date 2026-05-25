@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ArrowLeft, Truck, MapPin, Phone, Camera, CheckCircle, Package } from "lucide-react";
 import {
@@ -13,6 +12,7 @@ import {
   useUploadDocumento,
   useAdvanceStatus,
 } from "@/hooks/useTraspasoServices";
+import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 
 export default function MensajeroTraspasoDetail() {
   const { id } = useParams();
@@ -20,7 +20,7 @@ export default function MensajeroTraspasoDetail() {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
   const { data: documentos = [] } = useDocumentos(id);
   const uploadMutation = useUploadDocumento(id ?? "");
   const advanceMutation = useAdvanceStatus(id ?? "");
@@ -57,19 +57,27 @@ export default function MensajeroTraspasoDetail() {
   };
 
   if (isLoading) {
+    return <LoadingSkeleton rows={2} className="p-4 max-w-lg mx-auto space-y-4" rowClassName="h-40 w-full rounded-2xl" />;
+  }
+
+  if (isError) {
     return (
-      <div className="p-4 max-w-lg mx-auto space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full" />
+      <div className="p-4 max-w-lg mx-auto">
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar el traspaso."}
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!traspaso) {
     return (
-      <div className="p-4 max-w-lg mx-auto text-center text-muted-foreground">
-        Traspaso no encontrado
-      </div>
+      <NotFoundView
+        title="Traspaso no encontrado"
+        description="Este traspaso no existe o ya no está asignado a ti."
+        onBack={() => navigate("/mensajero")}
+      />
     );
   }
 
