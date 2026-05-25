@@ -28,7 +28,7 @@ export default function NotarioTraspasoDetail() {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
-  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
   const { data: contratos = [] } = useContratos(id);
   const { data: firmas = [] } = useFirmas(id);
   const saveFirmaMutation = useSaveFirma(id ?? "");
