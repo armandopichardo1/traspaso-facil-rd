@@ -119,8 +119,8 @@ export default function TraspasoDetail() {
                 <Car className="h-6 w-6 text-accent" />
               </div>
               <div>
-                <h1 className="font-extrabold text-lg">{t.vehiculo_marca} {t.vehiculo_modelo} {t.vehiculo_ano}</h1>
-                <p className="text-sm text-muted-foreground">Placa: {t.vehiculo_placa} · {t.codigo}</p>
+                <h1 className="font-extrabold text-lg">{t.vehiculoMarca} {t.vehiculoModelo} {t.vehiculoAno}</h1>
+                <p className="text-sm text-muted-foreground">Placa: {t.vehiculoPlaca} · {t.codigo}</p>
               </div>
             </div>
 
@@ -251,7 +251,7 @@ export default function TraspasoDetail() {
       )}
 
       {/* Escrow card */}
-      {t.escrow_status !== "no_aplica" && (
+      {t.escrowStatus !== "no_aplica" && (
         <Card className="mb-4 cursor-pointer rounded-xl hover:shadow-md transition-shadow" onClick={() => navigate(`/app/traspaso/${id}/escrow`)}>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
@@ -259,9 +259,9 @@ export default function TraspasoDetail() {
             </div>
             <div className="flex-1">
               <p className="font-bold text-sm">Pago Seguro</p>
-              <p className="text-xs text-muted-foreground capitalize">{t.escrow_status.replace("_", " ")}</p>
+              <p className="text-xs text-muted-foreground capitalize">{t.escrowStatus.replace("_", " ")}</p>
             </div>
-            {t.precio_vehiculo && <p className="font-bold text-accent">RD$ {t.precio_vehiculo.toLocaleString()}</p>}
+            {t.precioVehiculo && <p className="font-bold text-accent">RD$ {t.precioVehiculo.toLocaleString()}</p>}
           </CardContent>
         </Card>
       )}
@@ -275,7 +275,7 @@ export default function TraspasoDetail() {
               {docs.map((d: any) => (
                 <div key={d.id} className="flex items-center justify-between text-sm">
                   <span className="capitalize">{d.tipo.replace(/_/g, " ")}</span>
-                  <a href={d.file_url} target="_blank" rel="noopener" className="text-accent hover:underline text-xs font-medium">Ver</a>
+                  <a href={d.fileUrl} target="_blank" rel="noopener" className="text-accent hover:underline text-xs font-medium">Ver</a>
                 </div>
               ))}
             </div>
