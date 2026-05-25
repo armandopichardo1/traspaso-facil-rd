@@ -114,7 +114,7 @@ export default function ContractGenerator({ traspasoId, contractData, onRefresh 
   };
 
   const getContractSignatures = (contractId: string) =>
-    signatures.filter(s => s.contrato_id === contractId);
+    signatures.filter(s => s.contratoId === contractId);
 
   return (
     <div className="space-y-4">
