@@ -17,7 +17,7 @@ import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUp
 import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
-import { useTraspaso, useDocumentos } from "@/hooks/useTraspasoServices";
+import { useTraspaso, useDocumentos, useContratos } from "@/hooks/useTraspasoServices";
 
 import { STATUS_STEPS } from "@/lib/traspaso-status";
 
