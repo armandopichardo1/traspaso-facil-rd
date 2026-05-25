@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
 import { getNextStatus, canAdvanceTo } from "@/lib/traspaso-status";
 import type { UserRole } from "@/lib/traspaso-status";
