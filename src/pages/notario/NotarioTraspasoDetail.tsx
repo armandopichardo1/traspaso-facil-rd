@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +9,13 @@ import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
 import { motion } from "framer-motion";
+import {
+  useTraspaso,
+  useContratos,
+  useFirmas,
+  useSaveFirma,
+  useAdvanceStatus,
+} from "@/hooks/useTraspasoServices";
 
 const STEPS = [
   { key: "identity", label: "Identidad Verificada", icon: ShieldCheck },
@@ -20,96 +26,50 @@ const STEPS = [
 export default function NotarioTraspasoDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [traspaso, setTraspaso] = useState<any>(null);
-  const [contratos, setContratos] = useState<any[]>([]);
-  const [firmas, setFirmas] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [signing, setSigning] = useState(false);
-  const [advancing, setAdvancing] = useState(false);
+  const { user, profile } = useAuth();
+
+  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: contratos = [] } = useContratos(id);
+  const { data: firmas = [] } = useFirmas(id);
+  const saveFirmaMutation = useSaveFirma(id ?? "");
+  const advanceMutation = useAdvanceStatus(id ?? "");
+
   const [activeStep, setActiveStep] = useState(0);
   const [showSignature, setShowSignature] = useState(false);
 
-  const fetchData = async () => {
-    setLoading(true);
-    const [tRes, cRes, fRes] = await Promise.all([
-      supabase.from("traspasos").select("*").eq("id", id!).single(),
-      supabase.from("traspaso_contratos").select("*").eq("traspaso_id", id!).order("created_at", { ascending: false }),
-      supabase.from("traspaso_firmas").select("*").eq("traspaso_id", id!).order("created_at", { ascending: false }),
-    ]);
-    setTraspaso(tRes.data);
-    setContratos(cRes.data || []);
-    setFirmas(fRes.data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    if (id) fetchData();
-  }, [id]);
-
   const handleSign = async (signatureData: { imageDataUrl: string; userAgent: string; geolocation: string | null }) => {
     if (!traspaso || !user) return;
-    setSigning(true);
     try {
       const blob = await (await fetch(signatureData.imageDataUrl)).blob();
-      const fileName = `firmas/${traspaso.id}/notario_${Date.now()}.png`;
-      const { error: uploadError } = await supabase.storage
-        .from("documentos")
-        .upload(fileName, blob, { contentType: "image/png" });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("documentos").getPublicUrl(fileName);
-
-      const { error } = await supabase.from("traspaso_firmas").insert({
-        traspaso_id: traspaso.id,
-        contrato_id: contratos[0]?.id || null,
-        tipo_firmante: "notario",
-        nombre_firmante: "Notario Certificador",
-        firma_hash: btoa(signatureData.imageDataUrl.slice(0, 100)),
-        firma_imagen_url: urlData.publicUrl,
-        user_agent: signatureData.userAgent,
-        geolocation: signatureData.geolocation,
+      await saveFirmaMutation.mutateAsync({
+        contratoId: contratos[0]?.id ?? null,
+        tipoFirmante: "notario",
+        firmaImagenBlob: blob,
+        nombre: profile?.nombre || "Notario Certificador",
       });
-      if (error) throw error;
-
       toast.success("Firma del notario registrada");
       setShowSignature(false);
-      fetchData();
     } catch (err: any) {
       toast.error(err.message || "Error al firmar");
-    } finally {
-      setSigning(false);
     }
   };
 
   const handleAdvanceStatus = async () => {
-    if (!traspaso) return;
-    setAdvancing(true);
+    if (!traspaso || !user) return;
     try {
-      const nextStatus = "verificacion_antifraude";
-      const { error } = await supabase
-        .from("traspasos")
-        .update({ status: nextStatus })
-        .eq("id", traspaso.id);
-      if (error) throw error;
-
-      await supabase.from("traspaso_timeline").insert({
-        traspaso_id: traspaso.id,
-        status: nextStatus,
+      await advanceMutation.mutateAsync({
+        toStatus: "verificacion_antifraude",
+        actor: { id: user.id, role: "notario" },
         nota: "Contrato certificado por notario — pasa a verificación antifraude",
-        created_by: user?.id,
       });
-
       toast.success("Traspaso avanzado a verificación antifraude");
       navigate("/notario");
     } catch (err: any) {
       toast.error(err.message || "Error al avanzar");
-    } finally {
-      setAdvancing(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="p-4 max-w-lg mx-auto space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -127,7 +87,7 @@ export default function NotarioTraspasoDetail() {
     );
   }
 
-  const notarioFirma = firmas.find((f) => f.tipo_firmante === "notario");
+  const notarioFirma = firmas.find((f) => f.tipoFirmante === "notario");
 
   return (
     <div className="p-4 max-w-lg mx-auto pb-24">
@@ -197,19 +157,19 @@ export default function NotarioTraspasoDetail() {
               <div className="text-sm space-y-2">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Vendedor</span>
-                  <span className="font-medium">{traspaso.vendedor_nombre || "—"}</span>
+                  <span className="font-medium">{traspaso.vendedorNombre || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cédula</span>
-                  <span className="font-medium">{traspaso.vendedor_cedula || "—"}</span>
+                  <span className="font-medium">{traspaso.vendedorCedula || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Comprador</span>
-                  <span className="font-medium">{traspaso.comprador_nombre || "—"}</span>
+                  <span className="font-medium">{traspaso.compradorNombre || "—"}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cédula</span>
-                  <span className="font-medium">{traspaso.comprador_cedula || "—"}</span>
+                  <span className="font-medium">{traspaso.compradorCedula || "—"}</span>
                 </div>
               </div>
             </CardContent>
@@ -218,10 +178,10 @@ export default function NotarioTraspasoDetail() {
           <Card className="rounded-xl">
             <CardContent className="p-5 text-sm space-y-2">
               <p className="font-bold">Vehículo</p>
-              <p><span className="text-muted-foreground">Marca/Modelo:</span> {traspaso.vehiculo_marca} {traspaso.vehiculo_modelo}</p>
-              <p><span className="text-muted-foreground">Placa:</span> {traspaso.vehiculo_placa || "—"}</p>
-              <p><span className="text-muted-foreground">Chasis:</span> {traspaso.vehiculo_chasis || "—"}</p>
-              <p><span className="text-muted-foreground">Año:</span> {traspaso.vehiculo_ano || "—"}</p>
+              <p><span className="text-muted-foreground">Marca/Modelo:</span> {traspaso.vehiculoMarca} {traspaso.vehiculoModelo}</p>
+              <p><span className="text-muted-foreground">Placa:</span> {traspaso.vehiculoPlaca || "—"}</p>
+              <p><span className="text-muted-foreground">Chasis:</span> {traspaso.vehiculoChasis || "—"}</p>
+              <p><span className="text-muted-foreground">Año:</span> {traspaso.vehiculoAno || "—"}</p>
             </CardContent>
           </Card>
 
@@ -243,10 +203,10 @@ export default function NotarioTraspasoDetail() {
                 <p className="text-muted-foreground text-sm">No hay contratos generados</p>
               ) : (
                 <div className="space-y-3">
-                  {contratos.map((c) => (
+                  {contratos.map((c: any) => (
                     <div key={c.id} className="border border-border rounded-xl p-3">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-bold text-sm capitalize">{c.tipo.replace(/_/g, " ")}</span>
+                        <span className="font-bold text-sm capitalize">{String(c.tipo).replace(/_/g, " ")}</span>
                         <Badge variant="secondary" className="text-xs">{c.status}</Badge>
                       </div>
                       <div
@@ -260,7 +220,6 @@ export default function NotarioTraspasoDetail() {
             </CardContent>
           </Card>
 
-          {/* Existing signatures */}
           {firmas.length > 0 && (
             <Card className="rounded-xl">
               <CardContent className="p-5">
@@ -270,10 +229,10 @@ export default function NotarioTraspasoDetail() {
                 <div className="space-y-2">
                   {firmas.map((f) => (
                     <div key={f.id} className="flex items-center gap-3 border border-border rounded-xl p-2">
-                      <img src={f.firma_imagen_url} alt="Firma" className="h-10 w-20 object-contain border rounded" />
+                      <img src={f.firmaImagenUrl} alt="Firma" className="h-10 w-20 object-contain border rounded" />
                       <div>
-                        <p className="font-medium text-sm capitalize">{f.tipo_firmante}</p>
-                        <p className="text-xs text-muted-foreground">{f.nombre_firmante}</p>
+                        <p className="font-medium text-sm capitalize">{f.tipoFirmante}</p>
+                        <p className="text-xs text-muted-foreground">{f.nombreFirmante}</p>
                       </div>
                     </div>
                   ))}
@@ -363,9 +322,9 @@ export default function NotarioTraspasoDetail() {
             className="w-full font-bold"
             size="lg"
             onClick={handleAdvanceStatus}
-            disabled={advancing}
+            disabled={advanceMutation.isPending}
           >
-            {advancing ? "Avanzando..." : "Avanzar a Verificación Antifraude →"}
+            {advanceMutation.isPending ? "Avanzando..." : "Avanzar a Verificación Antifraude →"}
           </Button>
         </motion.div>
       )}
