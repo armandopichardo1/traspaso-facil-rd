@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ArrowLeft, Truck, MapPin, Phone, Camera, CheckCircle, Package } from "lucide-react";
 import {
@@ -13,6 +12,7 @@ import {
   useUploadDocumento,
   useAdvanceStatus,
 } from "@/hooks/useTraspasoServices";
+import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 
 export default function MensajeroTraspasoDetail() {
   const { id } = useParams();
