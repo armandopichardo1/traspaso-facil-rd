@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, Truck, MapPin, Phone, Camera, CheckCircle, Package } from "lucide-react";
+import { motion } from "framer-motion";
+import { STATUS_LABELS } from "@/lib/traspaso-status";
 import {
   useTraspaso,
   useDocumentos,
   useUploadDocumento,
   useAdvanceStatus,
+  useDocumentoSignedUrl,
 } from "@/hooks/useTraspasoServices";
 import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 
