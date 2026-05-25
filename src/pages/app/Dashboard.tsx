@@ -1,7 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +10,11 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS } from "@/lib/traspaso-status";
+import {
+  useTraspasosForRole,
+  useHistorialesForUser,
+  useCreateHistorialRequest,
+} from "@/hooks/useTraspasoServices";
 
 export default function Dashboard() {
   const { profile } = useAuth();
