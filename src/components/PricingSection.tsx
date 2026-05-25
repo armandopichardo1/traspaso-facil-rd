@@ -2,6 +2,7 @@ import { AnimateOnScroll } from "@/components/AnimateOnScroll";
 import { Button } from "@/components/ui/button";
 import { Check, Zap } from "lucide-react";
 import { motion } from "framer-motion";
+import PricingDisclosure from "@/components/PricingDisclosure";
 
 const plans = [
   {
