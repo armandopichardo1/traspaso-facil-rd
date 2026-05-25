@@ -269,7 +269,7 @@ export async function updateTraspasoFields(
 
   const { data, error } = await supabase
     .from("traspasos")
-    .update(map)
+    .update(map as never)
     .eq("id", id)
     .select("*")
     .single();
@@ -284,7 +284,7 @@ export async function assignRole(
 ): Promise<ServiceResult<void>> {
   const col =
     role === "gestor" ? "gestor_id" : role === "notario" ? "notario_id" : "mensajero_id";
-  const { error } = await supabase.from("traspasos").update({ [col]: userId }).eq("id", id);
+  const { error } = await supabase.from("traspasos").update({ [col]: userId } as never).eq("id", id);
   if (error) return { ok: false, error: error.message };
   return { ok: true, data: undefined };
 }
