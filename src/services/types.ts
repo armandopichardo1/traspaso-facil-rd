@@ -145,7 +145,7 @@ export interface TraspasoTimelineEntry {
   createdAt: string;
 }
 
-export type DocTipo =
+export type DocTipoCanonical =
   | "matricula"
   | "cedula_vendedor"
   | "cedula_comprador"
@@ -154,11 +154,15 @@ export type DocTipo =
   | "contrato_firmado"
   | "comprobante_pago"
   | "otro";
+/** TODO_BACKEND: normalizar tipos de documento. Hoy aceptamos strings legacy
+ * (cedula_*_frente, marbete, matricula_foto, etc.) que el backend real
+ * debe mapear a un set canónico. */
+export type DocTipo = DocTipoCanonical | (string & {});
 
 export interface TraspasoDoc {
   id: string;
   traspasoId: string;
-  tipo: DocTipo;
+  tipo: string;
   fileUrl: string;
   uploadedAt: string;
 }
