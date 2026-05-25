@@ -86,6 +86,8 @@ export interface NewTraspasoInput {
   customerId: string;
   plan: Plan;
   assetType?: AssetType;
+  /** TODO_BACKEND: el backend real valida tipo_vehiculo contra catálogo */
+  tipoVehiculo?: string;
   vehiculo?: {
     marca?: string;
     modelo?: string;
@@ -109,6 +111,9 @@ export interface NewTraspasoInput {
     rnc: string;
   }>;
   precioVehiculo?: number;
+  /** TODO_BACKEND: el backend sella precio_servicio desde pricing_config */
+  precioServicio?: number;
+  escrowStatus?: EscrowStatus;
   esTraspasoFamiliar?: boolean;
 }
 
