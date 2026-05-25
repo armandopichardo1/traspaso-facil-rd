@@ -51,19 +51,16 @@ export default function ContractGenerator({ traspasoId, contractData, contracts,
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [signingContract, setSigningContract] = useState<{ id: string; tipo: string } | null>(null);
 
+  const generateContractMutation = useGenerateContract(traspasoId);
+  const saveFirmaMutation = useSaveFirma(traspasoId);
+
   const availableContracts = getAvailableContracts(contractData);
 
   const handleGenerate = async (tipo: ContractType) => {
     setGenerating(tipo);
     try {
       const html = generateContract(tipo, contractData);
-      const { error } = await supabase.from("traspaso_contratos").insert({
-        traspaso_id: traspasoId,
-        tipo,
-        contenido_html: html,
-        status: "borrador",
-      } as any);
-      if (error) throw error;
+      await generateContractMutation.mutateAsync({ tipo, contenidoHtml: html });
       toast({ title: `${CONTRACT_LABELS[tipo]} generado` });
       onRefresh();
     } catch (e: any) {
@@ -74,45 +71,24 @@ export default function ContractGenerator({ traspasoId, contractData, contracts,
 
   const handleSign = async (contractId: string, signatureData: SignatureData) => {
     try {
-      // Upload signature image
-      const fileName = `firmas/${traspasoId}/${contractId}_${Date.now()}.png`;
+      // Convert dataURL -> Blob for service layer
       const base64Data = signatureData.imageDataUrl.split(",")[1];
       const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+      const blob = new Blob([binaryData], { type: "image/png" });
 
-      const { error: uploadError } = await supabase.storage
-        .from("documentos")
-        .upload(fileName, binaryData, { contentType: "image/png" });
+      const tipoFirmante = signingContract?.tipo === "vendedor" ? "vendedor" : "comprador";
+      const nombre = tipoFirmante === "vendedor" ? contractData.vendedor_nombre : contractData.comprador_nombre;
+      const cedula = tipoFirmante === "vendedor"
+        ? (contractData.vendedor_tipo_persona === "fisica" ? contractData.vendedor_cedula : contractData.vendedor_rnc)
+        : (contractData.comprador_tipo_persona === "fisica" ? contractData.comprador_cedula : contractData.comprador_rnc);
 
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from("documentos").getPublicUrl(fileName);
-
-      // Compute hash of contract HTML
-      const contract = contracts.find(c => c.id === contractId);
-      const encoder = new TextEncoder();
-      const data = encoder.encode(contract?.contenido_html || "");
-      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
-
-      // Save signature record
-      const { error } = await supabase.from("traspaso_firmas").insert({
-        traspaso_id: traspasoId,
-        contrato_id: contractId,
-        tipo_firmante: signingContract?.tipo === "vendedor" ? "vendedor" : "comprador",
-        nombre_firmante: signingContract?.tipo === "vendedor" ? contractData.vendedor_nombre : contractData.comprador_nombre,
-        cedula_firmante: signingContract?.tipo === "vendedor"
-          ? (contractData.vendedor_tipo_persona === "fisica" ? contractData.vendedor_cedula : contractData.vendedor_rnc)
-          : (contractData.comprador_tipo_persona === "fisica" ? contractData.comprador_cedula : contractData.comprador_rnc),
-        firma_imagen_url: urlData.publicUrl,
-        firma_hash: hash,
-        ip_address: signatureData.ipAddress,
-        user_agent: signatureData.userAgent,
-        geolocation: signatureData.geolocation,
-        documento_url: null,
-      } as any);
-
-      if (error) throw error;
+      await saveFirmaMutation.mutateAsync({
+        contratoId: contractId,
+        tipoFirmante,
+        firmaImagenBlob: blob,
+        nombre,
+        cedula: cedula ?? undefined,
+      });
 
       toast({ title: "Firma registrada exitosamente" });
       setSigningContract(null);
