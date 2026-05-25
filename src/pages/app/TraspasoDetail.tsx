@@ -34,7 +34,7 @@ export default function TraspasoDetail() {
   const queryClient = useQueryClient();
   const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
-  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
   const { data: docs } = useDocumentos(id);
 
   const { data: contracts = [] } = useContratos(id);
@@ -47,11 +47,27 @@ export default function TraspasoDetail() {
   };
 
   if (isLoading) {
-    return <div className="max-w-lg mx-auto px-4 pt-6 space-y-4"><Skeleton className="h-8 w-32" /><Skeleton className="h-48 w-full rounded-2xl" /></div>;
+    return <LoadingSkeleton rows={2} className="max-w-lg mx-auto px-4 pt-6 space-y-4" rowClassName="h-48 w-full rounded-2xl" />;
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar el traspaso."}
+          onRetry={() => refetch()}
+        />
+      </div>
+    );
   }
 
   if (!traspaso) {
-    return <div className="max-w-lg mx-auto px-4 pt-6 text-center"><p className="text-muted-foreground">Traspaso no encontrado.</p><Button variant="ghost" onClick={() => navigate("/app")} className="mt-4">← Volver</Button></div>;
+    return (
+      <NotFoundView
+        title="Traspaso no encontrado"
+        onBack={() => navigate("/app")}
+      />
+    );
   }
 
   const t = traspaso;
