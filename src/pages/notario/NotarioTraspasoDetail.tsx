@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
@@ -16,6 +15,7 @@ import {
   useSaveFirma,
   useAdvanceStatus,
 } from "@/hooks/useTraspasoServices";
+import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 
 const STEPS = [
   { key: "identity", label: "Identidad Verificada", icon: ShieldCheck },
