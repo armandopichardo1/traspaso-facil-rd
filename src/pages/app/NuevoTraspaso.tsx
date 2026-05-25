@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+// supabase ya no se usa directamente: pasa por el service layer.
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MaskedInput } from "@/components/ui/masked-input";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, UserCheck } from "lucide-react";
 import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
 import MarbeteCapture from "@/components/app/MarbeteCapture";
+import { useCreateTraspaso } from "@/hooks/useTraspasoServices";
 
 const STEPS = [
   { title: "Tu Rol", icon: UserCheck },
@@ -49,10 +50,11 @@ export default function NuevoTraspaso() {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
   const [miRol, setMiRol] = useState<MiRol | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [cedulaFiles, setCedulaFiles] = useState<Record<string, string>>({});
   const [codigo, setCodigo] = useState("");
+  const createTraspaso = useCreateTraspaso();
+  const submitting = createTraspaso.isPending;
 
   const [form, setForm] = useState<FormData>({
     tipo_vehiculo: "vehiculo_motor",
@@ -116,75 +118,61 @@ export default function NuevoTraspaso() {
     setFiles((prev) => ({ ...prev, [tipo]: file }));
   };
 
-  const uploadFiles = async (traspasoId: string) => {
-    for (const [tipo, file] of Object.entries(files)) {
-      if (!file) continue;
-      const path = `${user!.id}/${traspasoId}/${tipo}_${Date.now()}`;
-      const { error: uploadError } = await supabase.storage.from("documentos").upload(path, file);
-      if (uploadError) continue;
-      const { data: urlData } = supabase.storage.from("documentos").getPublicUrl(path);
-      await supabase.from("traspaso_documentos").insert({ traspaso_id: traspasoId, tipo, file_url: urlData.publicUrl });
-    }
-    for (const [tipo, base64] of Object.entries(cedulaFiles)) {
-      if (!base64) continue;
-      const byteChars = atob(base64);
-      const byteArr = new Uint8Array(byteChars.length);
-      for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
-      const blob = new Blob([byteArr], { type: "image/jpeg" });
-      const path = `${user!.id}/${traspasoId}/${tipo}_${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("documentos").upload(path, blob);
-      if (uploadError) continue;
-      const { data: urlData } = supabase.storage.from("documentos").getPublicUrl(path);
-      await supabase.from("traspaso_documentos").insert({ traspaso_id: traspasoId, tipo, file_url: urlData.publicUrl });
-    }
-  };
 
   const handleSubmit = async () => {
     if (!form.acepta_terminos) {
       toast({ title: "Debes aceptar los términos y condiciones", variant: "destructive" });
       return;
     }
-    setSubmitting(true);
 
-    const precio_servicio = form.plan === "express" ? 5000 : 3500;
-
-    const { data, error } = await supabase
-      .from("traspasos")
-      .insert({
-        customer_id: user!.id,
-        tipo_vehiculo: form.tipo_vehiculo,
-        vehiculo_marca: form.vehiculo_marca,
-        vehiculo_modelo: form.vehiculo_modelo,
-        vehiculo_ano: parseInt(form.vehiculo_ano) || null,
-        vehiculo_placa: form.vehiculo_placa.toUpperCase(),
-        vehiculo_color: form.vehiculo_color,
-        vehiculo_chasis: form.vehiculo_chasis || null,
-        vendedor_nombre: form.vendedor_nombre,
-        vendedor_cedula: form.vendedor_cedula || null,
-        vendedor_telefono: form.vendedor_telefono,
-        comprador_nombre: form.comprador_nombre,
-        comprador_cedula: form.comprador_cedula || null,
-        comprador_telefono: form.comprador_telefono,
+    try {
+      const created = await createTraspaso.mutateAsync({
+        customerId: user!.id,
         plan: form.plan,
-        precio_servicio,
-        precio_vehiculo: form.pago_seguro ? parseFloat(form.precio_vehiculo) || null : null,
-        escrow_status: form.pago_seguro ? "depositado" : "no_aplica",
-      } as any)
-      .select()
-      .single();
+        tipoVehiculo: form.tipo_vehiculo,
+        vehiculo: {
+          marca: form.vehiculo_marca,
+          modelo: form.vehiculo_modelo,
+          ano: parseInt(form.vehiculo_ano) || undefined,
+          placa: form.vehiculo_placa.toUpperCase(),
+          color: form.vehiculo_color,
+          chasis: form.vehiculo_chasis || undefined,
+        },
+        vendedor: {
+          nombre: form.vendedor_nombre,
+          cedula: form.vendedor_cedula || undefined,
+          telefono: form.vendedor_telefono,
+        },
+        comprador: {
+          nombre: form.comprador_nombre,
+          cedula: form.comprador_cedula || undefined,
+          telefono: form.comprador_telefono,
+        },
+        precioVehiculo: form.pago_seguro ? parseFloat(form.precio_vehiculo) || undefined : undefined,
+        escrowStatus: form.pago_seguro ? "depositado" : "no_aplica",
+      });
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-      setSubmitting(false);
-      return;
-    }
-
-    if (data) {
-      await uploadFiles((data as any).id);
-      setCodigo((data as any).codigo || "");
+      // TODO_BACKEND: orquestar uploads en server-side al crear el traspaso.
+      // Hoy lo hacemos cliente-side con el id recién creado.
+      // Sube archivos usando el id recién creado (no usa el hook con el id viejo).
+      const { uploadDocumento } = await import("@/services/traspasoService");
+      for (const [tipo, file] of Object.entries(files)) {
+        if (!file) continue;
+        await uploadDocumento(created.id, tipo as never, file);
+      }
+      for (const [tipo, base64] of Object.entries(cedulaFiles)) {
+        if (!base64) continue;
+        const byteChars = atob(base64);
+        const byteArr = new Uint8Array(byteChars.length);
+        for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i);
+        const file = new File([byteArr], `${tipo}_${Date.now()}.jpg`, { type: "image/jpeg" });
+        await uploadDocumento(created.id, tipo as never, file);
+      }
+      setCodigo(created.codigo || "");
       setStep(5);
+    } catch (e) {
+      toast({ title: "Error", description: (e as Error).message, variant: "destructive" });
     }
-    setSubmitting(false);
   };
 
   const FileInput = ({ tipo, label }: { tipo: string; label: string }) => (

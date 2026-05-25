@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
-  ShieldCheck, MapPin, PenTool, DollarSign, Upload,
+  ShieldCheck, MapPin,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
@@ -17,8 +17,9 @@ import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUp
 import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
+import { useTraspaso, useDocumentos } from "@/hooks/useTraspasoServices";
 
-import { STATUS_STEPS, STATUS_LABELS } from "@/lib/traspaso-status";
+import { STATUS_STEPS } from "@/lib/traspaso-status";
 
 const antifraudeBadge = (s: string) => {
   if (s === "aprobado") return { color: "bg-green-50 text-green-800 border-green-200", icon: Shield, label: "Aprobado" };
@@ -33,24 +34,8 @@ export default function TraspasoDetail() {
   const queryClient = useQueryClient();
   const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
-  const { data: traspaso, isLoading } = useQuery({
-    queryKey: ["traspaso", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspasos").select("*").eq("id", id).single();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: docs } = useQuery({
-    queryKey: ["traspaso-docs", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_documentos").select("*").eq("traspaso_id", id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: docs } = useDocumentos(id);
 
   const { data: contracts = [] } = useQuery({
     queryKey: ["traspaso-contracts", id],
@@ -75,7 +60,8 @@ export default function TraspasoDetail() {
   const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: ["traspaso-contracts", id] });
     queryClient.invalidateQueries({ queryKey: ["traspaso-signatures", id] });
-    queryClient.invalidateQueries({ queryKey: ["traspaso-docs", id] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso", id, "documentos"] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso", id] });
   };
 
   if (isLoading) {
@@ -86,27 +72,27 @@ export default function TraspasoDetail() {
     return <div className="max-w-lg mx-auto px-4 pt-6 text-center"><p className="text-muted-foreground">Traspaso no encontrado.</p><Button variant="ghost" onClick={() => navigate("/app")} className="mt-4">← Volver</Button></div>;
   }
 
-  const t = traspaso as any;
+  const t = traspaso;
   const currentIdx = STATUS_STEPS.findIndex((s) => s.key === t.status);
   const progressPct = currentIdx >= 0 ? Math.round(((currentIdx + 1) / STATUS_STEPS.length) * 100) : 0;
-  const af = antifraudeBadge(t.antifraude_status);
+  const af = antifraudeBadge(t.antifraudeStatus);
 
   const contractData: ContractData = {
-    vehiculo_marca: t.vehiculo_marca || "", vehiculo_modelo: t.vehiculo_modelo || "",
-    vehiculo_ano: t.vehiculo_ano || "", vehiculo_placa: t.vehiculo_placa || "",
-    vehiculo_color: t.vehiculo_color || "", vehiculo_chasis: t.vehiculo_chasis || "",
-    tipo_vehiculo: t.tipo_vehiculo || "vehiculo_motor",
-    vendedor_nombre: t.vendedor_nombre || "", vendedor_cedula: t.vendedor_cedula || "",
-    vendedor_rnc: t.vendedor_rnc || "", vendedor_tipo_persona: t.vendedor_tipo_persona || "fisica",
-    vendedor_telefono: t.vendedor_telefono || "",
-    comprador_nombre: t.comprador_nombre || "", comprador_cedula: t.comprador_cedula || "",
-    comprador_rnc: t.comprador_rnc || "", comprador_tipo_persona: t.comprador_tipo_persona || "fisica",
-    comprador_telefono: t.comprador_telefono || "",
-    precio_vehiculo: t.precio_vehiculo, medio_pago: t.medio_pago || "",
-    fecha_acto_venta: t.fecha_acto_venta || "",
-    es_traspaso_familiar: t.es_traspaso_familiar || false,
-    tiene_apoderado: t.tiene_apoderado || false,
-    apoderado_nombre: t.apoderado_nombre || "", apoderado_cedula: t.apoderado_cedula || "",
+    vehiculo_marca: t.vehiculoMarca || "", vehiculo_modelo: t.vehiculoModelo || "",
+    vehiculo_ano: t.vehiculoAno || "", vehiculo_placa: t.vehiculoPlaca || "",
+    vehiculo_color: t.vehiculoColor || "", vehiculo_chasis: t.vehiculoChasis || "",
+    tipo_vehiculo: "vehiculo_motor",
+    vendedor_nombre: t.vendedorNombre || "", vendedor_cedula: t.vendedorCedula || "",
+    vendedor_rnc: t.vendedorRnc || "", vendedor_tipo_persona: t.vendedorTipoPersona || "fisica",
+    vendedor_telefono: t.vendedorTelefono || "",
+    comprador_nombre: t.compradorNombre || "", comprador_cedula: t.compradorCedula || "",
+    comprador_rnc: t.compradorRnc || "", comprador_tipo_persona: t.compradorTipoPersona || "fisica",
+    comprador_telefono: t.compradorTelefono || "",
+    precio_vehiculo: t.precioVehiculo, medio_pago: t.medioPago || "",
+    fecha_acto_venta: t.fechaActoVenta || "",
+    es_traspaso_familiar: t.esTraspasoFamiliar || false,
+    tiene_apoderado: t.tieneApoderado || false,
+    apoderado_nombre: t.apoderadoNombre || "", apoderado_cedula: t.apoderadoCedula || "",
     codigo: t.codigo || "",
   };
 
@@ -134,8 +120,8 @@ export default function TraspasoDetail() {
                 <Car className="h-6 w-6 text-accent" />
               </div>
               <div>
-                <h1 className="font-extrabold text-lg">{t.vehiculo_marca} {t.vehiculo_modelo} {t.vehiculo_ano}</h1>
-                <p className="text-sm text-muted-foreground">Placa: {t.vehiculo_placa} · {t.codigo}</p>
+                <h1 className="font-extrabold text-lg">{t.vehiculoMarca} {t.vehiculoModelo} {t.vehiculoAno}</h1>
+                <p className="text-sm text-muted-foreground">Placa: {t.vehiculoPlaca} · {t.codigo}</p>
               </div>
             </div>
 
@@ -222,10 +208,10 @@ export default function TraspasoDetail() {
       </motion.div>
 
       {/* Contracts & Signatures — client can sign when contrato_generado */}
-      {(t.status === "contrato_generado" || t.status === "contrato_firmado" || contracts.length > 0) && (
+      {((t.status as string) === "contrato_generado" || t.status === "contrato_firmado" || contracts.length > 0) && (
         <Card className="mb-4 rounded-xl">
           <CardContent className="p-4">
-            {t.status === "contrato_generado" && (
+            {(t.status as string) === "contrato_generado" && (
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-sm text-accent mb-3">
                 ✍️ Tu contrato está listo. Puedes firmarlo digitalmente a continuación.
               </div>
@@ -252,7 +238,7 @@ export default function TraspasoDetail() {
       <div className="mb-4">
         <MarbeteUpload
           traspasoId={t.id}
-          existingUrl={docs?.find((d: any) => d.tipo === "marbete")?.file_url || null}
+          existingUrl={docs?.find((d) => d.tipo === "marbete")?.fileUrl || null}
           onUploaded={refreshData}
           onOcrResult={(result) => setMarbeteData(result)}
         />
@@ -266,7 +252,7 @@ export default function TraspasoDetail() {
       )}
 
       {/* Escrow card */}
-      {t.escrow_status !== "no_aplica" && (
+      {t.escrowStatus !== "no_aplica" && (
         <Card className="mb-4 cursor-pointer rounded-xl hover:shadow-md transition-shadow" onClick={() => navigate(`/app/traspaso/${id}/escrow`)}>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-accent/10 flex items-center justify-center">
@@ -274,9 +260,9 @@ export default function TraspasoDetail() {
             </div>
             <div className="flex-1">
               <p className="font-bold text-sm">Pago Seguro</p>
-              <p className="text-xs text-muted-foreground capitalize">{t.escrow_status.replace("_", " ")}</p>
+              <p className="text-xs text-muted-foreground capitalize">{t.escrowStatus.replace("_", " ")}</p>
             </div>
-            {t.precio_vehiculo && <p className="font-bold text-accent">RD$ {t.precio_vehiculo.toLocaleString()}</p>}
+            {t.precioVehiculo && <p className="font-bold text-accent">RD$ {t.precioVehiculo.toLocaleString()}</p>}
           </CardContent>
         </Card>
       )}
@@ -287,10 +273,10 @@ export default function TraspasoDetail() {
           <CardContent className="p-4">
             <h2 className="font-bold text-sm mb-3">Documentos</h2>
             <div className="space-y-2">
-              {docs.map((d: any) => (
+              {docs.map((d) => (
                 <div key={d.id} className="flex items-center justify-between text-sm">
                   <span className="capitalize">{d.tipo.replace(/_/g, " ")}</span>
-                  <a href={d.file_url} target="_blank" rel="noopener" className="text-accent hover:underline text-xs font-medium">Ver</a>
+                  <a href={d.fileUrl} target="_blank" rel="noopener" className="text-accent hover:underline text-xs font-medium">Ver</a>
                 </div>
               ))}
             </div>

@@ -1,7 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,42 +10,28 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS } from "@/lib/traspaso-status";
+import {
+  useTraspasosForRole,
+  useHistorialesForUser,
+  useCreateHistorialRequest,
+} from "@/hooks/useTraspasoServices";
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const navigate = useNavigate();
   const [placa, setPlaca] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
-  const { data: traspasos, isLoading: loadingTraspasos } = useQuery({
-    queryKey: ["my-traspasos"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspasos")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: historiales, isLoading: loadingHistoriales } = useQuery({
-    queryKey: ["my-historiales"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("historial_consultas")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: traspasos, isLoading: loadingTraspasos } = useTraspasosForRole(
+    "customer",
+    user?.id,
+  );
+  const { data: historiales, isLoading: loadingHistoriales } = useHistorialesForUser(user?.id);
+  const createHistorial = useCreateHistorialRequest();
 
   const needsTelefono = !profile?.telefono;
+  const submitting = createHistorial.isPending;
 
   const handleHistorial = async () => {
     if (!placa.trim()) return;
@@ -55,19 +39,12 @@ export default function Dashboard() {
       toast.error("Ingresa tu número de WhatsApp para recibir el informe");
       return;
     }
-
-    setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("historial_consultas")
-        .insert({
-          placa: placa.trim().toUpperCase(),
-          user_id: profile?.id,
-          telefono: needsTelefono ? telefono.trim() : profile?.telefono,
-        });
-
-      if (error) throw error;
-
+      await createHistorial.mutateAsync({
+        placa: placa.trim().toUpperCase(),
+        userId: profile?.id ?? null,
+        telefono: needsTelefono ? telefono.trim() : profile?.telefono ?? undefined,
+      });
       setSubmitted(true);
       setPlaca("");
       setTelefono("");
@@ -75,8 +52,6 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       toast.error("Error al enviar la solicitud");
-    } finally {
-      setSubmitting(false);
     }
   };
 
@@ -219,12 +194,12 @@ export default function Dashboard() {
               <div className="flex items-start justify-between mb-1">
                 <div>
                   <h3 className="text-xl font-extrabold text-foreground leading-tight">
-                    {activeOne.vehiculo_marca || "Vehículo"}{" "}
-                    {activeOne.vehiculo_modelo || ""}{" "}
-                    {activeOne.vehiculo_ano || ""}
+                    {activeOne.vehiculoMarca || "Vehículo"}{" "}
+                    {activeOne.vehiculoModelo || ""}{" "}
+                    {activeOne.vehiculoAno || ""}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    PLACA: {activeOne.vehiculo_placa || "—"}
+                    PLACA: {activeOne.vehiculoPlaca || "—"}
                   </p>
                 </div>
                 <Badge className="bg-accent/10 text-accent border-accent/20 text-[10px] font-bold whitespace-nowrap">
@@ -281,7 +256,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <Car className="h-4 w-4 text-accent" />
                   <span className="font-medium text-sm">
-                    {t.vehiculo_marca} {t.vehiculo_modelo} · {t.vehiculo_placa}
+                    {t.vehiculoMarca} {t.vehiculoModelo} · {t.vehiculoPlaca}
                   </span>
                 </div>
                 <Badge className="bg-accent/10 text-accent text-[10px]">
@@ -352,10 +327,10 @@ export default function Dashboard() {
                     <FileText className="h-4 w-4 text-accent" />
                   </div>
                   <p className="font-bold text-sm leading-tight">
-                    {t.vehiculo_marca} {t.vehiculo_modelo} {t.vehiculo_ano}
+                    {t.vehiculoMarca} {t.vehiculoModelo} {t.vehiculoAno}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    PLACA: {t.vehiculo_placa || "—"}
+                    PLACA: {t.vehiculoPlaca || "—"}
                   </p>
                   <Badge className={`mt-2 text-[10px] ${
                     t.status === "completado"
