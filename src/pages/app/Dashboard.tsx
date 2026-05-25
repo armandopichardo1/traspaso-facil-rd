@@ -23,33 +23,15 @@ export default function Dashboard() {
   const [telefono, setTelefono] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
-  const { data: traspasos, isLoading: loadingTraspasos } = useQuery({
-    queryKey: ["my-traspasos"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspasos")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: historiales, isLoading: loadingHistoriales } = useQuery({
-    queryKey: ["my-historiales"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("historial_consultas")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: traspasos, isLoading: loadingTraspasos } = useTraspasosForRole(
+    "customer",
+    user?.id,
+  );
+  const { data: historiales, isLoading: loadingHistoriales } = useHistorialesForUser(user?.id);
+  const createHistorial = useCreateHistorialRequest();
 
   const needsTelefono = !profile?.telefono;
+  const submitting = createHistorial.isPending;
 
   const handleHistorial = async () => {
     if (!placa.trim()) return;
@@ -57,19 +39,12 @@ export default function Dashboard() {
       toast.error("Ingresa tu número de WhatsApp para recibir el informe");
       return;
     }
-
-    setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from("historial_consultas")
-        .insert({
-          placa: placa.trim().toUpperCase(),
-          user_id: profile?.id,
-          telefono: needsTelefono ? telefono.trim() : profile?.telefono,
-        });
-
-      if (error) throw error;
-
+      await createHistorial.mutateAsync({
+        placa: placa.trim().toUpperCase(),
+        userId: profile?.id ?? null,
+        telefono: needsTelefono ? telefono.trim() : profile?.telefono ?? undefined,
+      });
       setSubmitted(true);
       setPlaca("");
       setTelefono("");
@@ -77,8 +52,6 @@ export default function Dashboard() {
     } catch (err) {
       console.error(err);
       toast.error("Error al enviar la solicitud");
-    } finally {
-      setSubmitting(false);
     }
   };
 
