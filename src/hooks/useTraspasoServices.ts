@@ -121,6 +121,14 @@ export const useUploadDocumento = (traspasoId: string) => {
   });
 };
 
+export const useDocumentoSignedUrl = (docId: string | undefined) =>
+  useQuery({
+    queryKey: ["documento", docId, "signed-url"],
+    enabled: !!docId,
+    staleTime: 1000 * 60 * 30, // las URLs duran 60 min
+    queryFn: () => unwrap(svc.getDocumentoSignedUrl(docId!)),
+  });
+
 export const useFirmas = (traspasoId: string | undefined) =>
   useQuery({
     queryKey: ["traspaso", traspasoId, "firmas"],
