@@ -1,42 +1,23 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
+import { useTraspasosForRole } from "@/hooks/useTraspasoServices";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Truck, MapPin, ArrowRight, RefreshCw, Package, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-type Traspaso = {
-  id: string;
-  codigo: string | null;
-  status: string;
-  vehiculo_marca: string | null;
-  vehiculo_modelo: string | null;
-  vehiculo_placa: string | null;
-  vendedor_nombre: string | null;
-  vendedor_telefono: string | null;
-  created_at: string;
-};
-
 export default function MensajeroDashboard() {
-  const [traspasos, setTraspasos] = useState<Traspaso[]>([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { profile } = useAuth();
+  const qc = useQueryClient();
 
-  const fetchTraspasos = async () => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("traspasos")
-      .select("*")
-      .order("created_at", { ascending: false });
-    setTraspasos(data || []);
-    setLoading(false);
-  };
+  const { data, isLoading, isFetching } = useTraspasosForRole("mensajero", profile?.id);
+  const traspasos = data ?? [];
 
-  useEffect(() => {
-    fetchTraspasos();
-  }, []);
+  const refresh = () =>
+    qc.invalidateQueries({ queryKey: ["traspasos", "mensajero", profile?.id] });
 
   const pendientes = traspasos.filter(t => t.status !== "completado" && t.status !== "cancelado");
   const completados = traspasos.filter(t => t.status === "completado");
@@ -51,12 +32,11 @@ export default function MensajeroDashboard() {
           </h1>
           <p className="text-sm text-muted-foreground">Recogida y entrega de matrículas</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={fetchTraspasos}>
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+        <Button variant="ghost" size="icon" onClick={refresh}>
+          <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
         </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card>
           <CardContent className="p-3 text-center">
@@ -81,7 +61,7 @@ export default function MensajeroDashboard() {
         </Card>
       </div>
 
-      {loading ? (
+      {isLoading ? (
         <div className="space-y-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
         </div>
@@ -110,21 +90,21 @@ export default function MensajeroDashboard() {
                       <div className="flex items-center gap-2">
                         <MapPin className="h-4 w-4 text-accent" />
                         <span className="font-semibold">
-                          {t.vehiculo_marca} {t.vehiculo_modelo}
+                          {t.vehiculoMarca} {t.vehiculoModelo}
                         </span>
                       </div>
                       <p className="text-xs font-mono text-muted-foreground">
-                        Placa: {t.vehiculo_placa || "—"} · {t.codigo}
+                        Placa: {t.vehiculoPlaca || "—"} · {t.codigo}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Vendedor: {t.vendedor_nombre || "—"}
-                        {t.vendedor_telefono && (
+                        Vendedor: {t.vendedorNombre || "—"}
+                        {t.vendedorTelefono && (
                           <a
-                            href={`tel:${t.vendedor_telefono}`}
+                            href={`tel:${t.vendedorTelefono}`}
                             className="ml-2 text-accent font-medium hover:underline"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            {t.vendedor_telefono}
+                            {t.vendedorTelefono}
                           </a>
                         )}
                       </p>
