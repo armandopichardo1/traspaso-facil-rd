@@ -1,42 +1,15 @@
 import { useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Car, CheckCircle, Clock, Loader2, Shield } from "lucide-react";
+import { Car, CheckCircle, Clock, Loader2 } from "lucide-react";
 import { STATUS_STEPS } from "@/lib/traspaso-status";
+import { useTraspasoByCodigo, useTimeline } from "@/hooks/useTraspasoServices";
 
 export default function Seguimiento() {
   const { code } = useParams();
 
-  const { data: traspaso, isLoading } = useQuery({
-    queryKey: ["seguimiento", code],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspasos")
-        .select("*")
-        .eq("codigo", code)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: timeline } = useQuery({
-    queryKey: ["seguimiento-timeline", code],
-    queryFn: async () => {
-      if (!traspaso) return [];
-      const { data, error } = await supabase
-        .from("traspaso_timeline")
-        .select("*")
-        .eq("traspaso_id", traspaso.id)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!traspaso,
-  });
+  const { data: traspaso, isLoading, error } = useTraspasoByCodigo(code);
+  const { data: timeline } = useTimeline(traspaso?.id);
 
   if (isLoading) {
     return (
@@ -49,7 +22,7 @@ export default function Seguimiento() {
     );
   }
 
-  if (!traspaso) {
+  if (error || !traspaso) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <div className="text-center">
@@ -76,10 +49,10 @@ export default function Seguimiento() {
               <Car className="h-5 w-5 text-accent" />
               <div>
                 <p className="font-bold">
-                  {traspaso.vehiculo_marca} {traspaso.vehiculo_modelo} {traspaso.vehiculo_ano}
+                  {traspaso.vehiculoMarca} {traspaso.vehiculoModelo} {traspaso.vehiculoAno}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Placa: {traspaso.vehiculo_placa} · {traspaso.codigo}
+                  Placa: {traspaso.vehiculoPlaca} · {traspaso.codigo}
                 </p>
               </div>
             </div>
@@ -92,7 +65,7 @@ export default function Seguimiento() {
             {STATUS_STEPS.map((s, i) => {
               const isDone = i <= currentIdx && traspaso.status !== "cancelado";
               const isCurrent = i === currentIdx;
-              const entry = timeline?.find((t: any) => t.status === s.key);
+              const entry = timeline?.find((t) => t.status === s.key);
               return (
                 <div key={s.key} className="flex gap-3">
                   <div className="flex flex-col items-center">
@@ -116,7 +89,7 @@ export default function Seguimiento() {
                     )}
                     {entry && (
                       <p className="text-[10px] text-muted-foreground">
-                        {new Date(entry.created_at).toLocaleDateString("es-DO")}
+                        {new Date(entry.createdAt).toLocaleDateString("es-DO")}
                       </p>
                     )}
                   </div>

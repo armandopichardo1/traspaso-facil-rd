@@ -181,7 +181,15 @@ export interface Firma {
   createdAt: string;
 }
 
-export type ContractTipo = "acto_venta" | "poder" | "otro";
+export type ContractTipo =
+  | "acto_venta"
+  | "poder"
+  | "otro"
+  | "contrato_venta"
+  | "poder_notarial"
+  | "carta_autorizacion"
+  | "declaracion_jurada"
+  | (string & {});
 
 export interface TraspasoMensaje {
   id: string;
