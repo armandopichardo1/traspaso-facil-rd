@@ -34,24 +34,8 @@ export default function TraspasoDetail() {
   const queryClient = useQueryClient();
   const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
-  const { data: traspaso, isLoading } = useQuery({
-    queryKey: ["traspaso", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspasos").select("*").eq("id", id).single();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: docs } = useQuery({
-    queryKey: ["traspaso-docs", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_documentos").select("*").eq("traspaso_id", id);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: docs } = useDocumentos(id);
 
   const { data: contracts = [] } = useQuery({
     queryKey: ["traspaso-contracts", id],
