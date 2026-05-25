@@ -1,13 +1,14 @@
-import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, ArrowRight, Search } from "lucide-react";
+import { Clock, ArrowRight, Search, FileSearch } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { EmptyState, ErrorState, LoadingSkeleton } from "@/components/shared/StateView";
 
 const STATUS_LABELS: Record<string, string> = {
   pendiente: "Pendiente",
@@ -15,11 +16,10 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function Historial() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
 
-  const { data: consultas, isLoading } = useQuery({
+  const { data: consultas, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["my-historial"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,7 +36,7 @@ export default function Historial() {
   );
 
   return (
-    <div className="container py-6 space-y-4">
+    <div className="container py-6 space-y-4 max-w-lg mx-auto">
       <h1 className="text-xl font-bold">Mis Consultas de Historial</h1>
 
       <div className="relative">
@@ -50,22 +50,40 @@ export default function Historial() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
+        <LoadingSkeleton rows={3} className="space-y-3" rowClassName="h-20 w-full rounded-xl" />
+      ) : isError ? (
+        <ErrorState
+          message={error instanceof Error ? error.message : undefined}
+          onRetry={() => refetch()}
+        />
       ) : filtered?.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-center text-muted-foreground">
-            No tienes consultas de historial aún.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FileSearch}
+          title={search ? "Sin resultados" : "Aún no tienes consultas"}
+          description={
+            search
+              ? "Intenta con otra placa."
+              : "Consulta el historial de un vehículo para verlo aquí."
+          }
+          action={
+            !search ? (
+              <Button variant="cta" size="sm" onClick={() => navigate("/#historial")}>
+                Consultar un vehículo
+              </Button>
+            ) : undefined
+          }
+        />
       ) : (
-        <div className="space-y-2">
+        <motion.div
+          className="space-y-2"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           {filtered?.map((c) => (
             <Card
               key={c.id}
-              className="cursor-pointer hover:shadow-md transition-shadow"
+              className="cursor-pointer hover:shadow-md transition-shadow rounded-xl"
               onClick={() => navigate(`/app/historial/${c.id}`)}
             >
               <CardContent className="p-4 flex items-center justify-between">
@@ -92,7 +110,7 @@ export default function Historial() {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   );
