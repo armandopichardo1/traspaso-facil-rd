@@ -128,6 +128,41 @@ export const useFirmas = (traspasoId: string | undefined) =>
     queryFn: () => unwrap(svc.listFirmas(traspasoId!)),
   });
 
+export const useSaveFirma = (traspasoId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Omit<Parameters<typeof svc.saveFirma>[0], "traspasoId">) =>
+      unwrap(svc.saveFirma({ ...input, traspasoId })),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["traspaso", traspasoId, "firmas"] }),
+  });
+};
+
+export const useContratos = (traspasoId: string | undefined) =>
+  useQuery({
+    queryKey: ["traspaso", traspasoId, "contratos"],
+    enabled: !!traspasoId,
+    queryFn: async () => {
+      const { data, error } = await (await import("@/integrations/supabase/client")).supabase
+        .from("traspaso_contratos")
+        .select("*")
+        .eq("traspaso_id", traspasoId!)
+        .order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+  });
+
+export const useGenerateContract = (traspasoId: string) => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (vars: { tipo: Parameters<typeof svc.generateContract>[1]; contenidoHtml: string }) =>
+      unwrap(svc.generateContract(traspasoId, vars.tipo, vars.contenidoHtml)),
+    onSuccess: () =>
+      qc.invalidateQueries({ queryKey: ["traspaso", traspasoId, "contratos"] }),
+  });
+};
+
 export const useMensajes = (traspasoId: string | undefined) =>
   useQuery({
     queryKey: ["traspaso", traspasoId, "mensajes"],
