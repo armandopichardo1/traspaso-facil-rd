@@ -21,11 +21,12 @@ import type {
 } from "@/services/types";
 import type { TraspasoStatus, UserRole } from "@/lib/traspaso-status";
 
-function unwrap<T>(p: Promise<{ ok: true; data: T } | { ok: false; error: string }>) {
-  return p.then((r) => {
-    if (r.ok) return r.data;
-    throw new Error(r.error);
-  });
+async function unwrap<T>(
+  p: Promise<{ ok: true; data: T } | { ok: false; error: string }>,
+): Promise<T> {
+  const r = await p;
+  if (r.ok === true) return r.data;
+  throw new Error((r as { ok: false; error: string }).error);
 }
 
 // ---------- Traspaso ----------
