@@ -4,13 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ArrowLeft, CheckCircle, AlertTriangle, Share2, Car, ChevronDown, ShieldCheck, DollarSign, FileText, Users } from "lucide-react";
+import { ArrowLeft, AlertTriangle, Share2, Car, ChevronDown, ShieldCheck, DollarSign, FileText, Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState } from "react";
+import { LoadingSkeleton, ErrorState, NotFoundView } from "@/components/shared/StateView";
 
 function Section({ icon: Icon, title, children, defaultOpen = false, variant = "default" }: {
   icon: any; title: string; children: React.ReactNode; defaultOpen?: boolean;
@@ -41,7 +41,7 @@ export default function HistorialDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const { data: consulta, isLoading } = useQuery({
+  const { data: consulta, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["historial", id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -56,22 +56,32 @@ export default function HistorialDetail() {
 
   if (isLoading) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-6 space-y-4">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-48 w-full rounded-2xl" />
-        <Skeleton className="h-40 w-full rounded-xl" />
+      <LoadingSkeleton
+        rows={2}
+        className="max-w-lg mx-auto px-4 pt-6 space-y-4"
+        rowClassName="h-48 w-full rounded-2xl"
+      />
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6">
+        <ErrorState
+          message={error instanceof Error ? error.message : undefined}
+          onRetry={() => refetch()}
+        />
       </div>
     );
   }
 
   if (!consulta) {
     return (
-      <div className="max-w-lg mx-auto px-4 pt-6 text-center">
-        <p className="text-muted-foreground">Consulta no encontrada.</p>
-        <Button variant="ghost" onClick={() => navigate("/app")} className="mt-4">
-          ← Volver
-        </Button>
-      </div>
+      <NotFoundView
+        title="Consulta no encontrada"
+        description="Esta consulta de historial no existe o fue removida."
+        onBack={() => navigate("/app")}
+      />
     );
   }
 
