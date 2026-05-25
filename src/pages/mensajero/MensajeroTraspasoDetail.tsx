@@ -20,7 +20,7 @@ export default function MensajeroTraspasoDetail() {
   const { user } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: traspaso, isLoading } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
   const { data: documentos = [] } = useDocumentos(id);
   const uploadMutation = useUploadDocumento(id ?? "");
   const advanceMutation = useAdvanceStatus(id ?? "");
