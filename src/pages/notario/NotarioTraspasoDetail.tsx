@@ -113,7 +113,7 @@ export default function NotarioTraspasoDetail() {
           Certificar Traspaso
         </h1>
         <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
-          {traspaso.status.replace(/_/g, " ")}
+          {STATUS_LABELS[traspaso.status] || traspaso.status}
         </Badge>
       </motion.div>
 
