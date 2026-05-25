@@ -152,10 +152,8 @@ export default function NuevoTraspaso() {
         escrowStatus: form.pago_seguro ? "depositado" : "no_aplica",
       });
 
-      setTraspasoId(created.id);
       // TODO_BACKEND: orquestar uploads en server-side al crear el traspaso.
-      // Hoy llamamos en paralelo desde el cliente con el traspasoId recién creado.
-      await new Promise((r) => setTimeout(r, 0));
+      // Hoy lo hacemos cliente-side con el id recién creado.
       // Sube archivos usando el id recién creado (no usa el hook con el id viejo).
       const { uploadDocumento } = await import("@/services/traspasoService");
       for (const [tipo, file] of Object.entries(files)) {
