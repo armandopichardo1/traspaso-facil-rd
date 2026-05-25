@@ -23,8 +23,8 @@ import type { TraspasoStatus, UserRole } from "@/lib/traspaso-status";
 
 function unwrap<T>(p: Promise<{ ok: true; data: T } | { ok: false; error: string }>) {
   return p.then((r) => {
-    if (!r.ok) throw new Error(r.error);
-    return r.data;
+    if (r.ok) return r.data;
+    throw new Error(r.error);
   });
 }
 
