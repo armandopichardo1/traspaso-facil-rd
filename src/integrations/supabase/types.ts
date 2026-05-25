@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      asset_types: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          key: string
+          label: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key: string
+          label: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          key?: string
+          label?: string
+        }
+        Relationships: []
+      }
       historial_consultas: {
         Row: {
           created_at: string
@@ -94,6 +118,42 @@ export type Database = {
           status?: string
           telefono?: string
           tipo_usuario?: string
+        }
+        Relationships: []
+      }
+      pricing_config: {
+        Row: {
+          active: boolean
+          asset_type: string
+          id: string
+          itbis_included: boolean
+          item_key: string
+          label: string
+          price_rd: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          asset_type: string
+          id?: string
+          itbis_included?: boolean
+          item_key: string
+          label: string
+          price_rd: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          asset_type?: string
+          id?: string
+          itbis_included?: boolean
+          item_key?: string
+          label?: string
+          price_rd?: number
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -394,6 +454,7 @@ export type Database = {
           antifraude_status: string
           apoderado_cedula: string | null
           apoderado_nombre: string | null
+          asset_type: string
           codigo: string | null
           comprador_cedula: string | null
           comprador_nombre: string | null
@@ -437,6 +498,7 @@ export type Database = {
           antifraude_status?: string
           apoderado_cedula?: string | null
           apoderado_nombre?: string | null
+          asset_type?: string
           codigo?: string | null
           comprador_cedula?: string | null
           comprador_nombre?: string | null
@@ -480,6 +542,7 @@ export type Database = {
           antifraude_status?: string
           apoderado_cedula?: string | null
           apoderado_nombre?: string | null
+          asset_type?: string
           codigo?: string | null
           comprador_cedula?: string | null
           comprador_nombre?: string | null
