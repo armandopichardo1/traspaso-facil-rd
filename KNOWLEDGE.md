@@ -172,4 +172,136 @@ Soft, **navy-tinted** shadows. No harsh black drops. Define reusable values in `
 
 ---
 
-*Last updated: 2026-05-21*
+## 4. Flujos paso a paso
+
+### 4.1 Comprar Historial del Vehículo
+
+Producto rápido y de bajo costo. Sirve como puerta de entrada antes de un traspaso completo.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  FLUJO: COMPRAR HISTORIAL                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+[Cliente]
+   │
+   ▼
+1. Landing / CTA "Consultar historial"
+   │
+   ▼
+2. Ingresa placa o chasis + correo + WhatsApp
+   │  (validación de formato, no requiere cuenta)
+   ▼
+3. Resumen del pedido + precio (RD$)
+   │
+   ▼
+4. Pago en línea (tarjeta / transferencia)
+   │  └─ Si falla → reintentar / cambiar método
+   ▼
+5. Registro en `historial_consultas`  (estado: pendiente)
+   │
+   ▼
+6. Notificación al equipo (WhatsApp interno + dashboard admin)
+   │
+   ▼
+[Admin / Gestor]
+7. Consulta manual en DGII / INTRANT / PGR
+   │
+   ▼
+8. Arma el PDF de historial (multas, gravámenes, dueños, etc.)
+   │
+   ▼
+9. Sube PDF y marca `historial_consultas.estado = entregado`
+   │
+   ▼
+10. Envío automático al cliente (WhatsApp + correo con link firmado)
+    │
+    ▼
+11. CTA dentro del PDF: "Iniciar traspaso completo" ──► entra al Flujo 4.2
+```
+
+**Reglas clave**
+- No requiere cuenta: la consulta se hace con correo + WhatsApp.
+- SLA objetivo: entrega en menos de 24h hábiles.
+- Estados válidos: `pendiente → en_proceso → entregado` (o `cancelado` por admin).
+
+---
+
+### 4.2 Iniciar Traspaso Completo (10 estados)
+
+Producto principal. Sigue la máquina de estados definida en `src/lib/traspaso-status.ts`.
+
+```text
+┌─────────────────────────────────────────────────────────────────┐
+│  FLUJO: TRASPASO COMPLETO                                       │
+└─────────────────────────────────────────────────────────────────┘
+
+[Cliente]
+   │
+   ▼
+1. solicitud_recibida              (owner: cliente)
+   │  - Crea cuenta / inicia sesión
+   │  - Sube cédulas, matrícula, fotos del vehículo
+   │  - Firma acuerdo de servicio
+   ▼
+[Admin]
+2. verificacion_antifraude         (owner: admin)
+   │  - OCR de cédula/matrícula
+   │  - Face match comprador/vendedor
+   │  - Validación de gravámenes
+   │  └─ Falla → cancelado
+   ▼
+[Admin + Cliente]
+3. pago_seguro_depositado          (owner: admin/cliente)   NUEVO
+   │  - Cliente deposita el monto en cuenta de garantía
+   │  - Admin confirma fondos disponibles
+   ▼
+[Mensajero]
+4. matricula_recogida              (owner: mensajero)
+   │  - Mensajero retira matrícula física del vendedor
+   │  - Foto + GPS de la entrega
+   ▼
+[Notario]
+5. contrato_firmado                (owner: notario)
+   │  - Firma de contrato de venta notariado
+   │  - Sello y acta legalizada
+   ▼
+[Gestor / Admin]
+6. legalizacion_pgr                (owner: gestor/admin)    NUEVO
+   │  - Legalización de firmas en PGR
+   ▼
+7. plan_piloto                     (owner: gestor/admin)
+   │  - Pago de impuestos (transferencia + opacidad)
+   ▼
+[Admin]
+8. dgii_proceso                    (owner: admin)
+   │  - Radicación y seguimiento en DGII
+   │  - Emisión de nueva matrícula
+   ▼
+[Mensajero]
+9. matricula_entregada             (owner: mensajero)       NUEVO
+   │  - Entrega de matrícula nueva al comprador
+   │  - Firma de recibido + foto
+   ▼
+[Admin]
+10. completado                     (owner: admin)
+    │  - Cierre del expediente
+    │  - Liberación de fondos al vendedor
+    │  - Encuesta NPS al cliente
+    ▼
+   FIN
+
+   Estado terminal alterno: `cancelado`
+      Accesible por admin desde cualquier estado.
+      Dispara reembolso parcial/total según etapa.
+```
+
+**Reglas clave**
+- Cada transición está role-gated en `TRANSITIONS` (ver `src/lib/traspaso-status.ts`).
+- El cliente solo ve `CLIENT_PROGRESS_LABELS` (10 pasos amigables, 1:1 con los estados).
+- `cancelado` es el único estado terminal alterno y solo lo puede disparar `admin`.
+- Cada cambio de estado debe registrar: `actor_id`, `actor_role`, `timestamp`, `nota`.
+
+---
+
+*Last updated: 2026-05-25*
