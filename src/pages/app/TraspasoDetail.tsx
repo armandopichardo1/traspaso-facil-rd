@@ -71,27 +71,27 @@ export default function TraspasoDetail() {
     return <div className="max-w-lg mx-auto px-4 pt-6 text-center"><p className="text-muted-foreground">Traspaso no encontrado.</p><Button variant="ghost" onClick={() => navigate("/app")} className="mt-4">← Volver</Button></div>;
   }
 
-  const t = traspaso as any;
+  const t = traspaso;
   const currentIdx = STATUS_STEPS.findIndex((s) => s.key === t.status);
   const progressPct = currentIdx >= 0 ? Math.round(((currentIdx + 1) / STATUS_STEPS.length) * 100) : 0;
-  const af = antifraudeBadge(t.antifraude_status);
+  const af = antifraudeBadge(t.antifraudeStatus);
 
   const contractData: ContractData = {
-    vehiculo_marca: t.vehiculo_marca || "", vehiculo_modelo: t.vehiculo_modelo || "",
-    vehiculo_ano: t.vehiculo_ano || "", vehiculo_placa: t.vehiculo_placa || "",
-    vehiculo_color: t.vehiculo_color || "", vehiculo_chasis: t.vehiculo_chasis || "",
-    tipo_vehiculo: t.tipo_vehiculo || "vehiculo_motor",
-    vendedor_nombre: t.vendedor_nombre || "", vendedor_cedula: t.vendedor_cedula || "",
-    vendedor_rnc: t.vendedor_rnc || "", vendedor_tipo_persona: t.vendedor_tipo_persona || "fisica",
-    vendedor_telefono: t.vendedor_telefono || "",
-    comprador_nombre: t.comprador_nombre || "", comprador_cedula: t.comprador_cedula || "",
-    comprador_rnc: t.comprador_rnc || "", comprador_tipo_persona: t.comprador_tipo_persona || "fisica",
-    comprador_telefono: t.comprador_telefono || "",
-    precio_vehiculo: t.precio_vehiculo, medio_pago: t.medio_pago || "",
-    fecha_acto_venta: t.fecha_acto_venta || "",
-    es_traspaso_familiar: t.es_traspaso_familiar || false,
-    tiene_apoderado: t.tiene_apoderado || false,
-    apoderado_nombre: t.apoderado_nombre || "", apoderado_cedula: t.apoderado_cedula || "",
+    vehiculo_marca: t.vehiculoMarca || "", vehiculo_modelo: t.vehiculoModelo || "",
+    vehiculo_ano: t.vehiculoAno || "", vehiculo_placa: t.vehiculoPlaca || "",
+    vehiculo_color: t.vehiculoColor || "", vehiculo_chasis: t.vehiculoChasis || "",
+    tipo_vehiculo: "vehiculo_motor",
+    vendedor_nombre: t.vendedorNombre || "", vendedor_cedula: t.vendedorCedula || "",
+    vendedor_rnc: t.vendedorRnc || "", vendedor_tipo_persona: t.vendedorTipoPersona || "fisica",
+    vendedor_telefono: t.vendedorTelefono || "",
+    comprador_nombre: t.compradorNombre || "", comprador_cedula: t.compradorCedula || "",
+    comprador_rnc: t.compradorRnc || "", comprador_tipo_persona: t.compradorTipoPersona || "fisica",
+    comprador_telefono: t.compradorTelefono || "",
+    precio_vehiculo: t.precioVehiculo, medio_pago: t.medioPago || "",
+    fecha_acto_venta: t.fechaActoVenta || "",
+    es_traspaso_familiar: t.esTraspasoFamiliar || false,
+    tiene_apoderado: t.tieneApoderado || false,
+    apoderado_nombre: t.apoderadoNombre || "", apoderado_cedula: t.apoderadoCedula || "",
     codigo: t.codigo || "",
   };
 
