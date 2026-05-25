@@ -26,7 +26,7 @@ export default function GestorTraspasoDetail() {
   const { user } = useAuth();
   const [advancing, setAdvancing] = useState(false);
 
-  const { data: traspaso, isLoading } = useQuery({
+  const { data: traspaso, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["gestor-traspaso", id],
     queryFn: async () => {
       const { data, error } = await supabase.from("traspasos").select("*").eq("id", id!).single();
