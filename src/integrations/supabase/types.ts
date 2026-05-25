@@ -274,6 +274,13 @@ export type Database = {
             referencedRelation: "traspasos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "traspaso_contratos_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos_tracking"
+            referencedColumns: ["id"]
+          },
         ]
       }
       traspaso_documentos: {
@@ -304,6 +311,13 @@ export type Database = {
             columns: ["traspaso_id"]
             isOneToOne: false
             referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspaso_documentos_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos_tracking"
             referencedColumns: ["id"]
           },
         ]
@@ -369,6 +383,13 @@ export type Database = {
             referencedRelation: "traspasos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "traspaso_firmas_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos_tracking"
+            referencedColumns: ["id"]
+          },
         ]
       }
       traspaso_mensajes: {
@@ -402,6 +423,13 @@ export type Database = {
             columns: ["traspaso_id"]
             isOneToOne: false
             referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspaso_mensajes_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos_tracking"
             referencedColumns: ["id"]
           },
         ]
@@ -444,6 +472,13 @@ export type Database = {
             columns: ["traspaso_id"]
             isOneToOne: false
             referencedRelation: "traspasos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "traspaso_timeline_traspaso_id_fkey"
+            columns: ["traspaso_id"]
+            isOneToOne: false
+            referencedRelation: "traspasos_tracking"
             referencedColumns: ["id"]
           },
         ]
@@ -614,7 +649,42 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      traspasos_tracking: {
+        Row: {
+          asset_type: string | null
+          codigo: string | null
+          created_at: string | null
+          id: string | null
+          status: string | null
+          updated_at: string | null
+          vehiculo_marca: string | null
+          vehiculo_modelo: string | null
+          vehiculo_placa: string | null
+        }
+        Insert: {
+          asset_type?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vehiculo_marca?: string | null
+          vehiculo_modelo?: string | null
+          vehiculo_placa?: string | null
+        }
+        Update: {
+          asset_type?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          id?: string | null
+          status?: string | null
+          updated_at?: string | null
+          vehiculo_marca?: string | null
+          vehiculo_modelo?: string | null
+          vehiculo_placa?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_user_role: { Args: { _user_id: string }; Returns: string }

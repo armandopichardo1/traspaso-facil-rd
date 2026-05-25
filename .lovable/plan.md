@@ -1,174 +1,189 @@
-# Plan: Spine funcional del traspaso end-to-end (demo) + capa de servicio swap-able
+# Plan: Auditoría e implementación de RLS
 
-## Objetivo
+## Resumen ejecutivo
 
-Que un demo pueda recorrer el flujo completo: **historial → wizard de traspaso → upload de documentos → 10 transiciones de estado con roles → vista de escrow → completado**. Toda la I/O contra Supabase pasa por `src/services/traspasoService.ts` para que cuando el back-end real esté listo solo se cambie la implementación, sin tocar UI.
+Después de revisar todas las políticas en el schema dump más las políticas de `storage.objects`, encontré **8 huecos reales de seguridad** que violan el modelo de KNOWLEDGE.md §8. Tres son críticos (PII expuesta), cinco son menores (sobre-acceso). También faltan políticas explícitas para casos válidos (notario debe ver documentos asignados).
 
----
-
-## Estado actual (resultado del scan)
-
-- **30+ archivos** llaman `supabase` directamente (UI hace consultas, mutaciones, storage, etc.). Esto es lo que vamos a centralizar.
-- Páginas por rol ya existen: `app/`, `admin/`, `gestor/`, `notario/`, `mensajero/`.
-- `traspaso-status.ts` ya tiene la máquina de 10 estados, `canAdvanceTo`, `getNextStatus`, `requiresEscrowRefund`, `cancelTraspaso`.
-- Tablas DB: `traspasos`, `traspaso_documentos`, `traspaso_firmas`, `traspaso_contratos`, `traspaso_timeline`, `traspaso_mensajes`, `historial_consultas`, `profiles`.
-- Bug detectado en sesión anterior: `NotarioTraspasoDetail.tsx:89` avanza a `verificacion_antifraude` (debería ser `legalizacion_pgr`).
-- `MensajeroTraspasoDetail.tsx:80` hardcodea `dgii_proceso` como next (debería usar `getNextStatus`).
+No hago cambios en esta fase — solo expongo los hallazgos, la matriz de pruebas que correré después y la migración propuesta para tu aprobación.
 
 ---
 
-## Arquitectura del service layer
+## Matriz objetivo (lo que KNOWLEDGE.md §8 exige)
 
-### Archivo principal: `src/services/traspasoService.ts`
-
-Wrapper delgado, **sin lógica de negocio**, que devuelve tipos limpios y errores `Result`-style. No exporta tipos de Supabase. Cada función lleva un comentario `@backend` con el endpoint REST equivalente que el back-end real deberá exponer.
-
-### Subarchivos para mantenerlo manejable
-- `src/services/types.ts` — DTOs front-end (independientes del schema de Supabase): `Traspaso`, `TraspasoDoc`, `TraspasoTimelineEntry`, `Firma`, `HistorialConsulta`, `EscrowSnapshot`, etc.
-- `src/services/traspasoService.ts` — operaciones del pipeline de traspaso.
-- `src/services/historialService.ts` — intake y consulta de historial.
-- `src/services/mockBackend.ts` — funciones simuladas con `TODO_BACKEND` (payments, escrow real, DGII checks, antifraude IA).
-
-### Patrón de retorno
-```ts
-type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string };
-```
-UI consume con React Query (`queryFn` retorna `data` si `ok`, sino throw para que React Query maneje el error toast).
-
-### Hook estándar
-`src/hooks/useTraspaso.ts`, `useTraspasoList.ts`, `useTraspasoTimeline.ts`, etc. — envuelven los servicios con React Query y exponen `invalidate` keys consistentes (`["traspaso", id]`, `["traspasos", filters]`).
+| Rol | traspasos | documentos | firmas | contratos | timeline | mensajes | profiles | historial | leads |
+|---|---|---|---|---|---|---|---|---|---|
+| customer | SELECT+UPDATE own | R/W own | R own | R own | R own | R/W own | R/W own | R own | — |
+| gestor | R/W asignados | R/W asignados | R asignados | R/W asignados | R asignados | R/W asignados | R sólo de partes de sus traspasos | — | — |
+| notario | R asignados (estados firma) | **R sólo contrato/firmas** | R/W asignados | R asignados | R asignados | — | — | — | — |
+| mensajero | R asignados (estados recogida/entrega) | R/W (matrícula/comprobantes) | — | — | R asignados | — | — | — | — |
+| admin | full | full | full | full | full | full | full | full | full |
+| anon | R por código (limitado) | — | — | — | R por código (limitado) | — | — | INSERT only | INSERT only |
 
 ---
 
-## Contrato (firmas públicas) — esto es lo que el back-end real deberá implementar
+## Huecos encontrados
 
-### Historial (`historialService.ts`)
-```ts
-createHistorialRequest(input: { placa: string; telefono: string; email?: string }): Promise<ServiceResult<HistorialConsulta>>
-listHistorialesForUser(userId: string): Promise<ServiceResult<HistorialConsulta[]>>
-listPendingHistoriales(): Promise<ServiceResult<HistorialConsulta[]>>     // admin
-getHistorial(id: string): Promise<ServiceResult<HistorialConsulta>>
-adminFulfillHistorial(id: string, resultado: HistorialResultado): Promise<ServiceResult<void>>   // admin
-```
+### 🔴 Críticos (filtran PII o permiten escritura indebida)
 
-### Traspaso — lectura
-```ts
-getTraspaso(id: string): Promise<ServiceResult<Traspaso>>
-getTraspasoByCodigo(codigo: string): Promise<ServiceResult<Traspaso>>     // tracking público
-listTraspasosForRole(role: UserRole, userId: string, filters?: TraspasoFilters): Promise<ServiceResult<Traspaso[]>>
-getTimeline(traspasoId: string): Promise<ServiceResult<TraspasoTimelineEntry[]>>
-```
+1. **`historial_consultas` — "Authenticated users can read consultas" USING (true)**
+   Cualquier usuario logueado lee TODOS los historiales (placas + teléfonos + emails de otros). Debe ser `auth.uid() = user_id OR is_admin`.
 
-### Traspaso — creación y edición
-```ts
-createTraspaso(input: NewTraspasoInput): Promise<ServiceResult<Traspaso>>
-updateTraspasoFields(id: string, patch: Partial<EditableTraspasoFields>): Promise<ServiceResult<Traspaso>>
-assignRole(id: string, role: "gestor" | "notario" | "mensajero", userId: string): Promise<ServiceResult<void>>   // admin
-```
+2. **`leads` — "Authenticated users can read/update leads" USING (true)**
+   Igual: cualquier usuario logueado ve y modifica todos los leads (nombres, teléfonos, comentarios). Debe restringirse a admin.
 
-### Máquina de estados (la pieza central)
-```ts
-advanceStatus(
-  id: string,
-  toStatus: TraspasoStatus,
-  actor: { id: string; role: UserRole },
-  options?: { nota?: string; evidenceUrl?: string }
-): Promise<ServiceResult<Traspaso>>
+3. **`traspaso_timeline` — "Public can read timeline for tracking" USING (true) + "System can add timeline entries" auth.uid() IS NOT NULL**
+   - Lectura: cualquiera (incluido anon) lista TODO el timeline de todos los traspasos. El tracking público debe ir por `codigo` del traspaso (igual que la política anon de `traspasos`).
+   - Inserción: cualquier usuario autenticado puede meter entradas en cualquier traspaso. Debe escoparse al rol que tiene permiso para el status que está escribiendo, o eliminarse y dejar solo las políticas por rol que ya existen.
 
-cancelTraspaso(
-  id: string,
-  actor: { id: string; role: UserRole },
-  reason: string
-): Promise<ServiceResult<{ traspaso: Traspaso; refundTriggered: boolean }>>
-```
-Internamente: valida con `canAdvanceTo`, escribe `traspasos.status`, agrega entrada en `traspaso_timeline`, y si aplica dispara `mockBackend.triggerEscrowRefund` (TODO_BACKEND).
+### 🟠 Sobre-acceso (no PII grave pero rompe el modelo)
 
-### Documentos
-```ts
-uploadDocumento(traspasoId: string, tipo: DocTipo, file: File): Promise<ServiceResult<TraspasoDoc>>
-listDocumentos(traspasoId: string): Promise<ServiceResult<TraspasoDoc[]>>
-getDocumentoSignedUrl(docId: string): Promise<ServiceResult<string>>
-```
+4. **`profiles` — "Gestores can view profiles" USING (role='gestor')**
+   Un gestor ve TODOS los perfiles del sistema (cédulas, teléfonos, emails de todos los usuarios). Debe escoparse a perfiles de customers que son parte de uno de SUS traspasos.
 
-### Firmas
-```ts
-saveFirma(input: { traspasoId: string; tipoFirmante: FirmanteTipo; firmaImagenBlob: Blob; nombre: string; cedula?: string; }): Promise<ServiceResult<Firma>>
-listFirmas(traspasoId: string): Promise<ServiceResult<Firma[]>>
-```
+5. **`traspasos` — "Anon can read traspasos by code" expone todas las columnas**
+   La política filtra correctamente por `codigo IS NOT NULL` pero la consulta `SELECT *` devuelve `vendedor_cedula`, `comprador_cedula`, `vendedor_telefono`, `precio_vehiculo`, `antifraude_notas`, `notas_internas`, etc. Para tracking público basta `codigo`, `status`, `created_at`, `updated_at`. → crear vista `public.traspasos_tracking` con security_invoker y forzar el front a leerla.
 
-### Contratos
-```ts
-generateContract(traspasoId: string, tipo: ContractTipo): Promise<ServiceResult<{ id: string; html: string }>>
-getContract(contractId: string): Promise<ServiceResult<{ html: string; pdfUrl?: string }>>
-```
+6. **`traspaso_documentos` — falta política de notario**
+   Notario necesita ver `contrato_firmado` y cédulas para certificar, pero hoy no tiene SELECT. Front falla silencioso.
 
-### Mensajes (chat traspaso)
-```ts
-listMensajes(traspasoId: string): Promise<ServiceResult<TraspasoMensaje[]>>
-sendMensaje(traspasoId: string, text: string): Promise<ServiceResult<TraspasoMensaje>>
-markRead(traspasoId: string): Promise<ServiceResult<void>>
-```
+7. **Customer NO puede UPDATE sus propios traspasos**
+   La spec de §8 dice que el customer puede editar datos del comprador/vehículo mientras `status = solicitud_recibida`. Hoy no existe política → front se rompe en `NuevoTraspaso` paso 2+.
 
-### Escrow (mockBackend.ts — `TODO_BACKEND`)
-```ts
-createEscrowDeposit(traspasoId: string, amountRD: number): Promise<ServiceResult<EscrowSnapshot>>   // simula pago
-getEscrowSnapshot(traspasoId: string): Promise<ServiceResult<EscrowSnapshot>>                       // lee escrow_status + pago_servicio_status
-confirmEscrowReceived(traspasoId: string): Promise<ServiceResult<EscrowSnapshot>>                   // admin
-releaseEscrowToVendor(traspasoId: string): Promise<ServiceResult<EscrowSnapshot>>                   // al completar
-triggerEscrowRefund(traspasoId: string, reason: string): Promise<ServiceResult<EscrowSnapshot>>     // al cancelar
-```
+### 🟡 Storage (`storage.objects` bucket `documentos`)
 
-### Otros mocks `TODO_BACKEND`
-```ts
-runAntifraudeCheck(traspasoId: string): Promise<ServiceResult<{ score: number; passed: boolean }>>   // simula IA
-fetchDgiiStatus(traspasoId: string): Promise<ServiceResult<{ stage: string; estimatedDate: string }>>  // simula scraping DGII
-sendWhatsAppNotification(to: string, template: string, vars: Record<string,string>): Promise<ServiceResult<void>>
-```
+8. **Políticas actuales son demasiado abiertas:**
+   - `Authenticated users can upload docs`: cualquier usuario autenticado sube a CUALQUIER path. Debe restringir el prefijo del path al `traspaso_id` que el usuario posee.
+   - `Users can view own docs`: USING (auth.uid() IS NOT NULL) — cualquier autenticado lee CUALQUIER archivo del bucket. Debe verificar que el path empieza por un `traspaso_id` cuyo `customer_id`, `gestor_id`, `notario_id` o `mensajero_id` sea el usuario; o que sea admin.
 
 ---
 
-## Pricing en el spine
-- Cualquier monto cobrado se lee de `pricing_config` vía `usePricing` (ya planeado). El service `createTraspaso` recibe `plan: "basico" | "express"` y consulta `pricing_config` para sellar el precio en el registro.
+## Migración propuesta (la mostraré en build mode)
+
+```sql
+-- 1) historial_consultas: lectura restringida
+DROP POLICY "Authenticated users can read consultas" ON historial_consultas;
+CREATE POLICY "Customers read own consultas" ON historial_consultas
+  FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins read all consultas" ON historial_consultas
+  FOR SELECT USING (get_user_role(auth.uid()) = 'admin');
+
+-- 2) leads: solo admin lee/actualiza
+DROP POLICY "Authenticated users can read leads" ON leads;
+DROP POLICY "Authenticated users can update leads" ON leads;
+CREATE POLICY "Admins read leads" ON leads
+  FOR SELECT USING (get_user_role(auth.uid()) = 'admin');
+CREATE POLICY "Admins update leads" ON leads
+  FOR UPDATE USING (get_user_role(auth.uid()) = 'admin');
+
+-- 3) traspaso_timeline: cerrar lectura pública y restringir inserción genérica
+DROP POLICY "Public can read timeline for tracking" ON traspaso_timeline;
+DROP POLICY "System can add timeline entries" ON traspaso_timeline;
+CREATE POLICY "Anon read timeline by codigo" ON traspaso_timeline
+  FOR SELECT TO anon
+  USING (EXISTS (SELECT 1 FROM traspasos t WHERE t.id = traspaso_id AND t.codigo IS NOT NULL));
+
+-- 4) profiles: gestor solo ve perfiles de SUS partes
+DROP POLICY "Gestores can view profiles" ON profiles;
+CREATE POLICY "Gestores see related customer profiles" ON profiles
+  FOR SELECT USING (
+    get_user_role(auth.uid()) = 'gestor'
+    AND EXISTS (SELECT 1 FROM traspasos t
+                WHERE t.gestor_id = auth.uid() AND t.customer_id = profiles.id)
+  );
+
+-- 5) traspasos: vista pública de tracking + actualizar el front
+CREATE VIEW public.traspasos_tracking WITH (security_invoker=on) AS
+  SELECT id, codigo, status, asset_type, vehiculo_marca, vehiculo_modelo,
+         vehiculo_placa, created_at, updated_at
+  FROM public.traspasos WHERE codigo IS NOT NULL;
+-- Nota: la política "Anon can read traspasos by code" se mantiene mientras
+-- migramos el front a la vista; luego se elimina.
+
+-- 6) traspaso_documentos: notario lee asignados
+CREATE POLICY "Notarios see assigned docs" ON traspaso_documentos
+  FOR SELECT USING (
+    get_user_role(auth.uid()) = 'notario'
+    AND EXISTS (SELECT 1 FROM traspasos t
+                WHERE t.id = traspaso_id AND t.notario_id = auth.uid())
+  );
+
+-- 7) traspasos: customer puede editar mientras esté en solicitud_recibida
+CREATE POLICY "Customers update own draft" ON traspasos
+  FOR UPDATE
+  USING (auth.uid() = customer_id AND status = 'solicitud_recibida')
+  WITH CHECK (auth.uid() = customer_id AND status = 'solicitud_recibida');
+
+-- 8) storage.objects bucket documentos
+DROP POLICY "Authenticated users can upload docs" ON storage.objects;
+DROP POLICY "Users can view own docs" ON storage.objects;
+
+CREATE POLICY "Doc upload owner or staff" ON storage.objects FOR INSERT
+  WITH CHECK (
+    bucket_id = 'documentos'
+    AND auth.uid() IS NOT NULL
+    AND (
+      get_user_role(auth.uid()) IN ('admin','gestor','notario','mensajero')
+      OR EXISTS (
+        SELECT 1 FROM traspasos t
+        WHERE t.id::text = (storage.foldername(name))[1]
+          AND t.customer_id = auth.uid()
+      )
+    )
+  );
+
+CREATE POLICY "Doc read owner or party" ON storage.objects FOR SELECT
+  USING (
+    bucket_id = 'documentos'
+    AND (
+      get_user_role(auth.uid()) = 'admin'
+      OR EXISTS (
+        SELECT 1 FROM traspasos t
+        WHERE t.id::text = (storage.foldername(name))[1]
+          AND (
+            t.customer_id = auth.uid()
+            OR t.gestor_id  = auth.uid()
+            OR t.notario_id = auth.uid()
+            OR t.mensajero_id = auth.uid()
+          )
+      )
+    )
+  );
+```
+
+**Convención implícita:** los archivos en `documentos` deben subirse bajo el prefijo `{traspaso_id}/...`. Ya lo hacemos en `traspasoService.uploadDocumento` (`${traspasoId}/...`) y en `saveFirma`. Hay que verificar que `MarbeteCapture/Upload` y `CedulaCapture` también respeten esto antes de aplicar la migración (si no, sus uploads dejarán de funcionar).
 
 ---
 
-## Plan de implementación (etapas, una por aprobación)
+## Plan de pruebas (matriz de simulación)
 
-### Etapa 1 — Tipos + service skeleton (sesión actual al aprobar)
-- Crear `src/services/types.ts`, `src/services/traspasoService.ts`, `src/services/historialService.ts`, `src/services/mockBackend.ts` con **todas las firmas y bodies funcionales**. Sin tocar UI todavía. Cada función con comentario `@backend GET /api/...` y `TODO_BACKEND` donde aplique.
-- Crear `src/hooks/useTraspaso*.ts` que envuelven los servicios con React Query.
+Una vez aplicada la migración, correré contra la DB (sin tocar UI) un script que:
 
-### Etapa 2 — Refactor de páginas de cliente
-- `Dashboard.tsx`, `NuevoTraspaso.tsx`, `TraspasoDetail.tsx`, `EscrowView.tsx`, `HistorialDetail.tsx` → consumir los hooks.
-
-### Etapa 3 — Refactor de panel admin
-- `AdminDashboard`, `AdminTraspasoDetail`, `AdminHistoriales` → hooks + acciones `advanceStatus`, `cancelTraspaso`, `adminFulfillHistorial`.
-
-### Etapa 4 — Refactor paneles de roles operativos
-- `GestorDashboard`, `GestorTraspasoDetail`, `GestorNuevoTraspaso`, `NotarioTraspasoDetail` (incluye fix del bug de transición), `MensajeroTraspasoDetail` (incluye fix de hardcoded `dgii_proceso`).
-
-### Etapa 5 — Mocks visibles y testing manual
-- Botones de admin "Simular pago escrow", "Simular antifraude OK", "Simular respuesta DGII" — claramente marcados como demo.
-- Recorrido manual del flujo completo con cuenta admin + cuenta cliente.
-
-### Etapa 6 — Documentación del contrato
-- Generar `BACKEND_CONTRACT.md` listando cada función del service con su firma, su tabla/endpoint actual, y el endpoint REST objetivo.
+1. Crea 4 traspasos de prueba con 4 customers distintos, asignando un gestor, notario, mensajero diferentes.
+2. Para cada rol (`customer_a`, `customer_b`, `gestor_1`, `notario_1`, `mensajero_1`, `admin`, `anon`), ejecuta vía `set_config('request.jwt.claims', ...)` cada SELECT/UPDATE/INSERT/DELETE relevante sobre cada tabla.
+3. Marca PASS/FAIL contra la matriz objetivo de arriba.
+4. Te entrego un reporte tabla por tabla.
 
 ---
 
-## Lo que NO toco
+## Banderas para el back-end real
 
-- `traspaso-status.ts` — ya es la fuente de verdad.
-- RLS — se respetan tal cual; el service layer asume que Supabase RLS valida.
-- Edge functions — no se crean nuevas en esta fase; los mocks viven en `mockBackend.ts` (client-side, simulando latencia con `setTimeout`).
-- KNOWLEDGE.md — se actualizará en una sesión posterior con el contenido de `BACKEND_CONTRACT.md`.
+Cuando reemplacen Supabase por la API REST propia, deben replicar:
+
+- **Filtrado por rol en cada endpoint** equivalente a la columna que aquí filtra RLS (`customer_id`, `gestor_id`, `notario_id`, `mensajero_id`).
+- **Restricción de status para notario/mensajero** (notario solo entre `contrato_generado` y `contrato_firmado`; mensajero entre `contrato_firmado` y `matricula_recogida`/`matricula_entregada`).
+- **Tracking público SOLO por código** sin exponer PII (la vista `traspasos_tracking` es el contrato).
+- **Storage de documentos:** path = `{traspaso_id}/...`; lectura limitada a las 4 partes + admin. Subida limitada a customer (su propio traspaso) o staff asignado.
+- **Customer puede editar el traspaso solo mientras `status = solicitud_recibida`**.
+- **Gestor solo ve perfiles de customers de sus traspasos**, no el directorio completo.
+- **`historial_consultas` y `leads`**: solo dueño + admin pueden leer.
 
 ---
 
-## Preguntas antes de pasar a build mode
+## Plan de implementación (atómico)
 
-1. **Alcance de la sesión de implementación:** ¿Cubrimos solo **Etapa 1** (skeleton de servicios + hooks, sin refactor de UI) o quieres que en la misma sesión empecemos a migrar **Etapa 2** (páginas de cliente)? Recomiendo Etapa 1 sola — es la base sobre la que todo lo demás se apoya, y deja un commit fácil de revisar.
-2. **Estilo de los mocks de escrow/DGII/antifraude:** ¿prefieres mocks **deterministas** (siempre OK, latencia fija) o con un **toggle de admin** para simular fallos (declined, fraude detectado, DGII rechaza)? Para una demo de inversores el determinista basta; el toggle es útil si vas a mostrar el camino de cancelación.
-3. **Persistencia de mocks:** los estados de escrow viven en `traspasos.escrow_status` y `pago_servicio_status` (ya existen). ¿OK que `mockBackend` solo escriba ahí, o quieres una tabla `mock_payments` separada para no contaminar la real?
+1. **Crear el archivo de migración** con las 8 correcciones de arriba — sola tarea de esta sesión, pido aprobación.
+2. Aplicar y correr el linter de Supabase + script de pruebas por rol.
+3. Auditar 2 componentes de upload (`MarbeteCapture`, `CedulaCapture`, etc.) para confirmar que respetan el prefijo `{traspaso_id}/`. Fix si no.
+4. Refactor del front para que el tracking público lea de `traspasos_tracking` en vez de `traspasos`.
 
-Con tus respuestas (o "default a tus recomendaciones") cambio a build mode y arranco con Etapa 1.
+¿Apruebas la migración tal como está, o quieres ajustar alguna política antes de pasarla?
