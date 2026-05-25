@@ -194,12 +194,12 @@ export default function Dashboard() {
               <div className="flex items-start justify-between mb-1">
                 <div>
                   <h3 className="text-xl font-extrabold text-foreground leading-tight">
-                    {activeOne.vehiculo_marca || "Vehículo"}{" "}
-                    {activeOne.vehiculo_modelo || ""}{" "}
-                    {activeOne.vehiculo_ano || ""}
+                    {activeOne.vehiculoMarca || "Vehículo"}{" "}
+                    {activeOne.vehiculoModelo || ""}{" "}
+                    {activeOne.vehiculoAno || ""}
                   </h3>
                   <p className="text-sm text-muted-foreground mt-0.5">
-                    PLACA: {activeOne.vehiculo_placa || "—"}
+                    PLACA: {activeOne.vehiculoPlaca || "—"}
                   </p>
                 </div>
                 <Badge className="bg-accent/10 text-accent border-accent/20 text-[10px] font-bold whitespace-nowrap">
@@ -256,7 +256,7 @@ export default function Dashboard() {
                 <div className="flex items-center gap-2">
                   <Car className="h-4 w-4 text-accent" />
                   <span className="font-medium text-sm">
-                    {t.vehiculo_marca} {t.vehiculo_modelo} · {t.vehiculo_placa}
+                    {t.vehiculoMarca} {t.vehiculoModelo} · {t.vehiculoPlaca}
                   </span>
                 </div>
                 <Badge className="bg-accent/10 text-accent text-[10px]">
@@ -327,10 +327,10 @@ export default function Dashboard() {
                     <FileText className="h-4 w-4 text-accent" />
                   </div>
                   <p className="font-bold text-sm leading-tight">
-                    {t.vehiculo_marca} {t.vehiculo_modelo} {t.vehiculo_ano}
+                    {t.vehiculoMarca} {t.vehiculoModelo} {t.vehiculoAno}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    PLACA: {t.vehiculo_placa || "—"}
+                    PLACA: {t.vehiculoPlaca || "—"}
                   </p>
                   <Badge className={`mt-2 text-[10px] ${
                     t.status === "completado"
