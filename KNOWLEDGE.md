@@ -19,58 +19,112 @@
 
 ## 2. Design System: "Premium Government-Tech"
 
-Our aesthetic is **confident, clean, and trustworthy** — the visual language of a modern fintech app applied to government bureaucracy. Think Revolut meets TurboTax, but for Dominican vehicle transfers.
+Aesthetic: **confident, clean, trustworthy** — modern fintech polish applied to Dominican vehicle bureaucracy. Reference points: Revolut, Linear, TurboTax. Every screen should feel **premium, calm, and authoritative** — never busy, never generic.
 
-### Color Palette (HSL tokens only — never raw hex in components)
+### 2.1 Color Palette (HSL tokens only — never raw hex in components)
 
-| Role | Token | HSL | Usage |
-|------|-------|-----|-------|
-| Primary / Navy | `--navy` | `222 47% 11%` | Headlines, trust badges, dark sections |
-| Accent / Teal | `--teal` | `192 91% 37%` | Primary actions, progress bars, success states |
-| CTA / Orange | `--cta` | `21 90% 48%` | Hero buttons, pricing highlights, urgency |
-| Background | `--background` | `210 20% 98%` | Page background (off-white, never pure #fff) |
-| Foreground | `--foreground` | `215 25% 10%` | Body text |
-| Muted | `--muted-foreground` | `215 16% 47%` | Secondary text, labels |
-| Card | `--card` | `0 0% 100%` | Elevated surfaces |
-| Border | `--border` | `214 32% 91%` | Dividers, input borders |
+Brand spine: **Navy (authority) + Teal (action) + Orange (urgency)** on a warm off-white canvas. All tokens live in `src/index.css` under `:root` and are mapped in `tailwind.config.ts`.
 
-**Rules:**
-- Never use `bg-blue-500`, `text-gray-600`, or any raw Tailwind color utilities. Always use semantic tokens: `bg-navy`, `text-cta`, `bg-accent`, etc.
-- Gradients for hero backgrounds: `bg-navy-gradient` (navy → navy-light at 135deg) or `bg-gradient-to-br from-navy via-accent to-navy`.
-- Light mode only. No dark mode toggle. The brand lives on off-white.
+| Role | Token | HSL | Hex ref | Usage |
+|------|-------|-----|---------|-------|
+| Primary / Navy | `--navy` | `222 47% 11%` | `#0F172A` | Headlines, sticky nav, dark hero sections, trust copy |
+| Navy Light | `--navy-light` | `217 33% 17%` | `#1E293B` | Gradient stops, hover on dark surfaces |
+| Accent / Teal | `--teal` / `--accent` | `192 91% 37%` | `#0891B2` | Primary actions, progress, active states, links |
+| Teal Light | `--teal-light` | `192 91% 47%` | `#06B6D4` | Hover state for teal buttons, focus rings |
+| CTA / Orange | `--cta` / `--orange` | `21 90% 48%` | `#EA580C` | Hero CTA, pricing highlights, urgency badges |
+| Orange Light | `--orange-light` | `21 90% 55%` | `#F97316` | Hover state for CTA, gradient highlights |
+| Background | `--background` | `210 20% 98%` | `#F8FAFC` | Page canvas (warm off-white — never `#FFFFFF`) |
+| Card | `--card` | `0 0% 100%` | `#FFFFFF` | Elevated surfaces only (cards, modals, popovers) |
+| Foreground | `--foreground` | `215 25% 10%` | `#0F1419` | Body text (never pure black) |
+| Muted FG | `--muted-foreground` | `215 16% 47%` | `#64748B` | Secondary text, labels, captions |
+| Border | `--border` | `214 32% 91%` | `#E2E8F0` | Dividers, input borders at rest |
+| Success | (inline `green-600`) | — | `#16A34A` | Verification ticks, completed steps |
+| Warning | (inline `amber-500`) | — | `#F59E0B` | Pending, in-review states |
+| Destructive | `--destructive` | `0 84% 60%` | `#EF4444` | Errors, cancel actions |
 
-### Typography
+**Hard rules:**
+- **Never** use raw Tailwind palette utilities (`bg-blue-500`, `text-gray-600`). Always semantic: `bg-navy`, `text-cta`, `bg-accent`, `text-muted-foreground`.
+- **Never** hardcode hex in components. Use `hsl(var(--token))` if you must drop to CSS.
+- Light mode only — no dark mode toggle.
+- Signature gradients: `bg-navy-gradient` (135deg navy → navy-light) for hero, and `bg-gradient-to-r from-cta to-orange-light` for CTA buttons only.
 
-- **Font:** `DM Sans` (Google Fonts) for everything — headings and body.
+### 2.2 Typography
+
+- **Font:** `DM Sans` (Google Fonts) — single family, headings + body. Loaded via `<link>` in `index.html`.
+- **Weights:** 400 body, 500 labels, 600 subheads/buttons, 700 section heads, 800 hero.
 - **Scale:**
-  - Hero headline: `text-3xl md:text-5xl lg:text-[3.5rem]`, `font-extrabold`, `leading-[1.1]`, `tracking-tight`
-  - Section headlines: `text-2xl md:text-3xl`, `font-bold`
-  - Body: `text-sm md:text-base`, `text-muted-foreground`
-  - Labels / badges: `text-xs`, `font-semibold`, `uppercase`, `tracking-wider`
-- **Rule:** Headlines use tight tracking and heavy weight (extrabold/bold) to feel authoritative. Body stays legible with muted color.
+  - Display / hero: `text-3xl md:text-5xl lg:text-[3.5rem]` · `font-extrabold` · `leading-[1.1]` · `tracking-tight`
+  - Section H2: `text-2xl md:text-3xl` · `font-bold` · `tracking-tight`
+  - Card title H3: `text-lg md:text-xl` · `font-semibold`
+  - Body: `text-sm md:text-base` · `leading-relaxed` · `text-foreground` or `text-muted-foreground`
+  - Caption / label: `text-xs` · `font-semibold` · `uppercase` · `tracking-wider` · `text-muted-foreground`
+- **Rule:** Headlines = tight tracking + heavy weight (authority). Body = relaxed leading + muted color (calm).
 
-### Spacing & Shape
+### 2.3 Spacing Scale (4px base)
 
-- **Border radius:** `rounded-xl` (1rem) for cards, `rounded-2xl` (1.5rem) for hero images, `rounded-lg` (0.75rem) for buttons and inputs. Pill shapes (`rounded-full`) only for badges and trust bars.
-- **Shadows:** `shadow-sm` for cards at rest, `shadow-lg` on hover for interactive cards. Hero CTA uses `shadow-lg` to pop.
-- **Page padding:** `container` with `py-12 md:py-20` for vertical rhythm.
-- **Grid gaps:** `gap-6` for standard grids, `gap-8` for hero layouts.
+All spacing is a multiple of `4px`. Stick to Tailwind's default scale — never invent values like `gap-[13px]`.
 
-### Motion & Interactions
+| Token | px | Use |
+|-------|-----|-----|
+| `1` | 4 | Icon ↔ text inline |
+| `2` | 8 | Tight stacks, badge padding |
+| `3` | 12 | Form field internal padding |
+| `4` | 16 | Default card padding, list gaps |
+| `6` | 24 | Standard grid gap, card padding md+ |
+| `8` | 32 | Hero grid gap, section sub-blocks |
+| `12` | 48 | Vertical rhythm between minor sections |
+| `16` / `20` | 64 / 80 | `py-16 md:py-20` between major page sections |
+| `24` | 96 | Hero top/bottom on desktop |
 
-- **Framework:** `framer-motion` for React animations.
-- **Entrance pattern:** Elements fade in (`opacity: 1`) and slide up (`translateY: 20px → 0`) with `duration: 0.6` and staggered delays (`0.1s`, `0.2s`).
-- **Hover micro-interactions:** Cards lift on hover (`whileHover={{ y: -4, boxShadow: "..." }}`). Buttons get subtle scale or shadow increase.
-- **Shimmer effect:** CTA buttons (hero and dashboard) include a `translateX` shimmer sweep using `animate-shimmer` (2s ease-in-out loop) with a white/30% gradient overlay.
-- **Scroll behavior:** `scroll-behavior: smooth` globally, `scroll-padding-top: 5rem` for sticky nav offset.
+- **Page wrapper:** `container mx-auto px-4 md:px-6` + `py-12 md:py-20` per section.
+- **Grids:** `gap-6` default, `gap-8` hero, `gap-4` dense lists.
+- **Stack rhythm:** Use `space-y-4` or `space-y-6` — avoid manual margins.
 
-### Components & UI Patterns
+### 2.4 Border Radius
 
-- **Buttons:** Use `cva` variants. Primary CTA uses `variant="cta"` (orange). Secondary actions use `variant="teal"` (teal). Never use raw `<button>` classes.
-- **Cards:** `bg-card`, `rounded-2xl`, `border border-border/50`, `shadow-sm`.
-- **Badges:** Small, pill-shaped. Green for success, amber for pending, accent for active states.
-- **Icons:** `lucide-react` only. Size `h-4 w-4` for inline, `h-6 w-6` for feature icons, `h-12 w-12` for hero accents.
-- **Inputs:** `rounded-xl`, `h-12` minimum for mobile tap targets. White background with subtle shadow for contrast against off-white page.
+Premium feel comes from **generous, consistent** rounding. Never mix `rounded-md` with `rounded-2xl` in the same component.
+
+| Element | Class | Value |
+|---------|-------|-------|
+| Buttons, inputs, selects | `rounded-lg` | 0.75rem (12px) |
+| Cards, modals, popovers | `rounded-xl` | 1rem (16px) |
+| Hero images, feature cards | `rounded-2xl` | 1.5rem (24px) |
+| Hero illustration frames | `rounded-3xl` | 2rem (32px) |
+| Pills, badges, avatars, trust bar | `rounded-full` | full |
+| Tooltip, tag chips | `rounded-md` | 0.5rem (8px) — exception only |
+
+### 2.5 Shadows (Elevation System)
+
+Soft, **navy-tinted** shadows. No harsh black drops. Define reusable values in `index.css`.
+
+| Level | Value | Use |
+|-------|-------|-----|
+| Flat | (none) | Inline elements, list items |
+| `shadow-sm` | `0 1px 2px hsl(222 47% 11% / 0.05)` | Cards at rest, inputs |
+| `shadow-md` | `0 4px 12px hsl(222 47% 11% / 0.08)` | Sticky nav, dropdowns |
+| `shadow-lg` | `0 12px 28px hsl(222 47% 11% / 0.10)` | Hover on cards, hero CTA |
+| `shadow-xl` | `0 24px 48px hsl(222 47% 11% / 0.12)` | Modals, floating drawers |
+| CTA glow | `0 8px 24px hsl(21 90% 48% / 0.30)` | Orange hero button at rest |
+| Teal glow | `0 8px 24px hsl(192 91% 37% / 0.25)` | Primary teal button on hover |
+
+**Rule:** Elevation must always pair with a radius ≥ `rounded-lg`. No shadowed sharp corners.
+
+### 2.6 Motion & Interactions
+
+- **Library:** `framer-motion` only. No GSAP; raw CSS keyframes allowed only as Tailwind utilities (e.g. `shimmer`).
+- **Entrance:** `initial={{ opacity: 0, y: 20 }}` → `animate={{ opacity: 1, y: 0 }}` · `duration: 0.6` · stagger `0.1s`.
+- **Hover lift:** Cards `whileHover={{ y: -4 }}` + `shadow-sm` → `shadow-lg` · `transition: 0.2s ease`.
+- **Buttons:** `hover:-translate-y-0.5` + shadow grow. CTA adds `animate-shimmer` (2s loop, white/30% sweep).
+- **Reduce motion:** Respect `prefers-reduced-motion`.
+
+### 2.7 Components & UI Patterns
+
+- **Buttons:** Always `<Button>` from `@/components/ui/button`. Primary = `variant="cta"` (orange). Secondary = `variant="teal"`. Quiet = `outline` / `ghost`. Never raw `<button>` with utility classes.
+- **Cards:** `bg-card rounded-xl border border-border/50 shadow-sm p-6`; hover adds `shadow-lg` + `-translate-y-1`.
+- **Inputs:** `h-12` min, `rounded-lg`, `bg-card`, `border-border`, focus `ring-2 ring-teal/40`.
+- **Badges:** Pill, `text-xs font-semibold uppercase tracking-wider`. Success `bg-green-50 text-green-700`, pending `bg-amber-50 text-amber-700`, active `bg-teal/10 text-teal`, danger `bg-red-50 text-red-700`.
+- **Icons:** `lucide-react` only. `h-4 w-4` inline, `h-5 w-5` button, `h-6 w-6` feature, `h-10 w-10` hero accent inside a tinted rounded square.
+- **Sections:** Wrap in `<section className="container py-12 md:py-20">` with an optional eyebrow (`text-xs uppercase tracking-wider text-teal`) above the H2.
 
 ---
 
