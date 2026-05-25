@@ -4,11 +4,11 @@ import { useTraspasosForRole } from "@/hooks/useTraspasoServices";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   PlusCircle, Car, FileText, CheckCircle, Clock, DollarSign, Search, ShieldCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { EmptyState, ErrorState, LoadingSkeleton } from "@/components/shared/StateView";
 
 const STATUS_LABELS: Record<string, string> = {
   solicitud_recibida: "SOLICITUD",
