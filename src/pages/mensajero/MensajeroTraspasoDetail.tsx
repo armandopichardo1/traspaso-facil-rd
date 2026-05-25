@@ -32,6 +32,7 @@ export default function MensajeroTraspasoDetail() {
     () => documentos.find((d) => d.tipo === "evidencia_recogida"),
     [documentos],
   );
+  const { data: evidenciaUrl } = useDocumentoSignedUrl(evidencia?.id);
 
   const handleUploadEvidence = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
