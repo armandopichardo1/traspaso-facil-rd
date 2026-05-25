@@ -6,18 +6,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Truck, MapPin, ArrowRight, RefreshCw, Package, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState, ErrorState, LoadingSkeleton } from "@/components/shared/StateView";
 
 export default function MensajeroDashboard() {
   const navigate = useNavigate();
   const { profile } = useAuth();
   const qc = useQueryClient();
 
-  const { data, isLoading, isFetching } = useTraspasosForRole("mensajero", profile?.id);
+  const { data, isLoading, isFetching, isError, error, refetch } =
+    useTraspasosForRole("mensajero", profile?.id);
   const traspasos = data ?? [];
 
-  const refresh = () =>
+  const refresh = () => {
     qc.invalidateQueries({ queryKey: ["traspasos", "mensajero", profile?.id] });
+    refetch();
+  };
 
   const pendientes = traspasos.filter(t => t.status !== "completado" && t.status !== "cancelado");
   const completados = traspasos.filter(t => t.status === "completado");
