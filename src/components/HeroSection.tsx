@@ -155,6 +155,9 @@ const HeroSection = () => {
               >
                 <a href="#solicitud">Iniciar trámite 🚀</a>
               </Button>
+              <div className="mt-4">
+                <PricingDisclosure variant="onDark" />
+              </div>
             </div>
           </motion.div>
         </div>
