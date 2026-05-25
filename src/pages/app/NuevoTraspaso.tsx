@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, ArrowRight, Car, User, Shield, CreditCard, CheckCircle, Upload, UserCheck } from "lucide-react";
 import CedulaCapture, { type CedulaOcrResult } from "@/components/app/CedulaCapture";
 import MarbeteCapture from "@/components/app/MarbeteCapture";
-import { useCreateTraspaso, useUploadDocumento } from "@/hooks/useTraspasoServices";
+import { useCreateTraspaso } from "@/hooks/useTraspasoServices";
 
 const STEPS = [
   { title: "Tu Rol", icon: UserCheck },
