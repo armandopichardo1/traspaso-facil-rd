@@ -322,4 +322,113 @@ Producto principal. Sigue la máquina de estados definida en `src/lib/traspaso-s
 
 ---
 
+## 5. Roadmap: Prioridades por Semana (Lanzamiento)
+
+Meta: lanzamiento público en 8 semanas. Cada semana tiene un milestone entregable y un criterio de "listo para demo".
+
+### Semana 1 — Fundamentos + Landing Premium
+**Meta:** El sitio público transmite confianza y convierte consultas de historial.
+
+- [ ] Aplicar design system premium (colores HSL, sombras, radios, tokens) a `index.css` y `tailwind.config.ts`.
+- [ ] Refrescar `HeroSection`, `TrustBar`, `Navbar` con nuevos tokens.
+- [ ] Conectar formulario de historial a la tabla `historial_consultas` (insert público).
+- [ ] Integrar pasarela de pago (tarjeta/transferencia) para historial.
+- [ ] Configurar notificaciones automáticas al equipo (WhatsApp/email) cuando llegue una consulta.
+
+**Demo-ready:** Un visitante puede llegar, ver landing, pagar RD$350 y recibir confirmación.
+
+---
+
+### Semana 2 — Historial Vehicular (Producto Puerta de Entrada)
+**Meta:** El equipo admin puede recibir, procesar y entregar un historial en <24h.
+
+- [ ] Construir `AdminHistoriales` dashboard: listado, filtros por estado, asignación a gestor.
+- [ ] Flujo de estados: `pendiente → en_proceso → entregado` (o `cancelado`).
+- [ ] Subida de PDF por admin y marca de entrega.
+- [ ] Envío automático de PDF al cliente por correo/WhatsApp con link firmado.
+- [ ] CTA dentro del PDF/email para iniciar traspaso completo.
+
+**Demo-ready:** Admin recibe notificación, sube PDF, cliente lo recibe.
+
+---
+
+### Semana 3 — Autenticación + Onboarding del Cliente
+**Meta:** Un cliente puede crear cuenta, iniciar sesión y completar su perfil.
+
+- [ ] Auth con email/password + Google OAuth (sin confirmación automática de email).
+- [ ] Tabla `profiles` vinculada a `auth.users` con campos: nombre, cédula, teléfono, dirección.
+- [ ] Pantalla `CompleteProfile` obligatoria después del primer login.
+- [ ] Vistas protegidas: redirigir a login si no hay sesión.
+- [ ] Recuperación de contraseña por correo.
+
+**Demo-ready:** Usuario se registra con Google, completa perfil y llega al dashboard.
+
+---
+
+### Semana 4 — Traspaso Completo (Flujo del Cliente)
+**Meta:** Un cliente autenticado puede iniciar un traspaso y subir todos los documentos.
+
+- [ ] Tabla `traspasos` con campos: estado, datos del vehículo, vendedor, comprador, documentos.
+- [ ] Pantalla `NuevoTraspaso`: wizard de 4 pasos (datos vehículo → vendedor → comprador → documentos).
+- [ ] Captura de cédula y marbete con guía visual (`DocumentCameraGuide`).
+- [ ] Selfie capture con verificación facial (`SelfieCapture` → edge function `verify-face`).
+- [ ] Subida de fotos del vehículo y firma digital básica.
+
+**Demo-ready:** Cliente inicia traspaso, sube documentos, estado = `solicitud_recibida`.
+
+---
+
+### Semana 5 — Dashboard Admin y Gestores
+**Meta:** Admin y gestores pueden ver, asignar y avanzar traspasos.
+
+- [ ] `AdminDashboard` con métricas: traspasos activos, en espera, completados, ingresos.
+- [ ] `AdminTraspasoDetail`: vista completa del expediente, cambio de estado, notas internas.
+- [ ] `GestorDashboard`: vista filtrada de traspasos asignados al gestor.
+- [ ] `GestorNuevoTraspaso`: un gestor puede crear traspaso en nombre de un cliente.
+- [ ] RLS correcto: admin ve todo, gestor solo lo asignado.
+
+**Demo-ready:** Admin ve métricas, abre un traspaso y cambia estado a `verificacion_antifraude`.
+
+---
+
+### Semana 6 — Roles de Mensajero y Notario
+**Meta:** Mensajeros y notarios tienen vistas móviles para ejecutar sus tareas.
+
+- [ ] `MensajeroDashboard`: lista de recogidas y entregas asignadas.
+- [ ] `MensajeroTraspasoDetail`: confirmar recogida de matrícula (foto + GPS) y entrega (firma de recibido).
+- [ ] `NotarioDashboard`: lista de contratos pendientes de firma.
+- [ ] `NotarioTraspasoDetail`: revisar contrato generado, confirmar firma notariada.
+- [ ] `ContractGenerator`: genera borrador de contrato de venta con datos del traspaso.
+
+**Demo-ready:** Mensajero abre app, confirma recogida con foto; notario marca contrato firmado.
+
+---
+
+### Semana 7 — Pagos en Línea y Escrow
+**Meta:** Cliente puede pagar el traspaso y el dinero queda retenido hasta la entrega.
+
+- [ ] Integrar pasarela de pago para traspaso completo (RD$3,500+).
+- [ ] Tabla `escrow_payments`: monto, estado (deposited / released / refunded), traspaso_id.
+- [ ] Vista `EscrowView` para el cliente: ver depósito, liberación o reembolso.
+- [ ] Admin puede liberar fondos al vendedor o reembolsar al cliente según etapa.
+- [ ] Email/WhatsApp de confirmación de pago y liberación.
+
+**Demo-ready:** Cliente paga, admin libera fondos al completar.
+
+---
+
+### Semana 8 — QA, Polish y Lanzamiento
+**Meta:** Producto estable, rápido y listo para usuarios reales.
+
+- [ ] Testing completo de los 10 estados del flujo con roles reales.
+- [ ] Revisión de RLS en todas las tablas (`traspasos`, `historial_consultas`, `profiles`, `escrow_payments`).
+- [ ] Optimizar imágenes, lazy loading de páginas, revisar métricas de Lighthouse.
+- [ ] Copy review: todo el texto en español dominicano, sin inglés en la UI.
+- [ ] Configurar dominio personalizado, SSL, y SEO básico (meta tags, sitemap).
+- [ ] Guía rápida para el equipo de soporte y documentación de procesos manuales (DGII, INTRANT).
+
+**Demo-ready:** Lanzamiento público. Primer cliente real puede comprar historial o iniciar traspaso.
+
+---
+
 *Last updated: 2026-05-25*
