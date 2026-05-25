@@ -1,13 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useTraspasosForRole } from "@/hooks/useTraspasoServices";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  PlusCircle, Car, ArrowRight, FileText, CheckCircle, Clock, TrendingUp, DollarSign, Search, ShieldCheck,
+  PlusCircle, Car, FileText, CheckCircle, Clock, DollarSign, Search, ShieldCheck,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
