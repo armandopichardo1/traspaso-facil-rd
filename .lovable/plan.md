@@ -1,102 +1,86 @@
+# Plan: Update `src/lib/traspaso-status.ts` to the new 10-state machine
 
+## Heads-up before we start
+I read `KNOWLEDGE.md` end-to-end. **Section 3 is "Tech Constraints" — it does not contain a state machine.** The 10-step spec lives only in your message. I'll implement exactly what you pasted, and as a follow-up we should add this state machine to `KNOWLEDGE.md` so it's the source of truth. Flag if you want me to do that in the same step.
 
-# Auditoría: Flujo Cliente vs Gestor vs Admin — Problemas y Soluciones
+Also: the old config contained `documentos_completos` and `contrato_generado`. The new spec drops both. Many UI files and DB migrations reference them — see blast radius below.
 
-## Resumen del flujo actual DGII
+## Scope of this change
+Only `src/lib/traspaso-status.ts`. No UI, no DB migration, no consumer fixes. The app **will break at runtime / typecheck** in places that import the dropped keys until we do the follow-up pass.
+
+## New `STATUS_STEPS` (exact order)
 
 ```text
-solicitud_recibida → documentos_completos → contrato_generado → contrato_firmado
-     (1)                   (2)                    (3)                  (4)
-  Cliente/Gestor         Gestor                 Gestor               Notario
-                                                                        ↓
-completado ← dgii_proceso ← matricula_recogida ← verificacion_antifraude
-   (8)           (7)              (6)                    (5)
-  Admin      Admin/Gestor      Mensajero                Admin
+ # | key                    | label                                  | owner
+ 1 | solicitud_recibida     | Solicitud Recibida                     | cliente
+ 2 | verificacion_antifraude| Verificación Antifraude                | admin
+ 3 | pago_seguro_depositado | Pago Seguro Depositado          (NEW) | admin/cliente
+ 4 | matricula_recogida     | Matrícula Recogida              (MOVED)| mensajero
+ 5 | contrato_firmado       | Contrato Firmado y Notariado           | notario
+ 6 | legalizacion_pgr       | Legalización PGR + Banco Reservas (NEW)| gestor/admin
+ 7 | plan_piloto            | CENARVE / Plan Piloto                  | gestor/admin
+ 8 | dgii_proceso           | Expediente en DGII                     | admin
+ 9 | matricula_entregada    | Matrícula Entregada             (NEW) | mensajero
+10 | completado             | Completado                             | admin
 ```
 
-## Problemas detectados
+Dropped: `documentos_completos`, `contrato_generado`.
+`cancelado` stays as terminal, admin-only from any non-terminal state.
 
-### 1. Cliente crea traspaso completo — pero no deberia
-**Problema:** El cliente en `NuevoTraspaso.tsx` llena TODOS los datos (vendedor, comprador, vehiculo, contrato, documentos, plan) y crea el traspaso con status `solicitud_recibida`. Pero segun DGII, el **gestor** es quien verifica documentos y genera contratos. El cliente esta haciendo trabajo del gestor.
+## New `TRANSITIONS` map (role gating)
 
-**En la vida real:** El cliente (vendedor o comprador) contacta al gestor, le entrega los documentos, y el gestor maneja todo. El cliente no llena formularios de 7 pasos.
+```ts
+solicitud_recibida      → verificacion_antifraude   [admin]
+verificacion_antifraude → pago_seguro_depositado    [admin]
+pago_seguro_depositado  → matricula_recogida        [admin, mensajero]
+matricula_recogida      → contrato_firmado          [admin, notario]
+contrato_firmado        → legalizacion_pgr          [admin, gestor]
+legalizacion_pgr        → plan_piloto               [admin, gestor]
+plan_piloto             → dgii_proceso              [admin]
+dgii_proceso            → matricula_entregada       [admin, mensajero]
+matricula_entregada     → completado                [admin]
+```
 
-### 2. Duplicacion total del flujo de creacion
-**Problema:** `NuevoTraspaso.tsx` (cliente, 7 pasos) y `GestorNuevoTraspaso.tsx` (gestor, 7 pasos) son casi identicos (~600 lineas cada uno). El gestor tiene un paso extra de matricula scanner y precios mayoristas, pero el resto es copy-paste.
+`canAdvanceTo`, `getNextStatus`, `getValidNextStatuses` stay as-is structurally — they just read the new map. `cancelado` continues to be reachable by admin from any non-terminal state.
 
-### 3. El cliente no tiene acciones post-creacion
-**Problema:** En `TraspasoDetail.tsx`, el cliente solo ve el timeline y documentos — no puede hacer nada. No puede firmar contratos, no puede subir documentos adicionales, no puede comunicarse con el gestor dentro de la app.
+## New `CLIENT_PROGRESS_LABELS` (10 items, aligned 1:1)
 
-### 4. STATUS_STEPS inconsistentes entre vistas
-**Problema:** 
-- `Dashboard.tsx` del cliente tiene sus propios STATUS_STEPS que NO coinciden con `traspaso-status.ts` (falta `documentos_completos`, `contrato_generado`)
-- El cliente ve "REVISIÓN" donde deberia ver "Documentos Completos", etc.
+```
+SOLICITUD · ANTIFRAUDE · PAGO · RECOGIDA · FIRMA · PGR · PLAN PILOTO · DGII · ENTREGA · COMPLETADO
+```
 
-### 5. El admin tiene poder total sin restricciones
-**Problema:** El admin puede cambiar status a CUALQUIER valor sin validar el orden del pipeline. Puede saltar de `solicitud_recibida` a `completado`. No hay validacion de orden.
+## Open question (pago_seguro_depositado owner)
+You wrote owner `admin/cliente` but the transition INTO it is gated. I'm proposing: cliente triggers the payment in-app, but the **status transition** is gated to `admin` (confirmation that escrow received funds). If you want the cliente role to also be able to advance this status from the UI, say so and I'll add `"customer"` to the transition roles. Same question for `cancelado`: today only admin can cancel — keep that?
 
-### 6. No hay asignacion gestor-traspaso para traspasos del cliente
-**Problema:** Cuando el cliente crea un traspaso, `gestor_id` queda null. No hay mecanismo para que un admin asigne un gestor, ni para que el gestor "tome" el caso.
+## Blast radius (files referencing old/changed keys — for the follow-up step, NOT this one)
 
-### 7. Notario ve traspasos sin filtro de asignacion
-**Problema:** El notario ve TODOS los traspasos en status `contrato_generado/firmado/verificacion`, no solo los que le corresponden. No hay campo `notario_id` en la tabla.
+Direct references to `documentos_completos`, `contrato_generado`, `plan_piloto`, `matricula_recogida`, `dgii_proceso`, `verificacion_antifraude`, `solicitud_recibida`, `completado`:
 
----
+**App / UI (15 files):**
+- `src/pages/app/Dashboard.tsx`, `TraspasoDetail.tsx`, `CompleteProfile.tsx`, `Historial.tsx`, `HistorialDetail.tsx`
+- `src/pages/gestor/GestorDashboard.tsx`, `GestorTraspasoDetail.tsx`, `GestorNuevoTraspaso.tsx`
+- `src/pages/notario/NotarioDashboard.tsx`, `NotarioTraspasoDetail.tsx`
+- `src/pages/mensajero/MensajeroDashboard.tsx`, `MensajeroTraspasoDetail.tsx`
+- `src/pages/admin/AdminTraspasoDetail.tsx`, `AdminHistoriales.tsx`, `src/pages/AdminDashboard.tsx`
+- `src/components/admin/MetricsDashboard.tsx`, `TrendCharts.tsx`, `LeadFilters.tsx`
+- `src/pages/Norma0325.tsx`, `GuiaTraspaso.tsx`, `TerminosServicio.tsx` (likely just copy mentions)
 
-## Soluciones propuestas
+**DB / migrations (6 files):**
+- `supabase/migrations/20260405003706_*.sql`
+- `supabase/migrations/20260405213401_*.sql`
+- `supabase/migrations/20260406142641_*.sql`
+- `supabase/migrations/20260408191938_*.sql`
+- `supabase/migrations/20260409204455_*.sql`
+- `supabase/migrations/20260409205932_*.sql`
 
-### Solucion A: Simplificar flujo del cliente (recomendada)
-Reducir el formulario del cliente a lo minimo:
-1. **Paso 1:** Seleccionar si es vendedor o comprador
-2. **Paso 2:** Datos del vehiculo (placa, marca, modelo) + foto del marbete con OCR
-3. **Paso 3:** Datos de la contraparte (nombre, cedula, telefono)
-4. **Paso 4:** Subir documentos basicos (cedula frente/reverso + selfie)
-5. **Paso 5:** Elegir plan y confirmar
+The `traspasos.status` column is almost certainly a Postgres `enum` or has a CHECK constraint built from the old keys. Inserting/advancing to `pago_seguro_depositado`, `legalizacion_pgr`, or `matricula_entregada` **will fail in DB until we add a migration** that:
+1. Adds the 3 new enum values.
+2. Drops or replaces the 2 removed values (only safe if no rows currently use them — needs a `read_query` check first).
+3. Backfills any in-flight rows sitting on `documentos_completos` / `contrato_generado` to the closest new state.
 
-Eliminar del flujo del cliente: contrato (lo genera el gestor), fecha acto venta, medio pago, apoderado, persona juridica. Esos datos los llena el gestor.
+I'll handle all of that in the follow-up step you mentioned. For now: only the TS config changes.
 
-### Solucion B: Asignacion de gestor
-- Agregar columna `notario_id` y `mensajero_id` a la tabla traspasos
-- Admin asigna gestor cuando el cliente crea un traspaso (o auto-asigna al gestor disponible)
-- Panel admin muestra traspasos sin gestor como "pendientes de asignacion"
-
-### Solucion C: Unificar STATUS_STEPS
-- Eliminar los STATUS_STEPS locales de `Dashboard.tsx`
-- Usar siempre los de `traspaso-status.ts`
-- El cliente ve un timeline simplificado con nombres amigables
-
-### Solucion D: Validar transiciones de status
-- El admin solo puede avanzar al siguiente status valido (no saltar)
-- Cada rol solo puede avanzar los status que le corresponden
-- Crear funcion `getNextStatus(currentStatus, role)` centralizada
-
-### Solucion E: Acciones del cliente post-creacion
-- El cliente puede firmar contratos desde `TraspasoDetail` cuando el status es `contrato_generado`
-- El cliente puede subir documentos faltantes
-- Chat/notas entre cliente y gestor (tabla `traspaso_mensajes`)
-
----
-
-## Plan de implementacion
-
-### Paso 1 — Unificar STATUS_STEPS (rapido)
-Eliminar STATUS_STEPS duplicados de `Dashboard.tsx`. Importar desde `traspaso-status.ts`. Ajustar el progress bar del cliente para usar las etiquetas correctas.
-
-### Paso 2 — Simplificar NuevoTraspaso del cliente
-Reducir de 7 pasos a 5. Mover campos avanzados (contrato, apoderado, persona juridica) al flujo del gestor unicamente.
-
-### Paso 3 — Agregar asignacion de gestor/notario/mensajero
-Migracion DB: agregar `notario_id` y `mensajero_id` a traspasos. UI admin para asignar roles. Auto-asignar gestor cuando el admin lo decida.
-
-### Paso 4 — Validar transiciones de status
-Crear helper `canAdvanceTo(currentStatus, nextStatus, role)`. Usarlo en GestorTraspasoDetail, NotarioTraspasoDetail, MensajeroTraspasoDetail, y AdminTraspasoDetail.
-
-### Paso 5 — Acciones del cliente en TraspasoDetail
-Permitir al cliente firmar contratos y subir documentos adicionales cuando el traspaso esta en los estados correspondientes.
-
-## Detalles tecnicos
-- 1 migracion DB (agregar notario_id, mensajero_id)
-- 1 nuevo helper en `traspaso-status.ts` (canAdvanceTo, getNextStatus)
-- ~5 archivos editados (Dashboard, NuevoTraspaso, TraspasoDetail, AdminTraspasoDetail, GestorTraspasoDetail)
-- Sin nuevas Edge Functions
-
+## Confirm before I switch to build
+1. OK to proceed with `pago_seguro_depositado` gated to `[admin]` only (cliente pays, admin confirms)?
+2. Keep `cancelado` admin-only?
+3. Want me to also append this state machine to `KNOWLEDGE.md` section 3 in the same change, so the doc matches reality?

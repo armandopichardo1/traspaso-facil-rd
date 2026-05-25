@@ -1,14 +1,15 @@
-// Unified status pipeline aligned with DGII process
+// Unified status pipeline aligned with DGII process (10-state machine)
 export const STATUS_STEPS = [
   { key: "solicitud_recibida", label: "Solicitud Recibida", owner: "cliente", desc: "Solicitud registrada en el sistema" },
   { key: "verificacion_antifraude", label: "Verificación Antifraude", owner: "admin", desc: "Admin revisa selfie vs cédula" },
-  { key: "documentos_completos", label: "Documentos Completos", owner: "gestor", desc: "Gestor verificó que todos los docs están listos" },
-  { key: "contrato_generado", label: "Contrato Generado", owner: "sistema", desc: "Contrato de compraventa generado automáticamente" },
-  { key: "contrato_firmado", label: "Contrato Firmado y Notariado", owner: "notario", desc: "Notario certificó la firma del contrato" },
+  { key: "pago_seguro_depositado", label: "Pago Seguro Depositado", owner: "admin/cliente", desc: "Cliente depositó el pago en escrow; admin confirma" },
   { key: "matricula_recogida", label: "Matrícula Recogida", owner: "mensajero", desc: "Mensajero recogió la matrícula vieja" },
-  { key: "plan_piloto", label: "Plan Piloto + Impuesto 2%", owner: "gestor/admin", desc: "Pago de impuesto 2% y plan piloto DGII" },
+  { key: "contrato_firmado", label: "Contrato Firmado y Notariado", owner: "notario", desc: "Notario certificó la firma del contrato" },
+  { key: "legalizacion_pgr", label: "Legalización PGR + Banco de Reservas", owner: "gestor/admin", desc: "Legalización en PGR y pago en Banco de Reservas" },
+  { key: "plan_piloto", label: "CENARVE / Plan Piloto", owner: "gestor/admin", desc: "Inspección CENARVE y plan piloto DGII" },
   { key: "dgii_proceso", label: "Expediente en DGII", owner: "admin", desc: "Expediente entregado a DGII para procesamiento" },
-  { key: "completado", label: "Completado — Nueva Matrícula Entregada", owner: "admin", desc: "Nueva matrícula entregada al cliente" },
+  { key: "matricula_entregada", label: "Matrícula Entregada", owner: "mensajero", desc: "Mensajero entregó la nueva matrícula al cliente" },
+  { key: "completado", label: "Completado", owner: "admin", desc: "Traspaso finalizado" },
 ] as const;
 
 export type TraspasoStatus = typeof STATUS_STEPS[number]["key"] | "cancelado";
@@ -20,8 +21,19 @@ export const STATUS_LABELS: Record<string, string> = Object.fromEntries([
   ["cancelado", "Cancelado"],
 ]);
 
-// Friendly labels for client-facing progress
-export const CLIENT_PROGRESS_LABELS = ["SOLICITUD", "ANTIFRAUDE", "DOCUMENTOS", "CONTRATO", "FIRMA", "RECOGIDA", "PLAN PILOTO", "DGII", "COMPLETADO"];
+// Friendly labels for client-facing progress (aligned 1:1 with STATUS_STEPS)
+export const CLIENT_PROGRESS_LABELS = [
+  "SOLICITUD",
+  "ANTIFRAUDE",
+  "PAGO",
+  "RECOGIDA",
+  "FIRMA",
+  "PGR",
+  "PLAN PILOTO",
+  "DGII",
+  "ENTREGA",
+  "COMPLETADO",
+];
 
 export const statusColor = (s: string) => {
   if (s === "completado") return "bg-green-100 text-green-800";
@@ -37,21 +49,22 @@ export const getProgress = (status: string) => {
 // Workflow: which role can advance to which next status
 const TRANSITIONS: Record<string, { next: string; roles: UserRole[] }> = {
   solicitud_recibida: { next: "verificacion_antifraude", roles: ["admin"] },
-  verificacion_antifraude: { next: "documentos_completos", roles: ["admin", "gestor"] },
-  documentos_completos: { next: "contrato_generado", roles: ["admin", "gestor"] },
-  contrato_generado: { next: "contrato_firmado", roles: ["admin", "notario"] },
-  contrato_firmado: { next: "matricula_recogida", roles: ["admin", "mensajero"] },
-  matricula_recogida: { next: "plan_piloto", roles: ["admin", "gestor"] },
+  verificacion_antifraude: { next: "pago_seguro_depositado", roles: ["admin"] },
+  pago_seguro_depositado: { next: "matricula_recogida", roles: ["admin", "mensajero"] },
+  matricula_recogida: { next: "contrato_firmado", roles: ["admin", "notario"] },
+  contrato_firmado: { next: "legalizacion_pgr", roles: ["admin", "gestor"] },
+  legalizacion_pgr: { next: "plan_piloto", roles: ["admin", "gestor"] },
   plan_piloto: { next: "dgii_proceso", roles: ["admin"] },
-  dgii_proceso: { next: "completado", roles: ["admin"] },
+  dgii_proceso: { next: "matricula_entregada", roles: ["admin", "mensajero"] },
+  matricula_entregada: { next: "completado", roles: ["admin"] },
 };
 
 /**
  * Check if a given role can advance from current status to next status.
  */
 export const canAdvanceTo = (current: string, next: string, role: UserRole): boolean => {
-  // Admin can always cancel
-  if (next === "cancelado" && role === "admin") return true;
+  // Admin can always cancel from any non-terminal state
+  if (next === "cancelado" && role === "admin" && current !== "completado" && current !== "cancelado") return true;
   const transition = TRANSITIONS[current];
   if (!transition) return false;
   return transition.next === next && transition.roles.includes(role);
