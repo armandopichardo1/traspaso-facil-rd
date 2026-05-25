@@ -42,21 +42,11 @@ export default function GestorDashboard() {
   const { profile } = useAuth();
   const navigate = useNavigate();
 
-  const { data: traspasos, isLoading } = useQuery({
-    queryKey: ["gestor-traspasos"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("traspasos")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-  });
+  const { data: traspasos, isLoading } = useTraspasosForRole("gestor", profile?.id);
 
   const activos = traspasos?.filter(t => t.status !== "completado" && t.status !== "cancelado") || [];
   const completados = traspasos?.filter(t => t.status === "completado") || [];
-  const totalGastado = traspasos?.reduce((sum, t) => sum + (t.precio_servicio || 0), 0) || 0;
+  const totalGastado = traspasos?.reduce((sum, t) => sum + (t.precioServicio || 0), 0) || 0;
 
   const timeSince = (dateStr: string) => {
     const diff = Date.now() - new Date(dateStr).getTime();
