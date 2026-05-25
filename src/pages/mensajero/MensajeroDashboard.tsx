@@ -65,16 +65,18 @@ export default function MensajeroDashboard() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
-        </div>
+        <LoadingSkeleton rows={3} className="space-y-3" rowClassName="h-28 w-full rounded-xl" />
+      ) : isError ? (
+        <ErrorState
+          message={(error as Error)?.message || "No se pudo cargar la lista de entregas."}
+          onRetry={() => refetch()}
+        />
       ) : traspasos.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <Truck className="h-10 w-10 mx-auto mb-3 opacity-30" />
-            <p>No hay entregas pendientes</p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={Truck}
+          title="No hay entregas pendientes"
+          description="Cuando un traspaso esté listo para recogida, aparecerá aquí."
+        />
       ) : (
         <div className="space-y-3">
           {traspasos.map((t) => {
