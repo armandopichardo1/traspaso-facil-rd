@@ -207,10 +207,10 @@ export default function TraspasoDetail() {
       </motion.div>
 
       {/* Contracts & Signatures — client can sign when contrato_generado */}
-      {(t.status === "contrato_generado" || t.status === "contrato_firmado" || contracts.length > 0) && (
+      {((t.status as string) === "contrato_generado" || t.status === "contrato_firmado" || contracts.length > 0) && (
         <Card className="mb-4 rounded-xl">
           <CardContent className="p-4">
-            {t.status === "contrato_generado" && (
+            {(t.status as string) === "contrato_generado" && (
               <div className="bg-accent/10 border border-accent/20 rounded-lg p-3 text-sm text-accent mb-3">
                 ✍️ Tu contrato está listo. Puedes firmarlo digitalmente a continuación.
               </div>
