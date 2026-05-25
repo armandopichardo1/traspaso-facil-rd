@@ -1,6 +1,7 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import PricingDisclosure from "@/components/PricingDisclosure";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { FileText, AlertTriangle, Calculator, Clock, Shield, HelpCircle, ArrowRight } from "lucide-react";
