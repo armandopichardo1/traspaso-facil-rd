@@ -1,213 +1,174 @@
-# Plan: Tarifas configurables por admin + esquema multi-activo
+# Plan: Spine funcional del traspaso end-to-end (demo) + capa de servicio swap-able
 
 ## Objetivo
 
-(A) Eliminar precios hardcoded del frontend: todos los precios viven en `pricing_config` y se editan desde una pantalla admin.
-(B) Preparar el esquema para que el día de mañana se puedan traspasar **terrenos, propiedades, lanchas y motocicletas** sin refactor. Solo modelo de datos — sin construir los flujos.
+Que un demo pueda recorrer el flujo completo: **historial → wizard de traspaso → upload de documentos → 10 transiciones de estado con roles → vista de escrow → completado**. Toda la I/O contra Supabase pasa por `src/services/traspasoService.ts` para que cuando el back-end real esté listo solo se cambie la implementación, sin tocar UI.
 
 ---
 
-## Parte A — `pricing_config` (precios configurables)
+## Estado actual (resultado del scan)
 
-### Tabla nueva
-```text
-pricing_config
-  id              uuid PK default gen_random_uuid()
-  asset_type      text NOT NULL  -- FK lógico a asset_types.key (vehiculo, terreno, ...)
-  item_key        text NOT NULL  -- p.ej. 'historial', 'traspaso_basico'
-  label           text NOT NULL  -- "Traspaso Básico"
-  price_rd        numeric(12,2) NOT NULL CHECK (price_rd >= 0)
-  itbis_included  boolean NOT NULL DEFAULT true
-  active          boolean NOT NULL DEFAULT true
-  updated_at      timestamptz NOT NULL DEFAULT now()
-  updated_by      uuid REFERENCES auth.users(id)
-  UNIQUE (asset_type, item_key)
+- **30+ archivos** llaman `supabase` directamente (UI hace consultas, mutaciones, storage, etc.). Esto es lo que vamos a centralizar.
+- Páginas por rol ya existen: `app/`, `admin/`, `gestor/`, `notario/`, `mensajero/`.
+- `traspaso-status.ts` ya tiene la máquina de 10 estados, `canAdvanceTo`, `getNextStatus`, `requiresEscrowRefund`, `cancelTraspaso`.
+- Tablas DB: `traspasos`, `traspaso_documentos`, `traspaso_firmas`, `traspaso_contratos`, `traspaso_timeline`, `traspaso_mensajes`, `historial_consultas`, `profiles`.
+- Bug detectado en sesión anterior: `NotarioTraspasoDetail.tsx:89` avanza a `verificacion_antifraude` (debería ser `legalizacion_pgr`).
+- `MensajeroTraspasoDetail.tsx:80` hardcodea `dgii_proceso` como next (debería usar `getNextStatus`).
+
+---
+
+## Arquitectura del service layer
+
+### Archivo principal: `src/services/traspasoService.ts`
+
+Wrapper delgado, **sin lógica de negocio**, que devuelve tipos limpios y errores `Result`-style. No exporta tipos de Supabase. Cada función lleva un comentario `@backend` con el endpoint REST equivalente que el back-end real deberá exponer.
+
+### Subarchivos para mantenerlo manejable
+- `src/services/types.ts` — DTOs front-end (independientes del schema de Supabase): `Traspaso`, `TraspasoDoc`, `TraspasoTimelineEntry`, `Firma`, `HistorialConsulta`, `EscrowSnapshot`, etc.
+- `src/services/traspasoService.ts` — operaciones del pipeline de traspaso.
+- `src/services/historialService.ts` — intake y consulta de historial.
+- `src/services/mockBackend.ts` — funciones simuladas con `TODO_BACKEND` (payments, escrow real, DGII checks, antifraude IA).
+
+### Patrón de retorno
+```ts
+type ServiceResult<T> = { ok: true; data: T } | { ok: false; error: string };
+```
+UI consume con React Query (`queryFn` retorna `data` si `ok`, sino throw para que React Query maneje el error toast).
+
+### Hook estándar
+`src/hooks/useTraspaso.ts`, `useTraspasoList.ts`, `useTraspasoTimeline.ts`, etc. — envuelven los servicios con React Query y exponen `invalidate` keys consistentes (`["traspaso", id]`, `["traspasos", filters]`).
+
+---
+
+## Contrato (firmas públicas) — esto es lo que el back-end real deberá implementar
+
+### Historial (`historialService.ts`)
+```ts
+createHistorialRequest(input: { placa: string; telefono: string; email?: string }): Promise<ServiceResult<HistorialConsulta>>
+listHistorialesForUser(userId: string): Promise<ServiceResult<HistorialConsulta[]>>
+listPendingHistoriales(): Promise<ServiceResult<HistorialConsulta[]>>     // admin
+getHistorial(id: string): Promise<ServiceResult<HistorialConsulta>>
+adminFulfillHistorial(id: string, resultado: HistorialResultado): Promise<ServiceResult<void>>   // admin
 ```
 
-### RLS (siguiendo §8 de KNOWLEDGE.md)
-- SELECT: público (cualquiera puede leer precios — son visibles en la landing).
-- INSERT/UPDATE/DELETE: solo `admin` vía `get_user_role(auth.uid()) = 'admin'`.
-
-### Seed inicial (todos `asset_type='vehiculo'`)
-| item_key | label | price_rd |
-|---|---|---|
-| historial | Historial Vehicular | 350 |
-| traspaso_basico | Traspaso Básico | 3500 |
-| traspaso_express | Traspaso Express | 5000 |
-| gestor_wholesale | Tarifa Mayorista (Gestor) | 2500 |
-| dealer_starter | Plan Dealer Starter | 15000 |
-| dealer_growth | Plan Dealer Growth | 30000 |
-| dealer_enterprise | Plan Dealer Enterprise | 50000 |
-
-### Frontend
-1. **Nuevo hook** `src/hooks/usePricing.ts`:
-   ```ts
-   usePricing(assetType='vehiculo') → { data, getPrice(item_key), isLoading }
-   ```
-   Usa React Query con `staleTime: 5min`. Devuelve mapa `{ item_key: { price_rd, label, ... } }`.
-2. **Componente** `<Price itemKey="traspaso_basico" />` que renderiza `RD$ X,XXX` formateado con `formatDOP` y muestra skeleton mientras carga.
-3. **Pantalla admin nueva** `src/pages/admin/AdminPricing.tsx`:
-   - Tabla editable agrupada por `asset_type`.
-   - Inline edit de `price_rd`, `label`, `active`, `itbis_included`.
-   - Botón "Agregar tarifa" → modal con `asset_type`, `item_key`, `label`, `price_rd`.
-   - Ruta `/admin/precios`, agregar enlace en `AdminDashboard`.
-4. **Refactor de componentes que muestran precios** (los identificaré con `rg "3500|3,500|350|RD\$"` durante la implementación). Candidatos conocidos: `HeroSection`, `PlanesSection`, `HistorialSection`, `PrecioCard`, `GuiaTraspaso`, `app/Historial.tsx`.
-
----
-
-## Parte B — Esquema multi-activo
-
-### Tabla nueva `asset_types`
-```text
-asset_types
-  id        uuid PK default gen_random_uuid()
-  key       text UNIQUE NOT NULL  -- 'vehiculo', 'terreno', 'propiedad', 'lancha', 'motocicleta'
-  label     text NOT NULL
-  active    boolean NOT NULL DEFAULT true
-  created_at timestamptz NOT NULL DEFAULT now()
+### Traspaso — lectura
+```ts
+getTraspaso(id: string): Promise<ServiceResult<Traspaso>>
+getTraspasoByCodigo(codigo: string): Promise<ServiceResult<Traspaso>>     // tracking público
+listTraspasosForRole(role: UserRole, userId: string, filters?: TraspasoFilters): Promise<ServiceResult<Traspaso[]>>
+getTimeline(traspasoId: string): Promise<ServiceResult<TraspasoTimelineEntry[]>>
 ```
 
-Seed: las 5 categorías arriba, solo `vehiculo` con `active=true`. Las demás quedan `active=false` hasta que se construya el flujo.
+### Traspaso — creación y edición
+```ts
+createTraspaso(input: NewTraspasoInput): Promise<ServiceResult<Traspaso>>
+updateTraspasoFields(id: string, patch: Partial<EditableTraspasoFields>): Promise<ServiceResult<Traspaso>>
+assignRole(id: string, role: "gestor" | "notario" | "mensajero", userId: string): Promise<ServiceResult<void>>   // admin
+```
 
-### Modificar `traspasos`
-- `ALTER TABLE traspasos ADD COLUMN asset_type text NOT NULL DEFAULT 'vehiculo'`.
-- No agrego FK formal (los `text` keys son más flexibles para back-end externo); validación a nivel app/trigger.
-- Los campos `vehiculo_*` existentes se quedan tal cual (son específicos del flujo vehicular). Más adelante, cada tipo nuevo puede traer su propia tabla de atributos `traspaso_atributos_<tipo>` o usar JSONB.
+### Máquina de estados (la pieza central)
+```ts
+advanceStatus(
+  id: string,
+  toStatus: TraspasoStatus,
+  actor: { id: string; role: UserRole },
+  options?: { nota?: string; evidenceUrl?: string }
+): Promise<ServiceResult<Traspaso>>
 
-### Diseño para flujos de estado por tipo (futuro, NO se construye ahora)
-Documentar en KNOWLEDGE.md §7 que cuando se agreguen activos:
-- `traspaso-status.ts` exportará `getStatusFlow(assetType)` que devuelve el `STATUS_STEPS` correspondiente.
-- Habrá una constante por tipo: `VEHICULO_STEPS`, `TERRENO_STEPS`, etc.
-- El flujo actual de 10 estados se renombrará internamente como `VEHICULO_STEPS` (alias para compatibilidad).
+cancelTraspaso(
+  id: string,
+  actor: { id: string; role: UserRole },
+  reason: string
+): Promise<ServiceResult<{ traspaso: Traspaso; refundTriggered: boolean }>>
+```
+Internamente: valida con `canAdvanceTo`, escribe `traspasos.status`, agrega entrada en `traspaso_timeline`, y si aplica dispara `mockBackend.triggerEscrowRefund` (TODO_BACKEND).
 
-**No se toca `traspaso-status.ts` en esta sesión** — el cambio queda documentado.
+### Documentos
+```ts
+uploadDocumento(traspasoId: string, tipo: DocTipo, file: File): Promise<ServiceResult<TraspasoDoc>>
+listDocumentos(traspasoId: string): Promise<ServiceResult<TraspasoDoc[]>>
+getDocumentoSignedUrl(docId: string): Promise<ServiceResult<string>>
+```
 
-### RLS de `asset_types`
-- SELECT: público.
-- INSERT/UPDATE/DELETE: solo `admin`.
+### Firmas
+```ts
+saveFirma(input: { traspasoId: string; tipoFirmante: FirmanteTipo; firmaImagenBlob: Blob; nombre: string; cedula?: string; }): Promise<ServiceResult<Firma>>
+listFirmas(traspasoId: string): Promise<ServiceResult<Firma[]>>
+```
 
----
+### Contratos
+```ts
+generateContract(traspasoId: string, tipo: ContractTipo): Promise<ServiceResult<{ id: string; html: string }>>
+getContract(contractId: string): Promise<ServiceResult<{ html: string; pdfUrl?: string }>>
+```
 
-## Migración SQL propuesta (vista previa, aún no ejecutada)
+### Mensajes (chat traspaso)
+```ts
+listMensajes(traspasoId: string): Promise<ServiceResult<TraspasoMensaje[]>>
+sendMensaje(traspasoId: string, text: string): Promise<ServiceResult<TraspasoMensaje>>
+markRead(traspasoId: string): Promise<ServiceResult<void>>
+```
 
-```sql
--- 1. asset_types
-CREATE TABLE public.asset_types (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  key text UNIQUE NOT NULL,
-  label text NOT NULL,
-  active boolean NOT NULL DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-ALTER TABLE public.asset_types ENABLE ROW LEVEL SECURITY;
+### Escrow (mockBackend.ts — `TODO_BACKEND`)
+```ts
+createEscrowDeposit(traspasoId: string, amountRD: number): Promise<ServiceResult<EscrowSnapshot>>   // simula pago
+getEscrowSnapshot(traspasoId: string): Promise<ServiceResult<EscrowSnapshot>>                       // lee escrow_status + pago_servicio_status
+confirmEscrowReceived(traspasoId: string): Promise<ServiceResult<EscrowSnapshot>>                   // admin
+releaseEscrowToVendor(traspasoId: string): Promise<ServiceResult<EscrowSnapshot>>                   // al completar
+triggerEscrowRefund(traspasoId: string, reason: string): Promise<ServiceResult<EscrowSnapshot>>     // al cancelar
+```
 
-CREATE POLICY "Anyone can read asset types"
-  ON public.asset_types FOR SELECT USING (true);
-CREATE POLICY "Admins manage asset types insert"
-  ON public.asset_types FOR INSERT
-  WITH CHECK (get_user_role(auth.uid()) = 'admin');
-CREATE POLICY "Admins manage asset types update"
-  ON public.asset_types FOR UPDATE
-  USING (get_user_role(auth.uid()) = 'admin');
-CREATE POLICY "Admins manage asset types delete"
-  ON public.asset_types FOR DELETE
-  USING (get_user_role(auth.uid()) = 'admin');
-
-INSERT INTO public.asset_types (key, label, active) VALUES
-  ('vehiculo', 'Vehículo', true),
-  ('motocicleta', 'Motocicleta', false),
-  ('terreno', 'Terreno', false),
-  ('propiedad', 'Propiedad / Inmueble', false),
-  ('lancha', 'Lancha / Embarcación', false);
-
--- 2. pricing_config
-CREATE TABLE public.pricing_config (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  asset_type text NOT NULL,
-  item_key text NOT NULL,
-  label text NOT NULL,
-  price_rd numeric(12,2) NOT NULL CHECK (price_rd >= 0),
-  itbis_included boolean NOT NULL DEFAULT true,
-  active boolean NOT NULL DEFAULT true,
-  updated_at timestamptz NOT NULL DEFAULT now(),
-  updated_by uuid REFERENCES auth.users(id),
-  UNIQUE (asset_type, item_key)
-);
-ALTER TABLE public.pricing_config ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can read active pricing"
-  ON public.pricing_config FOR SELECT USING (true);
-CREATE POLICY "Admins insert pricing"
-  ON public.pricing_config FOR INSERT
-  WITH CHECK (get_user_role(auth.uid()) = 'admin');
-CREATE POLICY "Admins update pricing"
-  ON public.pricing_config FOR UPDATE
-  USING (get_user_role(auth.uid()) = 'admin');
-CREATE POLICY "Admins delete pricing"
-  ON public.pricing_config FOR DELETE
-  USING (get_user_role(auth.uid()) = 'admin');
-
-CREATE TRIGGER update_pricing_config_updated_at
-  BEFORE UPDATE ON public.pricing_config
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-INSERT INTO public.pricing_config (asset_type, item_key, label, price_rd) VALUES
-  ('vehiculo', 'historial',          'Historial Vehicular',       350),
-  ('vehiculo', 'traspaso_basico',    'Traspaso Básico',           3500),
-  ('vehiculo', 'traspaso_express',   'Traspaso Express',          5000),
-  ('vehiculo', 'gestor_wholesale',   'Tarifa Mayorista (Gestor)', 2500),
-  ('vehiculo', 'dealer_starter',     'Plan Dealer Starter',       15000),
-  ('vehiculo', 'dealer_growth',      'Plan Dealer Growth',        30000),
-  ('vehiculo', 'dealer_enterprise',  'Plan Dealer Enterprise',    50000);
-
--- 3. traspasos.asset_type
-ALTER TABLE public.traspasos
-  ADD COLUMN asset_type text NOT NULL DEFAULT 'vehiculo';
-CREATE INDEX idx_traspasos_asset_type ON public.traspasos(asset_type);
+### Otros mocks `TODO_BACKEND`
+```ts
+runAntifraudeCheck(traspasoId: string): Promise<ServiceResult<{ score: number; passed: boolean }>>   // simula IA
+fetchDgiiStatus(traspasoId: string): Promise<ServiceResult<{ stage: string; estimatedDate: string }>>  // simula scraping DGII
+sendWhatsAppNotification(to: string, template: string, vars: Record<string,string>): Promise<ServiceResult<void>>
 ```
 
 ---
 
-## Flags para el back-end externo (debe mirrorar)
-
-1. **Tablas nuevas:** `pricing_config`, `asset_types` — esquema, RLS, seed idénticos.
-2. **Columna nueva:** `traspasos.asset_type text NOT NULL DEFAULT 'vehiculo'`.
-3. **Fuente de verdad de precios:** el back-end NO debe hardcodear precios; debe consultar `pricing_config` por `(asset_type, item_key)`. Cualquier checkout/payment intent debe leerlo en tiempo de cobro.
-4. **`updated_by`** apunta a `auth.users(id)` — si el back-end usa otro sistema de identidad, mantener el UUID consistente.
-5. **Validación de `asset_type`** en `traspasos`: cuando el back-end inserte, debe verificar que el `key` exista y esté `active=true` en `asset_types`.
-6. **Estado por tipo (futuro):** documentar que el `STATUS_STEPS` actual aplica solo a `asset_type='vehiculo'`. Otros tipos definirán su propio pipeline.
+## Pricing en el spine
+- Cualquier monto cobrado se lee de `pricing_config` vía `usePricing` (ya planeado). El service `createTraspaso` recibe `plan: "basico" | "express"` y consulta `pricing_config` para sellar el precio en el registro.
 
 ---
 
-## Archivos a tocar (segunda fase, después de aprobar migración)
+## Plan de implementación (etapas, una por aprobación)
 
-**Nuevos:**
-- `src/hooks/usePricing.ts`
-- `src/components/Price.tsx`
-- `src/pages/admin/AdminPricing.tsx`
-- ruta en `src/App.tsx`
+### Etapa 1 — Tipos + service skeleton (sesión actual al aprobar)
+- Crear `src/services/types.ts`, `src/services/traspasoService.ts`, `src/services/historialService.ts`, `src/services/mockBackend.ts` con **todas las firmas y bodies funcionales**. Sin tocar UI todavía. Cada función con comentario `@backend GET /api/...` y `TODO_BACKEND` donde aplique.
+- Crear `src/hooks/useTraspaso*.ts` que envuelven los servicios con React Query.
 
-**Modificados (refactor de precios hardcoded — lista preliminar a confirmar con `rg`):**
-- `src/pages/Index.tsx` / `HeroSection`
-- `src/components/PlanesSection.tsx`
-- `src/components/HistorialSection.tsx`
-- `src/components/PrecioCard.tsx` (si existe)
-- `src/pages/GuiaTraspaso.tsx`
-- `src/pages/app/Historial.tsx`
-- `src/pages/AdminDashboard.tsx` (link a /admin/precios)
+### Etapa 2 — Refactor de páginas de cliente
+- `Dashboard.tsx`, `NuevoTraspaso.tsx`, `TraspasoDetail.tsx`, `EscrowView.tsx`, `HistorialDetail.tsx` → consumir los hooks.
 
-**KNOWLEDGE.md:**
-- §1: nota de pricing dinámico
-- §7: arquitectura multi-activo + regla "no hardcoded prices"
+### Etapa 3 — Refactor de panel admin
+- `AdminDashboard`, `AdminTraspasoDetail`, `AdminHistoriales` → hooks + acciones `advanceStatus`, `cancelTraspaso`, `adminFulfillHistorial`.
 
-**Sin tocar:** `src/lib/traspaso-status.ts`, edge functions, RLS de tablas existentes.
+### Etapa 4 — Refactor paneles de roles operativos
+- `GestorDashboard`, `GestorTraspasoDetail`, `GestorNuevoTraspaso`, `NotarioTraspasoDetail` (incluye fix del bug de transición), `MensajeroTraspasoDetail` (incluye fix de hardcoded `dgii_proceso`).
+
+### Etapa 5 — Mocks visibles y testing manual
+- Botones de admin "Simular pago escrow", "Simular antifraude OK", "Simular respuesta DGII" — claramente marcados como demo.
+- Recorrido manual del flujo completo con cuenta admin + cuenta cliente.
+
+### Etapa 6 — Documentación del contrato
+- Generar `BACKEND_CONTRACT.md` listando cada función del service con su firma, su tabla/endpoint actual, y el endpoint REST objetivo.
 
 ---
 
-## Orden de ejecución (próximas sesiones)
+## Lo que NO toco
 
-1. **Sesión actual (al aprobar):** ejecutar migración → confirmar tipos generados.
-2. **Sesión siguiente:** crear `usePricing`, `<Price>`, `AdminPricing` y refactorizar componentes de la landing.
-3. **Sesión 3:** documentar en KNOWLEDGE.md y notificar back-end.
+- `traspaso-status.ts` — ya es la fuente de verdad.
+- RLS — se respetan tal cual; el service layer asume que Supabase RLS valida.
+- Edge functions — no se crean nuevas en esta fase; los mocks viven en `mockBackend.ts` (client-side, simulando latencia con `setTimeout`).
+- KNOWLEDGE.md — se actualizará en una sesión posterior con el contenido de `BACKEND_CONTRACT.md`.
 
-¿Apruebas el plan y la migración para que la ejecute?
+---
+
+## Preguntas antes de pasar a build mode
+
+1. **Alcance de la sesión de implementación:** ¿Cubrimos solo **Etapa 1** (skeleton de servicios + hooks, sin refactor de UI) o quieres que en la misma sesión empecemos a migrar **Etapa 2** (páginas de cliente)? Recomiendo Etapa 1 sola — es la base sobre la que todo lo demás se apoya, y deja un commit fácil de revisar.
+2. **Estilo de los mocks de escrow/DGII/antifraude:** ¿prefieres mocks **deterministas** (siempre OK, latencia fija) o con un **toggle de admin** para simular fallos (declined, fraude detectado, DGII rechaza)? Para una demo de inversores el determinista basta; el toggle es útil si vas a mostrar el camino de cancelación.
+3. **Persistencia de mocks:** los estados de escrow viven en `traspasos.escrow_status` y `pago_servicio_status` (ya existen). ¿OK que `mockBackend` solo escriba ahí, o quieres una tabla `mock_payments` separada para no contaminar la real?
+
+Con tus respuestas (o "default a tus recomendaciones") cambio a build mode y arranco con Etapa 1.
