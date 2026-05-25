@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Search, FileText, Shield, Lock, PenTool, Headphones, CheckCircle } from "lucide-react";
 import heroImage from "@/assets/hero-traspaso-v2.jpg";
 import { motion } from "framer-motion";
+import PricingDisclosure from "@/components/PricingDisclosure";
 
 const trustItems = [
   { icon: Shield, label: "Sistema Antifraude" },
