@@ -6,11 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, Truck, MapPin, Phone, Camera, CheckCircle, Package } from "lucide-react";
+import { motion } from "framer-motion";
+import { STATUS_LABELS } from "@/lib/traspaso-status";
 import {
   useTraspaso,
   useDocumentos,
   useUploadDocumento,
   useAdvanceStatus,
+  useDocumentoSignedUrl,
 } from "@/hooks/useTraspasoServices";
 import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 
@@ -29,6 +32,7 @@ export default function MensajeroTraspasoDetail() {
     () => documentos.find((d) => d.tipo === "evidencia_recogida"),
     [documentos],
   );
+  const { data: evidenciaUrl } = useDocumentoSignedUrl(evidencia?.id);
 
   const handleUploadEvidence = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -82,22 +86,26 @@ export default function MensajeroTraspasoDetail() {
   }
 
   return (
-    <div className="p-4 max-w-lg mx-auto space-y-4">
+    <div className="p-4 max-w-lg mx-auto space-y-4 pb-24">
       <button onClick={() => navigate("/mensajero")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Volver
       </button>
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold flex items-center gap-2">
+      <motion.div
+        className="flex items-center justify-between"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <h1 className="text-xl font-extrabold flex items-center gap-2">
           <Truck className="h-5 w-5 text-accent" />
           Entrega
         </h1>
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-          {traspaso.status.replace(/_/g, " ")}
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800 border-blue-200">
+          {STATUS_LABELS[traspaso.status] || traspaso.status}
         </Badge>
-      </div>
+      </motion.div>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm">Vehículo</CardTitle>
         </CardHeader>
@@ -108,7 +116,7 @@ export default function MensajeroTraspasoDetail() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <MapPin className="h-4 w-4" /> Contacto Vendedor
@@ -119,7 +127,7 @@ export default function MensajeroTraspasoDetail() {
           {traspaso.vendedorTelefono && (
             <a
               href={`tel:${traspaso.vendedorTelefono}`}
-              className="flex items-center gap-2 text-accent hover:underline"
+              className="flex items-center gap-2 text-accent hover:underline font-medium"
             >
               <Phone className="h-4 w-4" />
               {traspaso.vendedorTelefono}
@@ -128,7 +136,7 @@ export default function MensajeroTraspasoDetail() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <Camera className="h-4 w-4" /> Evidencia de Recogida
@@ -136,12 +144,22 @@ export default function MensajeroTraspasoDetail() {
         </CardHeader>
         <CardContent>
           {evidencia ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex items-center gap-2 text-green-600 text-sm">
                 <CheckCircle className="h-4 w-4" />
-                Evidencia subida
+                <span className="font-medium">Evidencia subida</span>
               </div>
-              <p className="text-xs text-muted-foreground break-all">{evidencia.fileUrl}</p>
+              {evidenciaUrl ? (
+                <a href={evidenciaUrl} target="_blank" rel="noopener">
+                  <img
+                    src={evidenciaUrl}
+                    alt="Evidencia de recogida"
+                    className="w-full max-h-64 object-contain rounded-lg border border-border bg-muted/30"
+                  />
+                </a>
+              ) : (
+                <div className="h-32 rounded-lg bg-muted/40 animate-pulse" />
+              )}
             </div>
           ) : (
             <div>
@@ -162,6 +180,9 @@ export default function MensajeroTraspasoDetail() {
                 <Camera className="h-4 w-4 mr-2" />
                 {uploadMutation.isPending ? "Subiendo..." : "Tomar Foto de Matrícula"}
               </Button>
+              <p className="text-[10px] text-muted-foreground mt-2 text-center">
+                La foto se almacena de forma privada y solo es visible para el equipo TRASPASA.DO.
+              </p>
             </div>
           )}
         </CardContent>
@@ -170,7 +191,7 @@ export default function MensajeroTraspasoDetail() {
       {evidencia && traspaso.status === "matricula_recogida" && (
         <Button
           variant="teal"
-          className="w-full"
+          className="w-full font-bold"
           size="lg"
           onClick={handleAdvanceStatus}
           disabled={advanceMutation.isPending}

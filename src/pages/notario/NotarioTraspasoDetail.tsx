@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
 import { motion } from "framer-motion";
+import { STATUS_LABELS } from "@/lib/traspaso-status";
 import {
   useTraspaso,
   useContratos,
@@ -112,7 +113,7 @@ export default function NotarioTraspasoDetail() {
           Certificar Traspaso
         </h1>
         <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
-          {traspaso.status.replace(/_/g, " ")}
+          {STATUS_LABELS[traspaso.status] || traspaso.status}
         </Badge>
       </motion.div>
 
