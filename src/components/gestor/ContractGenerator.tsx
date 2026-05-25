@@ -5,15 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, Eye, PenTool, CheckCircle } from "lucide-react";
 import { generateContract, CONTRACT_LABELS, type ContractType, type ContractData } from "@/lib/contract-templates";
-import { useGenerateContract, useSaveFirma } from "@/hooks/useTraspasoServices";
+import { useGenerateContract, useSaveFirma, useContratos, useFirmas } from "@/hooks/useTraspasoServices";
 import SignaturePad, { type SignatureData } from "./SignaturePad";
 
 interface ContractGeneratorProps {
   traspasoId: string;
   contractData: ContractData;
-  contracts: ContractRecord[];
-  signatures: SignatureRecord[];
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
 export interface ContractRecord {
