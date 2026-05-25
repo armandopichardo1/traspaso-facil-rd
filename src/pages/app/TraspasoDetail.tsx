@@ -37,29 +37,11 @@ export default function TraspasoDetail() {
   const { data: traspaso, isLoading } = useTraspaso(id);
   const { data: docs } = useDocumentos(id);
 
-  const { data: contracts = [] } = useQuery({
-    queryKey: ["traspaso-contracts", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_contratos").select("*").eq("traspaso_id", id!).order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  const { data: signatures = [] } = useQuery({
-    queryKey: ["traspaso-signatures", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_firmas").select("*").eq("traspaso_id", id!).order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
+  const { data: contracts = [] } = useContratos(id);
 
   const refreshData = () => {
-    queryClient.invalidateQueries({ queryKey: ["traspaso-contracts", id] });
-    queryClient.invalidateQueries({ queryKey: ["traspaso-signatures", id] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso", id, "contratos"] });
+    queryClient.invalidateQueries({ queryKey: ["traspaso", id, "firmas"] });
     queryClient.invalidateQueries({ queryKey: ["traspaso", id, "documentos"] });
     queryClient.invalidateQueries({ queryKey: ["traspaso", id] });
   };
