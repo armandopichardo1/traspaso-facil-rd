@@ -143,7 +143,7 @@ export default function ContractGenerator({ traspasoId, contractData, onRefresh 
                         </Badge>
                         {sigs.map(s => (
                           <Badge key={s.id} variant="outline" className="text-[10px]">
-                            {s.tipo_firmante}
+                            {s.tipoFirmante}
                           </Badge>
                         ))}
                       </div>
