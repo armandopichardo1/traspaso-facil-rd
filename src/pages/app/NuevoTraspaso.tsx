@@ -53,9 +53,7 @@ export default function NuevoTraspaso() {
   const [files, setFiles] = useState<Record<string, File | null>>({});
   const [cedulaFiles, setCedulaFiles] = useState<Record<string, string>>({});
   const [codigo, setCodigo] = useState("");
-  const [traspasoId, setTraspasoId] = useState<string | null>(null);
   const createTraspaso = useCreateTraspaso();
-  const uploadDoc = useUploadDocumento(traspasoId ?? "");
   const submitting = createTraspaso.isPending;
 
   const [form, setForm] = useState<FormData>({
