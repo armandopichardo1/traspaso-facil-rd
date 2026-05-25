@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
 import { motion } from "framer-motion";
+import { STATUS_LABELS } from "@/lib/traspaso-status";
 import {
   useTraspaso,
   useContratos,
