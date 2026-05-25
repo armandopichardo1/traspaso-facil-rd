@@ -273,7 +273,7 @@ export default function TraspasoDetail() {
           <CardContent className="p-4">
             <h2 className="font-bold text-sm mb-3">Documentos</h2>
             <div className="space-y-2">
-              {docs.map((d: any) => (
+              {docs.map((d) => (
                 <div key={d.id} className="flex items-center justify-between text-sm">
                   <span className="capitalize">{d.tipo.replace(/_/g, " ")}</span>
                   <a href={d.fileUrl} target="_blank" rel="noopener" className="text-accent hover:underline text-xs font-medium">Ver</a>
