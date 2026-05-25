@@ -44,30 +44,6 @@ export default function GestorTraspasoDetail() {
     },
   });
 
-  const { data: contracts = [] } = useQuery({
-    queryKey: ["gestor-contracts", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_contratos").select("*").eq("traspaso_id", id!).order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  const { data: signatures = [] } = useQuery({
-    queryKey: ["gestor-signatures", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_firmas").select("*").eq("traspaso_id", id!).order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  const refreshContracts = () => {
-    queryClient.invalidateQueries({ queryKey: ["gestor-contracts", id] });
-    queryClient.invalidateQueries({ queryKey: ["gestor-signatures", id] });
-  };
 
   const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
     if (!traspaso) return;
@@ -234,10 +210,8 @@ export default function GestorTraspasoDetail() {
         <ContractGenerator
           traspasoId={t.id}
           contractData={contractData}
-          contracts={contracts as any}
-          signatures={signatures as any}
-          onRefresh={refreshContracts}
         />
+
       </div>
 
       {/* Documents */}

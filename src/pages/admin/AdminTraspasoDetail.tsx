@@ -137,25 +137,6 @@ export default function AdminTraspasoDetail() {
     enabled: !!id,
   });
 
-  const { data: contratos } = useQuery({
-    queryKey: ["admin-contratos", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_contratos").select("*").eq("traspaso_id", id).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  const { data: firmas } = useQuery({
-    queryKey: ["admin-firmas", id],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("traspaso_firmas").select("*").eq("traspaso_id", id).order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
 
   const updateTraspaso = useMutation({
     mutationFn: async (updates: TablesUpdate<"traspasos">) => {
@@ -667,13 +648,8 @@ export default function AdminTraspasoDetail() {
                   apoderado_nombre: traspaso.apoderado_nombre || "", apoderado_cedula: traspaso.apoderado_cedula || "",
                   codigo: traspaso.codigo || "",
                 } as ContractData}
-                contracts={contratos || []}
-                signatures={firmas || []}
-                onRefresh={() => {
-                  queryClient.invalidateQueries({ queryKey: ["admin-contratos", id] });
-                  queryClient.invalidateQueries({ queryKey: ["admin-firmas", id] });
-                }}
               />
+
             </CardContent>
           </Card>
 

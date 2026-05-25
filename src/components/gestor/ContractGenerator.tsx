@@ -5,15 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, Download, Eye, PenTool, CheckCircle } from "lucide-react";
 import { generateContract, CONTRACT_LABELS, type ContractType, type ContractData } from "@/lib/contract-templates";
-import { useGenerateContract, useSaveFirma } from "@/hooks/useTraspasoServices";
+import { useGenerateContract, useSaveFirma, useContratos, useFirmas } from "@/hooks/useTraspasoServices";
 import SignaturePad, { type SignatureData } from "./SignaturePad";
 
 interface ContractGeneratorProps {
   traspasoId: string;
   contractData: ContractData;
-  contracts: ContractRecord[];
-  signatures: SignatureRecord[];
-  onRefresh: () => void;
+  onRefresh?: () => void;
 }
 
 export interface ContractRecord {
@@ -45,12 +43,14 @@ function getAvailableContracts(data: ContractData): ContractType[] {
   return contracts;
 }
 
-export default function ContractGenerator({ traspasoId, contractData, contracts, signatures, onRefresh }: ContractGeneratorProps) {
+export default function ContractGenerator({ traspasoId, contractData, onRefresh }: ContractGeneratorProps) {
   const { toast } = useToast();
   const [generating, setGenerating] = useState<string | null>(null);
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [signingContract, setSigningContract] = useState<{ id: string; tipo: string } | null>(null);
 
+  const { data: contracts = [] } = useContratos(traspasoId);
+  const { data: signatures = [] } = useFirmas(traspasoId);
   const generateContractMutation = useGenerateContract(traspasoId);
   const saveFirmaMutation = useSaveFirma(traspasoId);
 
@@ -114,7 +114,7 @@ export default function ContractGenerator({ traspasoId, contractData, contracts,
   };
 
   const getContractSignatures = (contractId: string) =>
-    signatures.filter(s => s.contrato_id === contractId);
+    signatures.filter(s => s.contratoId === contractId);
 
   return (
     <div className="space-y-4">
@@ -143,7 +143,7 @@ export default function ContractGenerator({ traspasoId, contractData, contracts,
                         </Badge>
                         {sigs.map(s => (
                           <Badge key={s.id} variant="outline" className="text-[10px]">
-                            {s.tipo_firmante}
+                            {s.tipoFirmante}
                           </Badge>
                         ))}
                       </div>
