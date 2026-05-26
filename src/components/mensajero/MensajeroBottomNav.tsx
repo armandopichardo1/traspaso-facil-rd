@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { icon: Truck, label: "Entregas", path: "/mensajero" },
-  { icon: UserCircle, label: "Perfil", path: "/app/perfil" },
+  { icon: UserCircle, label: "Perfil", path: "/mensajero/perfil" },
 ];
 
 export default function MensajeroBottomNav() {
