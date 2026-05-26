@@ -141,7 +141,7 @@ export default function MetricsDashboard() {
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <CheckCircle className="h-5 w-5 mx-auto text-green-600 mb-1" />
+            <CheckCircle className="h-5 w-5 mx-auto text-success mb-1" />
             <p className="text-2xl font-extrabold">{data.onTimePct}%</p>
             <p className="text-xs text-muted-foreground">On-Time</p>
           </CardContent>
@@ -156,9 +156,9 @@ export default function MetricsDashboard() {
         <Card>
           <CardContent className="p-4 text-center">
             {bottleneck && (bottleneck.avg / bottleneck.sla) > 1 ? (
-              <AlertTriangle className="h-5 w-5 mx-auto text-red-500 mb-1" />
+              <AlertTriangle className="h-5 w-5 mx-auto text-destructive/100 mb-1" />
             ) : (
-              <TrendingUp className="h-5 w-5 mx-auto text-green-600 mb-1" />
+              <TrendingUp className="h-5 w-5 mx-auto text-success mb-1" />
             )}
             <p className="text-sm font-bold truncate">
               {bottleneck ? (STATUS_LABELS[bottleneck.stage] || bottleneck.stage) : "—"}
@@ -184,10 +184,10 @@ export default function MetricsDashboard() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium truncate flex-1">{STATUS_LABELS[m.stage] || m.stage}</span>
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className={`text-[10px] ${isOver ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}>
+                    <Badge variant="secondary" className={`text-[10px] ${isOver ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"}`}>
                       {m.onTimePct}% on-time
                     </Badge>
-                    <span className={`text-xs font-mono font-medium ${isOver ? "text-red-600" : "text-foreground"}`}>
+                    <span className={`text-xs font-mono font-medium ${isOver ? "text-destructive" : "text-foreground"}`}>
                       {formatDuration(m.avg)}
                     </span>
                     <span className="text-xs text-muted-foreground">/ {formatDuration(m.sla)}</span>
@@ -195,7 +195,7 @@ export default function MetricsDashboard() {
                 </div>
                 <Progress
                   value={Math.min(ratio * 100, 100)}
-                  className={`h-2 ${isOver ? "[&>div]:bg-red-500" : "[&>div]:bg-green-500"}`}
+                  className={`h-2 ${isOver ? "[&>div]:bg-destructive/100" : "[&>div]:bg-success/100"}`}
                 />
               </div>
             );

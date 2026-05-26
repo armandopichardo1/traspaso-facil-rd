@@ -105,7 +105,7 @@ export default function AdminHistoriales() {
           <Card>
             <CardContent className="p-4">
               <p className="text-sm text-muted-foreground">Completadas</p>
-              <p className="text-3xl font-bold text-green-600">{completadas.length}</p>
+              <p className="text-3xl font-bold text-success">{completadas.length}</p>
             </CardContent>
           </Card>
         </div>
@@ -160,7 +160,7 @@ export default function AdminHistoriales() {
                         </div>
                         <div>
                           <Label className="text-xs">Oposiciones y Alertas</Label>
-                          <Textarea value={oposiciones} onChange={(e) => setOposiciones(e.target.value)} rows={2} placeholder="Dejar vacío si no hay oposiciones" className="border-red-200 focus:border-red-400" />
+                          <Textarea value={oposiciones} onChange={(e) => setOposiciones(e.target.value)} rows={2} placeholder="Dejar vacío si no hay oposiciones" className="border-destructive/30 focus:border-destructive/60" />
                         </div>
                         <div>
                           <Label className="text-xs">Valor DGII (RD$)</Label>
@@ -217,7 +217,7 @@ export default function AdminHistoriales() {
                     <td className="p-3 whitespace-nowrap">{new Date(c.created_at).toLocaleString("es-DO", { dateStyle: "short" })}</td>
                     <td className="p-3 font-mono font-medium">{c.placa}</td>
                     <td className="p-3">
-                      <Badge className="bg-green-100 text-green-800" variant="secondary">
+                      <Badge className="bg-success/15 text-success" variant="secondary">
                         <CheckCircle className="h-3 w-3 mr-1" /> Completado
                       </Badge>
                     </td>

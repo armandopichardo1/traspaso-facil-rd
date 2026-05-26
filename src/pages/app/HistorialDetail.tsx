@@ -19,11 +19,11 @@ function Section({ icon: Icon, title, children, defaultOpen = false, variant = "
   const [open, setOpen] = useState(defaultOpen);
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
-      <Card className={`rounded-xl overflow-hidden ${variant === "danger" ? "border-red-200" : ""}`}>
+      <Card className={`rounded-xl overflow-hidden ${variant === "danger" ? "border-destructive/30" : ""}`}>
         <CollapsibleTrigger className="w-full">
-          <div className={`flex items-center justify-between p-4 ${variant === "danger" ? "bg-red-50" : ""}`}>
+          <div className={`flex items-center justify-between p-4 ${variant === "danger" ? "bg-destructive/10" : ""}`}>
             <div className="flex items-center gap-3">
-              <Icon className={`h-5 w-5 ${variant === "danger" ? "text-red-500" : "text-accent"}`} />
+              <Icon className={`h-5 w-5 ${variant === "danger" ? "text-destructive/100" : "text-accent"}`} />
               <span className="font-bold text-sm">{title}</span>
             </div>
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
@@ -118,9 +118,9 @@ export default function HistorialDetail() {
                 : `Placa: ${consulta.placa}`}
             </h1>
             {isCompleted && (
-              <div className="mt-2 inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5">
-                <ShieldCheck className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-bold text-green-700">Verificado por TRASPASA.DO</span>
+              <div className="mt-2 inline-flex items-center gap-2 bg-success/10 border border-success/30 rounded-full px-4 py-1.5">
+                <ShieldCheck className="h-4 w-4 text-success" />
+                <span className="text-xs font-bold text-success">Verificado por TRASPASA.DO</span>
               </div>
             )}
             {!isCompleted && (
@@ -186,11 +186,11 @@ export default function HistorialDetail() {
             variant={resultado?.oposiciones ? "danger" : "default"}
           >
             {resultado?.oposiciones ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-800">
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 text-sm text-destructive">
                 ⚠️ {resultado.oposiciones}
               </div>
             ) : (
-              <p className="text-sm text-green-700 font-medium">✅ Sin oposiciones registradas</p>
+              <p className="text-sm text-success font-medium">✅ Sin oposiciones registradas</p>
             )}
           </Section>
 

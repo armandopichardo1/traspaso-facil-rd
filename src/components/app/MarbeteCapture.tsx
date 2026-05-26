@@ -125,7 +125,7 @@ export default function MarbeteCapture({ onCapture, onOcrResult, captured }: Mar
                   <span className="text-muted-foreground">Tipo:</span>
                   <span className="font-medium">{ocrData.tipo_vehiculo || "—"}</span>
                   <span className="text-muted-foreground">Vigente:</span>
-                  <span className={`font-medium ${ocrData.vigente ? "text-green-600" : "text-red-500"}`}>
+                  <span className={`font-medium ${ocrData.vigente ? "text-success" : "text-destructive/100"}`}>
                     {ocrData.vigente ? "Sí ✓" : "No ✗"}
                   </span>
                 </div>
@@ -138,7 +138,7 @@ export default function MarbeteCapture({ onCapture, onOcrResult, captured }: Mar
               </div>
             )}
 
-            <div className="flex items-center gap-2 text-sm text-green-600">
+            <div className="flex items-center gap-2 text-sm text-success">
               <CheckCircle className="h-4 w-4" /> Marbete capturado
             </div>
             <Button variant="outline" size="sm" onClick={handleRetake}>

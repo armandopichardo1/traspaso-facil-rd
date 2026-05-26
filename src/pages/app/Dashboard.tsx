@@ -92,11 +92,11 @@ export default function Dashboard() {
         transition={{ delay: 0.1, duration: 0.4 }}
       >
         {submitted ? (
-          <Card className="rounded-2xl border-green-200 bg-green-50">
+          <Card className="rounded-2xl border-success/30 bg-success/10">
             <CardContent className="p-6 text-center">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-3" />
-              <h3 className="font-bold text-lg text-green-800">¡Solicitud Recibida!</h3>
-              <p className="text-sm text-green-700 mt-1">
+              <CheckCircle className="h-12 w-12 text-success mx-auto mb-3" />
+              <h3 className="font-bold text-lg text-success">¡Solicitud Recibida!</h3>
+              <p className="text-sm text-success mt-1">
                 Te enviaremos el informe del historial por WhatsApp en menos de 30 minutos.
               </p>
               <Button
@@ -181,7 +181,7 @@ export default function Dashboard() {
             <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
               Traspaso Activo
             </h2>
-            <Badge className="bg-green-100 text-green-700 border-green-200 text-xs gap-1">
+            <Badge className="bg-success/15 text-success border-success/30 text-xs gap-1">
               <ShieldCheck className="h-3 w-3" /> Verificado
             </Badge>
           </div>
@@ -334,8 +334,8 @@ export default function Dashboard() {
                   </p>
                   <Badge className={`mt-2 text-[10px] ${
                     t.status === "completado"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-success/15 text-success"
+                      : "bg-destructive/15 text-destructive"
                   }`}>
                     ● {t.status === "completado" ? "COMPLETADO" : "CANCELADO"}
                   </Badge>
@@ -356,8 +356,8 @@ export default function Dashboard() {
                   <p className="text-xs text-muted-foreground mt-0.5">Historial vehicular</p>
                   <Badge className={`mt-2 text-[10px] gap-1 ${
                     h.status === "completado"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-amber-100 text-amber-700"
+                      ? "bg-success/15 text-success"
+                      : "bg-warning/15 text-warning"
                   }`}>
                     {h.status === "completado" ? (
                       <><CheckCircle className="h-3 w-3" /> COMPLETADO</>

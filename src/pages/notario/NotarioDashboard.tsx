@@ -57,7 +57,7 @@ export default function NotarioDashboard() {
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <FileCheck className="h-5 w-5 mx-auto mb-1 text-green-600" />
+            <FileCheck className="h-5 w-5 mx-auto mb-1 text-success" />
             <p className="text-lg font-bold">{completados.length}</p>
             <p className="text-[10px] text-muted-foreground">Certificados</p>
           </CardContent>
@@ -108,7 +108,7 @@ export default function NotarioDashboard() {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Badge variant="secondary" className={`text-xs ${isPending ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"}`}>
+                      <Badge variant="secondary" className={`text-xs ${isPending ? "bg-warning/15 text-warning" : "bg-success/15 text-success"}`}>
                         {t.status.replace(/_/g, " ")}
                       </Badge>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />

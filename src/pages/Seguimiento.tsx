@@ -70,14 +70,14 @@ export default function Seguimiento() {
                 <div key={s.key} className="flex gap-3">
                   <div className="flex flex-col items-center">
                     <div className={`h-6 w-6 rounded-full flex items-center justify-center ${
-                      isDone ? "bg-green-500 text-white" : isCurrent ? "bg-accent text-white" : "bg-muted text-muted-foreground"
+                      isDone ? "bg-success/100 text-white" : isCurrent ? "bg-accent text-white" : "bg-muted text-muted-foreground"
                     }`}>
                       {isDone && !isCurrent ? <CheckCircle className="h-3.5 w-3.5" /> :
                        isCurrent ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
                        <Clock className="h-3 w-3" />}
                     </div>
                     {i < STATUS_STEPS.length - 1 && (
-                      <div className={`w-0.5 h-8 ${isDone ? "bg-green-500" : "bg-muted"}`} />
+                      <div className={`w-0.5 h-8 ${isDone ? "bg-success/100" : "bg-muted"}`} />
                     )}
                   </div>
                   <div className="pb-6">

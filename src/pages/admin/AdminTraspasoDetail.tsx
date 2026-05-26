@@ -26,17 +26,17 @@ import { advanceStatus as advanceStatusSvc, cancelTraspaso as cancelTraspasoSvc 
 const ESCROW_OPTIONS = ["no_aplica", "depositado", "en_custodia", "liberado", "reembolsado"];
 
 const antifraudeStyle = (s: string) => {
-  if (s === "aprobado") return "bg-green-100 text-green-800";
-  if (s === "alerta") return "bg-amber-100 text-amber-800";
-  if (s === "rechazado") return "bg-red-100 text-red-800";
-  return "bg-blue-100 text-blue-800";
+  if (s === "aprobado") return "bg-success/15 text-success";
+  if (s === "alerta") return "bg-warning/15 text-warning";
+  if (s === "rechazado") return "bg-destructive/15 text-destructive";
+  return "bg-teal/15 text-teal";
 };
 
 function AiResultCard({ result }: { result: any }) {
   return (
-    <div className={`mt-2 rounded-lg border p-3 text-sm ${result.match ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}`}>
+    <div className={`mt-2 rounded-lg border p-3 text-sm ${result.match ? "bg-success/10 border-success/30" : "bg-destructive/10 border-destructive/30"}`}>
       <div className="flex items-center gap-2 mb-1">
-        {result.match ? <ShieldCheck className="h-4 w-4 text-green-600" /> : <ShieldX className="h-4 w-4 text-red-600" />}
+        {result.match ? <ShieldCheck className="h-4 w-4 text-success" /> : <ShieldX className="h-4 w-4 text-destructive" />}
         <span className="font-semibold">{result.match ? "Coinciden" : "No coinciden"}</span>
         <Badge variant="secondary" className="text-xs">{result.confidence}</Badge>
       </div>
@@ -416,10 +416,10 @@ export default function AdminTraspasoDetail() {
               </div>
 
               <div className="flex gap-2">
-                <Button size="sm" className="flex-1 bg-green-600 hover:bg-green-700 text-white" onClick={() => handleAntifraude("aprobado")}>
+                <Button size="sm" className="flex-1 bg-success hover:bg-success text-white" onClick={() => handleAntifraude("aprobado")}>
                   <ShieldCheck className="h-4 w-4 mr-1" /> Aprobar
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1 border-amber-500 text-amber-600 hover:bg-amber-50" onClick={() => handleAntifraude("alerta")}>
+                <Button size="sm" variant="outline" className="flex-1 border-warning/100 text-warning hover:bg-warning/10" onClick={() => handleAntifraude("alerta")}>
                   <ShieldAlert className="h-4 w-4 mr-1" /> Alerta
                 </Button>
                 <Button size="sm" variant="destructive" className="flex-1" onClick={() => handleAntifraude("rechazado")}>
@@ -522,7 +522,7 @@ export default function AdminTraspasoDetail() {
               </div>
 
               {isAntifraudeGated && !antifraudeApproved && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 flex items-start gap-2">
+                <div className="rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm text-warning flex items-start gap-2">
                   <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
                   <span>
                     {antifraudeAlerta
@@ -590,14 +590,14 @@ export default function AdminTraspasoDetail() {
                   <div key={s.key} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div className={`h-6 w-6 rounded-full flex items-center justify-center text-xs ${
-                        isDone ? "bg-green-500 text-white" : isCurrent ? "bg-accent text-white" : "bg-muted text-muted-foreground"
+                        isDone ? "bg-success/100 text-white" : isCurrent ? "bg-accent text-white" : "bg-muted text-muted-foreground"
                       }`}>
                         {isDone && !isCurrent ? <CheckCircle className="h-3.5 w-3.5" /> :
                          isCurrent ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> :
                          <Clock className="h-3 w-3" />}
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
-                        <div className={`w-0.5 h-6 ${isDone ? "bg-green-500" : "bg-muted"}`} />
+                        <div className={`w-0.5 h-6 ${isDone ? "bg-success/100" : "bg-muted"}`} />
                       )}
                     </div>
                     <div className="pb-4">
@@ -641,11 +641,11 @@ export default function AdminTraspasoDetail() {
                   <CardTitle className="text-base flex items-center gap-2"><Timer className="h-4 w-4 text-accent" /> KPIs de Entrega</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className={`rounded-lg p-3 ${overallOnTime ? "bg-green-50 border border-green-200" : "bg-red-50 border border-red-200"}`}>
+                  <div className={`rounded-lg p-3 ${overallOnTime ? "bg-success/10 border border-success/30" : "bg-destructive/10 border border-destructive/30"}`}>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {overallOnTime ? <TrendingUp className="h-4 w-4 text-green-600" /> : <AlertTriangle className="h-4 w-4 text-red-600" />}
-                        <span className={`text-sm font-semibold ${overallOnTime ? "text-green-700" : "text-red-700"}`}>
+                        {overallOnTime ? <TrendingUp className="h-4 w-4 text-success" /> : <AlertTriangle className="h-4 w-4 text-destructive" />}
+                        <span className={`text-sm font-semibold ${overallOnTime ? "text-success" : "text-destructive"}`}>
                           {overallOnTime ? "En tiempo" : "Con retraso"}
                         </span>
                       </div>
@@ -656,20 +656,20 @@ export default function AdminTraspasoDetail() {
                     <div className="rounded-lg border p-3 space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium">Etapa actual: {statusLabel(traspaso.status)}</span>
-                        <span className={`text-xs font-bold ${currentElapsedHours > currentSla ? "text-red-600" : "text-green-600"}`}>
+                        <span className={`text-xs font-bold ${currentElapsedHours > currentSla ? "text-destructive" : "text-success"}`}>
                           {formatDuration(currentElapsedHours)} / {formatDuration(currentSla)}
                         </span>
                       </div>
-                      <Progress value={Math.min((currentElapsedHours / currentSla) * 100, 100)} className={`h-2 ${currentElapsedHours > currentSla ? "[&>div]:bg-red-500" : "[&>div]:bg-green-500"}`} />
+                      <Progress value={Math.min((currentElapsedHours / currentSla) * 100, 100)} className={`h-2 ${currentElapsedHours > currentSla ? "[&>div]:bg-destructive/100" : "[&>div]:bg-success/100"}`} />
                     </div>
                   )}
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-muted-foreground uppercase">Desglose por etapa</p>
                     {stageKpis.map((kpi) => (
                       <div key={kpi.status} className="flex items-center gap-3 text-xs">
-                        <div className={`h-2 w-2 rounded-full shrink-0 ${kpi.isOverdue ? "bg-red-500" : "bg-green-500"}`} />
+                        <div className={`h-2 w-2 rounded-full shrink-0 ${kpi.isOverdue ? "bg-destructive/100" : "bg-success/100"}`} />
                         <span className="flex-1 truncate">{statusLabel(kpi.status)}</span>
-                        <span className={`font-mono font-medium ${kpi.isOverdue ? "text-red-600" : "text-foreground"}`}>{formatDuration(kpi.durationHours)}</span>
+                        <span className={`font-mono font-medium ${kpi.isOverdue ? "text-destructive" : "text-foreground"}`}>{formatDuration(kpi.durationHours)}</span>
                         <span className="text-muted-foreground">/ {formatDuration(kpi.slaHours)}</span>
                       </div>
                     ))}

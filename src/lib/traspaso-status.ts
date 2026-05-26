@@ -52,9 +52,9 @@ export const CLIENT_PROGRESS_LABELS = [
 ];
 
 export const statusColor = (s: string) => {
-  if (s === "completado") return "bg-green-100 text-green-800";
-  if (s === "cancelado") return "bg-red-100 text-red-800";
-  return "bg-blue-100 text-blue-800";
+  if (s === "completado") return "bg-success/15 text-success";
+  if (s === "cancelado") return "bg-destructive/15 text-destructive";
+  return "bg-teal/15 text-teal";
 };
 
 export const getProgress = (status: string) => {
