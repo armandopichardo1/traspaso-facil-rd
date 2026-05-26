@@ -21,6 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
 import { STATUS_STEPS, STATUS_LABELS, getValidNextStatuses } from "@/lib/traspaso-status";
+import { advanceStatus as advanceStatusSvc } from "@/services/traspasoService";
 
 const ESCROW_OPTIONS = ["no_aplica", "depositado", "en_custodia", "liberado", "reembolsado"];
 
@@ -154,23 +155,15 @@ export default function AdminTraspasoDetail() {
 
   const addTimelineEntry = useMutation({
     mutationFn: async () => {
-      // Validate transition
-      const validNext = traspaso ? getValidNextStatuses(traspaso.status) : [];
-      if (!validNext.includes(newStatus)) {
-        throw new Error(`No se puede avanzar de "${STATUS_LABELS[traspaso?.status || ""]}" a "${STATUS_LABELS[newStatus]}"`);
-      }
-
-      const { error: e1 } = await supabase.from("traspasos").update({ status: newStatus }).eq("id", id);
-      if (e1) throw e1;
-
       const { data: { user } } = await supabase.auth.getUser();
-      const { error: e2 } = await supabase.from("traspaso_timeline").insert({
-        traspaso_id: id,
-        status: newStatus,
-        nota: statusNote || null,
-        created_by: user?.id,
-      });
-      if (e2) throw e2;
+      if (!user) throw new Error("Sesión no encontrada");
+      const res = await advanceStatusSvc(
+        id!,
+        newStatus as any,
+        { id: user.id, role: "admin" },
+        { nota: statusNote || undefined },
+      );
+      if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-traspaso", id] });

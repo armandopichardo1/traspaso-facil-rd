@@ -1,0 +1,1 @@
+ALTER TABLE public.traspaso_timeline ADD COLUMN IF NOT EXISTS actor_role text;

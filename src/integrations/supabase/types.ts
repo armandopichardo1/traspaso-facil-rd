@@ -436,6 +436,7 @@ export type Database = {
       }
       traspaso_timeline: {
         Row: {
+          actor_role: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -444,6 +445,7 @@ export type Database = {
           traspaso_id: string
         }
         Insert: {
+          actor_role?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -452,6 +454,7 @@ export type Database = {
           traspaso_id: string
         }
         Update: {
+          actor_role?: string | null
           created_at?: string
           created_by?: string | null
           id?: string

@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
-import { getNextStatus, canAdvanceTo } from "@/lib/traspaso-status";
-import type { UserRole } from "@/lib/traspaso-status";
+import { getNextStatus } from "@/lib/traspaso-status";
+import { useAdvanceStatus } from "@/hooks/useTraspasoServices";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import TraspasoChat from "@/components/app/TraspasoChat";
@@ -24,7 +24,8 @@ export default function GestorTraspasoDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [advancing, setAdvancing] = useState(false);
+  const advanceStatus = useAdvanceStatus(id!);
+  const advancing = advanceStatus.isPending;
 
   const { data: traspaso, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["gestor-traspaso", id],
@@ -46,29 +47,18 @@ export default function GestorTraspasoDetail() {
 
 
   const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
-    if (!traspaso) return;
-    setAdvancing(true);
+    if (!traspaso || !user) return;
     try {
-      const { error } = await supabase
-        .from("traspasos")
-        .update({ status: nextStatus })
-        .eq("id", traspaso.id);
-      if (error) throw error;
-
-      await supabase.from("traspaso_timeline").insert({
-        traspaso_id: traspaso.id,
-        status: nextStatus,
+      await advanceStatus.mutateAsync({
+        toStatus: nextStatus as any,
+        actor: { id: user.id, role: "gestor" },
         nota,
-        created_by: user?.id,
       });
-
       toast.success(`Traspaso avanzado a ${STATUS_LABELS[nextStatus] || nextStatus}`);
       queryClient.invalidateQueries({ queryKey: ["gestor-traspaso", id] });
       queryClient.invalidateQueries({ queryKey: ["gestor-timeline", id] });
     } catch (err: any) {
       toast.error(err.message || "Error al avanzar");
-    } finally {
-      setAdvancing(false);
     }
   };
 
