@@ -49,6 +49,13 @@
     --gray: 215 16% 47%;
     --light: 210 20% 96%;
 
+    --success: 158 64% 32%;
+    --success-foreground: 0 0% 100%;
+    --warning: 36 92% 50%;
+    --warning-foreground: 222 47% 11%;
+    --gold: 41 60% 52%;
+    --gold-foreground: 222 47% 11%;
+
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
