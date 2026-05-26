@@ -4,17 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "@/components/shared/StateView";
-import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle, Clock, Phone } from "lucide-react";
+import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle, Clock, Phone, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS } from "@/lib/traspaso-status";
+import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS, isTerminal } from "@/lib/traspaso-status";
 import {
   useTraspasosForRole,
   useHistorialesForUser,
   useCreateHistorialRequest,
+  useTimeline,
 } from "@/hooks/useTraspasoServices";
+import { useTraspasoSummary } from "@/hooks/useTraspasoSummary";
 
 export default function Dashboard() {
   const { profile, user } = useAuth();
