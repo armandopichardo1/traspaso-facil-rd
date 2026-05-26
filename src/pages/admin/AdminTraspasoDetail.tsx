@@ -177,6 +177,24 @@ export default function AdminTraspasoDetail() {
     },
   });
 
+  const cancelTraspaso = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sesión no encontrada");
+      const res = await cancelTraspasoSvc(id!, { id: user.id, role: "admin" }, cancelReason);
+      if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-traspaso", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-timeline", id] });
+      setCancelReason("");
+      toast({ title: "Traspaso cancelado" });
+    },
+    onError: (e: any) => {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    },
+  });
+
   const handleAntifraude = (status: string) => {
     updateTraspaso.mutate({ antifraude_status: status, antifraude_notas: antifraudeNotas });
   };
