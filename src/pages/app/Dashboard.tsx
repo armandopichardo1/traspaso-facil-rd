@@ -187,7 +187,30 @@ export default function Dashboard() {
 
       {/* Active transfer */}
       {loadingTraspasos ? (
-        <LoadingSkeleton rows={1} showHeader={false} className="space-y-0 mb-4" rowClassName="h-52 w-full rounded-2xl" />
+        <div className="mb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Card className="rounded-2xl border-border/50">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-44" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-16 rounded-full" />
+                ))}
+              </div>
+              <Skeleton className="h-12 w-full rounded-xl" />
+            </CardContent>
+          </Card>
+        </div>
       ) : activeOne ? (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
