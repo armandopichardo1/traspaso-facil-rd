@@ -335,16 +335,16 @@ export default function IdentityVerificationPanel({
   return (
     <div className="space-y-4">
       {/* Institutional navy header */}
-      <div className="rounded-2xl overflow-hidden border border-[hsl(var(--navy))]/20 shadow-sm">
-        <div className="bg-[hsl(var(--navy))] text-[hsl(var(--navy-foreground,0_0%_100%))] p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-lg bg-white/10 backdrop-blur-sm flex items-center justify-center">
-            <ShieldCheck className="h-5 w-5 text-white" />
+      <div className="rounded-2xl overflow-hidden border border-navy/20 shadow-sm">
+        <div className="bg-navy text-navy-foreground p-4 flex items-center gap-3">
+          <div className="h-10 w-10 rounded-lg bg-navy-foreground/10 backdrop-blur-sm flex items-center justify-center">
+            <ShieldCheck className="h-5 w-5 text-navy-foreground" />
           </div>
           <div className="flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy-foreground/70">
               Panel de verificación notarial
             </p>
-            <h2 className="text-base font-extrabold leading-tight text-white">
+            <h2 className="text-base font-extrabold leading-tight text-navy-foreground">
               Identidad de las partes
             </h2>
           </div>
