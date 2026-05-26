@@ -355,7 +355,8 @@ export async function cancelTraspaso(
     status: "cancelado",
     nota: reason,
     created_by: actor.id,
-  });
+    actor_role: actor.role,
+  } as never);
 
   let refundTriggered = false;
   if (decision.needsRefund) {
