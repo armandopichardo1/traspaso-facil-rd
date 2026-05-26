@@ -169,7 +169,7 @@ export default function Dashboard() {
 
       {/* Active transfer */}
       {loadingTraspasos ? (
-        <Skeleton className="h-52 w-full mb-4 rounded-2xl" />
+        <LoadingSkeleton rows={1} showHeader={false} className="space-y-0 mb-4" rowClassName="h-52 w-full rounded-2xl" />
       ) : activeOne ? (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
