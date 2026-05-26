@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSkeleton } from "@/components/shared/StateView";
 import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle, Clock, Phone } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
@@ -169,7 +169,7 @@ export default function Dashboard() {
 
       {/* Active transfer */}
       {loadingTraspasos ? (
-        <Skeleton className="h-52 w-full mb-4 rounded-2xl" />
+        <LoadingSkeleton rows={1} showHeader={false} className="space-y-0 mb-4" rowClassName="h-52 w-full rounded-2xl" />
       ) : activeOne ? (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -313,7 +313,7 @@ export default function Dashboard() {
         </div>
 
         {loadingHistoriales && loadingTraspasos ? (
-          <Skeleton className="h-32 w-full rounded-xl" />
+          <LoadingSkeleton rows={1} showHeader={false} className="space-y-1" rowClassName="h-32 w-full rounded-xl" />
         ) : (recentActivity.length > 0 || (historiales && historiales.length > 0)) ? (
           <div className="grid grid-cols-2 gap-3">
             {recentActivity.map((t) => (
