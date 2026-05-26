@@ -5,9 +5,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
-import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Car,
+  User,
+  Shield,
+  Clock,
+  Phone,
+  FileText,
+  CheckCircle,
+  ArrowRight,
+  Sparkles,
+  Calendar,
+  ClipboardCheck,
+  TrendingUp,
+  Copy,
+} from "lucide-react";
 import { getNextStatus } from "@/lib/traspaso-status";
 import { useAdvanceStatus } from "@/hooks/useTraspasoServices";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
@@ -16,7 +34,55 @@ import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { STATUS_STEPS, STATUS_LABELS, statusColor, getProgress } from "@/lib/traspaso-status";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+// Formatea pesos dominicanos sin decimales
+const fmtRD = (n: number) =>
+  new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 })
+    .format(n)
+    .replace("DOP", "RD$");
+
+/** Genera 3 slots propuestos para inspección CENARVE (próximos días hábiles, mañana/mediodía/tarde). */
+function proposeCenarveSlots(from = new Date()) {
+  const slots: { date: Date; label: string }[] = [];
+  const times = [
+    { h: 9, label: "9:00 AM" },
+    { h: 11, label: "11:00 AM" },
+    { h: 14, label: "2:00 PM" },
+  ];
+  let cursor = new Date(from);
+  cursor.setDate(cursor.getDate() + 1);
+  let i = 0;
+  while (slots.length < 3 && i < 14) {
+    const day = cursor.getDay(); // 0 dom, 6 sáb
+    if (day !== 0 && day !== 6) {
+      const t = times[slots.length];
+      const d = new Date(cursor);
+      d.setHours(t.h, 0, 0, 0);
+      slots.push({
+        date: d,
+        label: `${d.toLocaleDateString("es-DO", { weekday: "long", day: "numeric", month: "short" })} · ${t.label}`,
+      });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+    i++;
+  }
+  return slots;
+}
+
+/** Checklist estándar para radicación CENARVE / DGII */
+const RADICACION_CHECKLIST = [
+  "Matrícula original del vendedor (sin enmiendas)",
+  "Cédula vigente del vendedor y comprador (copia ambos lados)",
+  "Contrato de venta notarizado (Ley 126-02) en 3 originales",
+  "Certificación de no oposición DGII (vigencia 30 días)",
+  "Recibo de pago del 2% de transferencia DGII",
+  "Inspección física CENARVE: chasis y motor visibles y limpios",
+  "Fotos del vehículo (frontal, lateral, trasera, chasis)",
+  "Marbete vigente o constancia de pago",
+  "Formulario IR-17 de la DGII completado",
+  "Poder notarizado del apoderado (si aplica)",
+];
 
 
 export default function GestorTraspasoDetail() {
