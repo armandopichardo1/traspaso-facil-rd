@@ -21,6 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
 import { STATUS_STEPS, STATUS_LABELS, getValidNextStatuses } from "@/lib/traspaso-status";
+import { advanceStatus as advanceStatusSvc } from "@/services/traspasoService";
 
 const ESCROW_OPTIONS = ["no_aplica", "depositado", "en_custodia", "liberado", "reembolsado"];
 
