@@ -87,6 +87,7 @@ const App = () => (
             <Route path="/mensajero" element={<MensajeroLayout />}>
               <Route index element={<MensajeroDashboard />} />
               <Route path="traspaso/:id" element={<MensajeroTraspasoDetail />} />
+              <Route path="perfil" element={<Profile />} />
             </Route>
 
             <Route path="/app/complete-profile" element={<CompleteProfile />} />
