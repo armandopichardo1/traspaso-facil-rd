@@ -93,10 +93,31 @@ function PartyVerification({
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Error de verificación");
-      setResult(data.data as AiResult);
+      const ai = data.data as AiResult;
+      setResult(ai);
+
+      // Persist to identity_verifications
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error: insErr } = await supabase.from("identity_verifications").insert({
+        traspaso_id: traspasoId,
+        party,
+        match: ai.match,
+        confidence: ai.confidence,
+        rasgos_coincidentes: ai.rasgos_coincidentes ?? [],
+        rasgos_diferentes: ai.rasgos_diferentes ?? [],
+        notas: ai.notas ?? null,
+        created_by: userRes.user?.id ?? null,
+      });
+      if (insErr) {
+        console.error("identity_verifications insert error", insErr);
+        toast.warning("Verificación realizada pero no se guardó el historial");
+      } else {
+        onPersisted?.();
+      }
+
       toast.success(
-        data.data.match
-          ? `Identidad ${party} coincide (${data.data.confidence})`
+        ai.match
+          ? `Identidad ${party} coincide (${ai.confidence})`
           : `Identidad ${party} NO coincide`,
       );
     } catch (e: any) {
