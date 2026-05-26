@@ -200,6 +200,7 @@ interface Props {
   compradorNombre: string;
   antifraudeStatus: string;
   antifraudeNotas?: string | null;
+  onVerificationChange?: (state: { vendedorVerified: boolean; compradorVerified: boolean }) => void;
 }
 
 export default function IdentityVerificationPanel({
@@ -208,8 +209,24 @@ export default function IdentityVerificationPanel({
   compradorNombre,
   antifraudeStatus,
   antifraudeNotas,
+  onVerificationChange,
 }: Props) {
   const { data: docs } = useDocumentos(traspasoId);
+  const [results, setResults] = useState<{ vendedor: AiResult | null; comprador: AiResult | null }>({
+    vendedor: null,
+    comprador: null,
+  });
+
+  const handleResult = (party: Party, r: AiResult | null) => {
+    setResults((prev) => {
+      const next = { ...prev, [party]: r };
+      onVerificationChange?.({
+        vendedorVerified: !!next.vendedor,
+        compradorVerified: !!next.comprador,
+      });
+      return next;
+    });
+  };
 
   const { cedVend, selVend, cedComp, selComp } = useMemo(() => {
     const byTipo = (tipo: string) => docs?.find((d) => d.tipo === tipo)?.id;
