@@ -70,6 +70,7 @@ const AdminDashboard = () => {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [fetching, setFetching] = useState(false);
   const navigate = useNavigate();
+  const { profile: currentProfile } = useAuth();
 
   // Filters
   const [dateFrom, setDateFrom] = useState("");
@@ -173,6 +174,11 @@ const AdminDashboard = () => {
 
   const confirmRoleChange = async () => {
     if (!pendingRoleChange) return;
+    if (currentProfile?.role !== "admin") {
+      toast.error("No tienes permiso para cambiar roles");
+      setPendingRoleChange(null);
+      return;
+    }
     const { profileId, oldRole, newRole } = pendingRoleChange;
     const { error } = await supabase.from("profiles").update({ role: newRole }).eq("id", profileId);
     setPendingRoleChange(null);
