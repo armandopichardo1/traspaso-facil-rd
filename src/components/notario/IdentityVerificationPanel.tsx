@@ -45,15 +45,21 @@ function PartyVerification({
   nombre,
   cedulaDocId,
   selfieDocId,
+  onResult,
 }: {
   traspasoId: string;
   party: Party;
   nombre: string;
   cedulaDocId?: string;
   selfieDocId?: string;
+  onResult?: (party: Party, result: AiResult | null) => void;
 }) {
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<AiResult | null>(null);
+  const [result, setResultState] = useState<AiResult | null>(null);
+  const setResult = (r: AiResult | null) => {
+    setResultState(r);
+    onResult?.(party, r);
+  };
   const canRun = !!cedulaDocId && !!selfieDocId;
 
   const run = async () => {
@@ -194,6 +200,7 @@ interface Props {
   compradorNombre: string;
   antifraudeStatus: string;
   antifraudeNotas?: string | null;
+  onVerificationChange?: (state: { vendedorVerified: boolean; compradorVerified: boolean }) => void;
 }
 
 export default function IdentityVerificationPanel({
@@ -202,8 +209,24 @@ export default function IdentityVerificationPanel({
   compradorNombre,
   antifraudeStatus,
   antifraudeNotas,
+  onVerificationChange,
 }: Props) {
   const { data: docs } = useDocumentos(traspasoId);
+  const [results, setResults] = useState<{ vendedor: AiResult | null; comprador: AiResult | null }>({
+    vendedor: null,
+    comprador: null,
+  });
+
+  const handleResult = (party: Party, r: AiResult | null) => {
+    setResults((prev) => {
+      const next = { ...prev, [party]: r };
+      onVerificationChange?.({
+        vendedorVerified: !!next.vendedor,
+        compradorVerified: !!next.comprador,
+      });
+      return next;
+    });
+  };
 
   const { cedVend, selVend, cedComp, selComp } = useMemo(() => {
     const byTipo = (tipo: string) => docs?.find((d) => d.tipo === tipo)?.id;
@@ -269,6 +292,7 @@ export default function IdentityVerificationPanel({
         nombre={vendedorNombre}
         cedulaDocId={cedVend}
         selfieDocId={selVend}
+        onResult={handleResult}
       />
       <PartyVerification
         traspasoId={traspasoId}
@@ -276,6 +300,7 @@ export default function IdentityVerificationPanel({
         nombre={compradorNombre}
         cedulaDocId={cedComp}
         selfieDocId={selComp}
+        onResult={handleResult}
       />
 
       <p className="text-[10px] text-muted-foreground leading-relaxed">

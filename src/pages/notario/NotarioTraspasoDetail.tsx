@@ -39,6 +39,8 @@ export default function NotarioTraspasoDetail() {
 
   const [activeStep, setActiveStep] = useState(0);
   const [showSignature, setShowSignature] = useState(false);
+  const [aiVerified, setAiVerified] = useState({ vendedorVerified: false, compradorVerified: false });
+  const identityAiOk = aiVerified.vendedorVerified && aiVerified.compradorVerified;
 
   const handleSign = async (signatureData: { imageDataUrl: string; userAgent: string; geolocation: string | null }) => {
     if (!traspaso || !user) return;
@@ -164,6 +166,7 @@ export default function NotarioTraspasoDetail() {
             compradorNombre={traspaso.compradorNombre || ""}
             antifraudeStatus={traspaso.antifraudeStatus}
             antifraudeNotas={traspaso.antifraudeNotas}
+            onVerificationChange={setAiVerified}
           />
 
           <Card className="rounded-xl">
@@ -265,6 +268,14 @@ export default function NotarioTraspasoDetail() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Al firmar, certificas la validez legal de este traspaso vehicular.
                   </p>
+                  {!identityAiOk && (
+                    <div className="mb-3 rounded-xl bg-warning/10 text-warning text-xs p-3 flex items-start gap-2 text-left">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>
+                        Debes ejecutar la verificación IA de identidad para ambas partes (vendedor y comprador) antes de firmar.
+                      </span>
+                    </div>
+                  )}
                   {!antifraudeAprobado && (
                     <div className="mb-3 rounded-xl bg-warning/10 text-warning text-xs p-3 flex items-start gap-2 text-left">
                       <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
@@ -278,7 +289,7 @@ export default function NotarioTraspasoDetail() {
                     className="w-full font-bold h-14 text-base"
                     size="lg"
                     onClick={() => setShowSignature(true)}
-                    disabled={!antifraudeAprobado}
+                    disabled={!antifraudeAprobado || !identityAiOk}
                   >
                     <PenTool className="h-5 w-5 mr-2" />
                     Firmar con un toque
@@ -324,12 +335,17 @@ export default function NotarioTraspasoDetail() {
               className="w-full font-bold"
               size="lg"
               onClick={handleAdvanceStatus}
-              disabled={advanceMutation.isPending || !antifraudeAprobado}
+              disabled={advanceMutation.isPending || !antifraudeAprobado || !identityAiOk}
             >
               {advanceMutation.isPending
                 ? "Avanzando..."
                 : `Avanzar a ${STATUS_LABELS[nextStatus]} →`}
             </Button>
+          )}
+          {!identityAiOk && (
+            <p className="text-xs text-warning text-center">
+              Ejecuta la verificación IA de identidad para vendedor y comprador para habilitar el avance.
+            </p>
           )}
           {!antifraudeAprobado && (
             <p className="text-xs text-warning text-center">
