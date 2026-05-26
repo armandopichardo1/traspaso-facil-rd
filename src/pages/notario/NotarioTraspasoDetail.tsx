@@ -335,12 +335,17 @@ export default function NotarioTraspasoDetail() {
               className="w-full font-bold"
               size="lg"
               onClick={handleAdvanceStatus}
-              disabled={advanceMutation.isPending || !antifraudeAprobado}
+              disabled={advanceMutation.isPending || !antifraudeAprobado || !identityAiOk}
             >
               {advanceMutation.isPending
                 ? "Avanzando..."
                 : `Avanzar a ${STATUS_LABELS[nextStatus]} →`}
             </Button>
+          )}
+          {!identityAiOk && (
+            <p className="text-xs text-warning text-center">
+              Ejecuta la verificación IA de identidad para vendedor y comprador para habilitar el avance.
+            </p>
           )}
           {!antifraudeAprobado && (
             <p className="text-xs text-warning text-center">
