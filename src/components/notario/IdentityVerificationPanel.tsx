@@ -272,8 +272,9 @@ function PartyVerification({
           )}
         </Button>
         {!canRun && (
-          <p className="text-[10px] text-muted-foreground text-center">
-            Faltan documentos (cédula o selfie) para esta parte.
+          <p className="text-[10px] text-warning text-center">
+            Faltan documentos del {party}:{" "}
+            {[!cedulaDocId && "cédula", !selfieDocId && "selfie"].filter(Boolean).join(" y ")}.
           </p>
         )}
       </CardContent>
