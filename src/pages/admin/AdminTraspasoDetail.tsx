@@ -68,6 +68,7 @@ export default function AdminTraspasoDetail() {
   const [selectedGestorId, setSelectedGestorId] = useState("");
   const [selectedNotarioId, setSelectedNotarioId] = useState("");
   const [selectedMensajeroId, setSelectedMensajeroId] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["admin-traspaso", id],
