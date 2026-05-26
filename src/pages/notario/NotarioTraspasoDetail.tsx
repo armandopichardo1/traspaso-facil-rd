@@ -102,11 +102,6 @@ export default function NotarioTraspasoDetail() {
   }
 
   const notarioFirma = firmas.find((f) => f.tipoFirmante === "notario");
-
-  return (
-    <div className="p-4 max-w-lg mx-auto pb-24">
-      <button onClick={() => navigate("/notario")} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground mb-4">
-  const notarioFirma = firmas.find((f) => f.tipoFirmante === "notario");
   const antifraudeAprobado = traspaso.antifraudeStatus === "aprobado";
   const antifraudeRechazado = traspaso.antifraudeStatus === "rechazado";
   const nextStatus = getNextStatus(traspaso.status, "notario");
