@@ -31,11 +31,15 @@ async function unwrap<T>(
 
 // ---------- Traspaso ----------
 
-export const useTraspaso = (id: string | undefined) =>
+export const useTraspaso = (
+  id: string | undefined,
+  options?: { refetchInterval?: number | false },
+) =>
   useQuery({
     queryKey: ["traspaso", id],
     enabled: !!id,
     queryFn: () => unwrap(svc.getTraspaso(id!)),
+    refetchInterval: options?.refetchInterval,
   });
 
 export const useTraspasoByCodigo = (codigo: string | undefined) =>
@@ -49,19 +53,26 @@ export const useTraspasosForRole = (
   role: UserRole | undefined,
   userId: string | undefined,
   filters?: TraspasoFilters,
+  options?: { refetchInterval?: number | false },
 ) =>
   useQuery({
     queryKey: ["traspasos", role, userId, filters],
     enabled: !!role && !!userId,
     queryFn: () => unwrap(svc.listTraspasosForRole(role!, userId!, filters)),
+    refetchInterval: options?.refetchInterval,
   });
 
-export const useTimeline = (traspasoId: string | undefined) =>
+export const useTimeline = (
+  traspasoId: string | undefined,
+  options?: { refetchInterval?: number | false },
+) =>
   useQuery({
     queryKey: ["traspaso", traspasoId, "timeline"],
     enabled: !!traspasoId,
     queryFn: () => unwrap(svc.getTimeline(traspasoId!)),
+    refetchInterval: options?.refetchInterval,
   });
+
 
 export const useCreateTraspaso = () => {
   const qc = useQueryClient();

@@ -5,11 +5,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
+import { ErrorState, NotFoundView } from "@/components/shared/StateView";
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
-  ShieldCheck, MapPin,
+  ShieldCheck, MapPin, Sparkles,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
@@ -17,9 +17,11 @@ import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUp
 import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
-import { useTraspaso, useDocumentos, useContratos } from "@/hooks/useTraspasoServices";
+import { useTraspaso, useDocumentos, useContratos, useTimeline } from "@/hooks/useTraspasoServices";
+import { useTraspasoSummary } from "@/hooks/useTraspasoSummary";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { STATUS_STEPS } from "@/lib/traspaso-status";
+import { STATUS_STEPS, isTerminal } from "@/lib/traspaso-status";
 
 const antifraudeBadge = (s: string) => {
   if (s === "aprobado") return { color: "bg-success/10 text-success border-success/30", icon: Shield, label: "Aprobado" };
@@ -34,8 +36,23 @@ export default function TraspasoDetail() {
   const queryClient = useQueryClient();
   const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
-  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id, {
+    refetchInterval: 15000,
+  });
   const { data: docs } = useDocumentos(id);
+  const inFlight = traspaso ? !isTerminal(traspaso.status) : false;
+  const { data: timeline } = useTimeline(id, {
+    refetchInterval: inFlight ? 20000 : false,
+  });
+  const { data: aiSummary, isLoading: loadingSummary } = useTraspasoSummary({
+    traspasoId: id,
+    status: traspaso?.status,
+    codigo: traspaso?.codigo,
+    vehiculo: traspaso
+      ? `${traspaso.vehiculoMarca ?? ""} ${traspaso.vehiculoModelo ?? ""} ${traspaso.vehiculoAno ?? ""}`.trim()
+      : null,
+    timeline,
+  });
 
   const { data: contracts = [] } = useContratos(id);
 
@@ -47,7 +64,40 @@ export default function TraspasoDetail() {
   };
 
   if (isLoading) {
-    return <LoadingSkeleton rows={2} className="max-w-lg mx-auto px-4 pt-6 space-y-4" rowClassName="h-48 w-full rounded-2xl" />;
+    return (
+      <div className="max-w-lg mx-auto px-4 pt-6 pb-24 space-y-4">
+        <Skeleton className="h-4 w-20" />
+        <Card className="rounded-2xl">
+          <CardContent className="p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-3 w-40" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-12 w-12 rounded-xl" />
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            </div>
+            <Skeleton className="h-2.5 w-full rounded-full" />
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl">
+          <CardContent className="p-5 space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-3">
+                <Skeleton className="h-8 w-8 rounded-full" />
+                <div className="flex-1 space-y-1.5">
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-2.5 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (isError) {
@@ -139,6 +189,21 @@ export default function TraspasoDetail() {
         <span className="text-sm font-medium">Antifraude: {af.label}</span>
       </div>
 
+      {/* AI summary */}
+      {!isTerminal(t.status) && (
+        <div className="mb-4 rounded-xl border border-gold/30 bg-gold/10 p-3 flex gap-2">
+          <Sparkles className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
+          {loadingSummary || !aiSummary ? (
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+          ) : (
+            <p className="text-xs text-foreground leading-snug">{aiSummary}</p>
+          )}
+        </div>
+      )}
+
       {/* Timeline */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -150,24 +215,25 @@ export default function TraspasoDetail() {
             <h2 className="font-bold text-sm mb-4">Progreso del Traspaso</h2>
             <div className="space-y-0">
               {STATUS_STEPS.map((s, i) => {
-                const isDone = i <= currentIdx && t.status !== "cancelado";
-                const isCurrent = i === currentIdx;
+                const isDone = i < currentIdx && t.status !== "cancelado";
+                const isCurrent = i === currentIdx && t.status !== "cancelado";
                 return (
                   <div key={s.key} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-all ${
-                        isDone && !isCurrent ? "bg-success/100 text-white" :
-                        isCurrent ? "bg-accent text-white ring-4 ring-accent/20" :
+                        isDone ? "bg-success text-success-foreground" :
+                        isCurrent ? "bg-gold text-gold-foreground ring-4 ring-gold/25" :
                         "bg-muted text-muted-foreground"
                       }`}>
-                        {isDone && !isCurrent ? <CheckCircle className="h-4 w-4" /> :
+                        {isDone ? <CheckCircle className="h-4 w-4" /> :
                          isCurrent ? <Loader2 className="h-4 w-4 animate-spin" /> :
                          <Clock className="h-3.5 w-3.5" />}
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
-                        <div className={`w-0.5 h-10 ${isDone ? "bg-success/100" : "bg-muted"}`} />
+                        <div className={`w-0.5 h-10 ${isDone ? "bg-success" : "bg-muted"}`} />
                       )}
                     </div>
+
                     <div className="pb-6">
                       <p className={`text-sm ${isDone || isCurrent ? "font-bold" : "text-muted-foreground"}`}>
                         {s.label}

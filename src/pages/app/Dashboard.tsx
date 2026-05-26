@@ -4,17 +4,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSkeleton } from "@/components/shared/StateView";
-import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle, Clock, Phone } from "lucide-react";
+import { Search, PlusCircle, Car, ArrowRight, FileText, ShieldCheck, CheckCircle, Clock, Phone, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
-import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS } from "@/lib/traspaso-status";
+import { STATUS_STEPS, STATUS_LABELS, getProgress, CLIENT_PROGRESS_LABELS, isTerminal } from "@/lib/traspaso-status";
 import {
   useTraspasosForRole,
   useHistorialesForUser,
   useCreateHistorialRequest,
+  useTimeline,
 } from "@/hooks/useTraspasoServices";
+import { useTraspasoSummary } from "@/hooks/useTraspasoSummary";
 
 export default function Dashboard() {
   const { profile, user } = useAuth();
@@ -26,6 +29,8 @@ export default function Dashboard() {
   const { data: traspasos, isLoading: loadingTraspasos } = useTraspasosForRole(
     "customer",
     user?.id,
+    undefined,
+    { refetchInterval: 15000 },
   );
   const { data: historiales, isLoading: loadingHistoriales } = useHistorialesForUser(user?.id);
   const createHistorial = useCreateHistorialRequest();
@@ -66,6 +71,19 @@ export default function Dashboard() {
   const activeTraspasos = traspasos?.filter(t => t.status !== "completado" && t.status !== "cancelado") || [];
   const recentActivity = traspasos?.filter(t => t.status === "completado" || t.status === "cancelado").slice(0, 4) || [];
   const activeOne = activeTraspasos[0];
+
+  const { data: activeTimeline } = useTimeline(activeOne?.id, {
+    refetchInterval: activeOne ? 20000 : false,
+  });
+  const { data: aiSummary, isLoading: loadingSummary } = useTraspasoSummary({
+    traspasoId: activeOne?.id,
+    status: activeOne?.status,
+    codigo: activeOne?.codigo,
+    vehiculo: activeOne
+      ? `${activeOne.vehiculoMarca ?? ""} ${activeOne.vehiculoModelo ?? ""} ${activeOne.vehiculoAno ?? ""}`.trim()
+      : null,
+    timeline: activeTimeline,
+  });
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
@@ -169,7 +187,30 @@ export default function Dashboard() {
 
       {/* Active transfer */}
       {loadingTraspasos ? (
-        <LoadingSkeleton rows={1} showHeader={false} className="space-y-0 mb-4" rowClassName="h-52 w-full rounded-2xl" />
+        <div className="mb-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-5 w-20 rounded-full" />
+          </div>
+          <Card className="rounded-2xl border-border/50">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-44" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <Skeleton className="h-5 w-24 rounded-full" />
+              </div>
+              <Skeleton className="h-12 w-full rounded-xl" />
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-5 w-16 rounded-full" />
+                ))}
+              </div>
+              <Skeleton className="h-12 w-full rounded-xl" />
+            </CardContent>
+          </Card>
+        </div>
       ) : activeOne ? (
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -207,29 +248,45 @@ export default function Dashboard() {
                 </Badge>
               </div>
 
-              {/* Segmented progress */}
+              {/* AI summary */}
+              {!isTerminal(activeOne.status) && (
+                <div className="mt-4 rounded-xl border border-gold/30 bg-gold/10 p-3 flex gap-2">
+                  <Sparkles className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
+                  {loadingSummary || !aiSummary ? (
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-3/4" />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-foreground leading-snug">{aiSummary}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Pills progress: emerald done, gold current, muted future */}
               <div className="mt-4">
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-muted-foreground">Progreso del Traspaso</span>
                   <span className="text-sm font-bold text-accent">{getProgressPercent(activeOne.status)}%</span>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {CLIENT_PROGRESS_LABELS.map((label, i) => {
                     const step = getProgressStep(activeOne.status);
-                    const filled = i <= step;
+                    const isDone = i < step;
+                    const isCurrent = i === step;
+                    const cls = isDone
+                      ? "bg-success/15 text-success border-success/30"
+                      : isCurrent
+                        ? "bg-gold/20 text-gold border-gold/40 ring-2 ring-gold/20"
+                        : "bg-muted text-muted-foreground border-transparent";
                     return (
-                      <div key={label} className="flex-1">
-                        <div
-                          className={`h-2 rounded-full ${
-                            filled ? "bg-accent" : "bg-muted"
-                          }`}
-                        />
-                        <p className={`text-[8px] mt-1 text-center font-medium ${
-                          filled ? "text-accent" : "text-muted-foreground"
-                        }`}>
-                          {label}
-                        </p>
-                      </div>
+                      <span
+                        key={label}
+                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-wide ${cls}`}
+                      >
+                        {isDone && <CheckCircle className="h-2.5 w-2.5" />}
+                        {label}
+                      </span>
                     );
                   })}
                 </div>
@@ -238,6 +295,7 @@ export default function Dashboard() {
               <Button variant="cta" className="w-full mt-4 font-bold text-sm h-12" size="lg">
                 CONTINUAR TRASPASO →
               </Button>
+
             </CardContent>
           </Card>
         </motion.div>
