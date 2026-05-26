@@ -156,76 +156,16 @@ export default function NotarioTraspasoDetail() {
         </motion.div>
       )}
 
-      {/* Step 0: Identity */}
+      {/* Step 0: Identity verification */}
       {activeStep === 0 && !notarioFirma && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-          <Card className="rounded-xl">
-            <CardContent className="p-5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
-                  antifraudeAprobado ? "bg-emerald/10" : antifraudeRechazado ? "bg-destructive/10" : "bg-warning/10"
-                }`}>
-                  {antifraudeAprobado ? (
-                    <ShieldCheck className="h-6 w-6 text-emerald" />
-                  ) : (
-                    <AlertTriangle className={`h-6 w-6 ${antifraudeRechazado ? "text-destructive" : "text-warning"}`} />
-                  )}
-                </div>
-                <div>
-                  <p className="font-bold text-sm">
-                    {antifraudeAprobado
-                      ? "Verificación antifraude aprobada"
-                      : antifraudeRechazado
-                      ? "Verificación antifraude rechazada"
-                      : "Verificación antifraude pendiente"}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {antifraudeAprobado
-                      ? "El equipo confirmó la identidad de las partes."
-                      : antifraudeRechazado
-                      ? "No puedes certificar este traspaso. Contacta al equipo."
-                      : "Debes esperar la aprobación del equipo antes de certificar."}
-                  </p>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className={`ml-auto text-[10px] uppercase tracking-wide ${
-                    antifraudeAprobado
-                      ? "bg-emerald/10 text-emerald"
-                      : antifraudeRechazado
-                      ? "bg-destructive/10 text-destructive"
-                      : "bg-warning/10 text-warning"
-                  }`}
-                >
-                  {traspaso.antifraudeStatus}
-                </Badge>
-              </div>
-              {traspaso.antifraudeNotas && (
-                <p className="text-xs text-muted-foreground italic mb-3">
-                  Notas: {traspaso.antifraudeNotas}
-                </p>
-              )}
-
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Vendedor</span>
-                  <span className="font-medium">{traspaso.vendedorNombre || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cédula</span>
-                  <span className="font-medium">{traspaso.vendedorCedula || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Comprador</span>
-                  <span className="font-medium">{traspaso.compradorNombre || "—"}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Cédula</span>
-                  <span className="font-medium">{traspaso.compradorCedula || "—"}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <IdentityVerificationPanel
+            traspasoId={traspaso.id}
+            vendedorNombre={traspaso.vendedorNombre || ""}
+            compradorNombre={traspaso.compradorNombre || ""}
+            antifraudeStatus={traspaso.antifraudeStatus}
+            antifraudeNotas={traspaso.antifraudeNotas}
+          />
 
           <Card className="rounded-xl">
             <CardContent className="p-5 text-sm space-y-2">
@@ -242,6 +182,7 @@ export default function NotarioTraspasoDetail() {
           </Button>
         </motion.div>
       )}
+
 
       {/* Step 1: Review */}
       {activeStep === 1 && !notarioFirma && (
