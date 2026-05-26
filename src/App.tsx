@@ -80,6 +80,7 @@ const App = () => (
             <Route path="/notario" element={<NotarioLayout />}>
               <Route index element={<NotarioDashboard />} />
               <Route path="traspaso/:id" element={<NotarioTraspasoDetail />} />
+              <Route path="perfil" element={<Profile />} />
             </Route>
 
             {/* Mensajero routes */}
