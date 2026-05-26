@@ -236,10 +236,57 @@ export default function IdentityVerificationPanel({
   onVerificationChange,
 }: Props) {
   const { data: docs } = useDocumentos(traspasoId);
+  const queryClient = useQueryClient();
   const [results, setResults] = useState<{ vendedor: AiResult | null; comprador: AiResult | null }>({
     vendedor: null,
     comprador: null,
   });
+
+  type VerificationRow = {
+    id: string;
+    party: Party;
+    match: boolean;
+    confidence: "alta" | "media" | "baja";
+    rasgos_coincidentes: string[];
+    rasgos_diferentes: string[];
+    notas: string | null;
+    created_at: string;
+  };
+
+  const historyKey = ["identity_verifications", traspasoId];
+  const { data: history = [] } = useQuery<VerificationRow[]>({
+    queryKey: historyKey,
+    enabled: !!traspasoId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("identity_verifications")
+        .select("id, party, match, confidence, rasgos_coincidentes, rasgos_diferentes, notas, created_at")
+        .eq("traspaso_id", traspasoId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as VerificationRow[];
+    },
+  });
+
+  // Hidrata estado de verificación a partir del historial guardado (último por parte)
+  useEffect(() => {
+    if (!history.length) return;
+    const latestBy = (p: Party) => history.find((r) => r.party === p);
+    const v = latestBy("vendedor");
+    const c = latestBy("comprador");
+    setResults((prev) => {
+      const next = {
+        vendedor: prev.vendedor ?? (v ? toAi(v) : null),
+        comprador: prev.comprador ?? (c ? toAi(c) : null),
+      };
+      onVerificationChange?.({
+        vendedorVerified: !!next.vendedor,
+        compradorVerified: !!next.comprador,
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history.length]);
 
   const handleResult = (party: Party, r: AiResult | null) => {
     setResults((prev) => {
@@ -250,6 +297,10 @@ export default function IdentityVerificationPanel({
       });
       return next;
     });
+  };
+
+  const handlePersisted = () => {
+    queryClient.invalidateQueries({ queryKey: historyKey });
   };
 
   const { cedVend, selVend, cedComp, selComp } = useMemo(() => {
