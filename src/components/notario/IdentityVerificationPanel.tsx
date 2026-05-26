@@ -1,11 +1,12 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldCheck, AlertTriangle, Loader2, ImageOff, ScanFace } from "lucide-react";
+import { ShieldCheck, AlertTriangle, Loader2, ImageOff, ScanFace, History } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDocumentos, useDocumentoSignedUrl } from "@/hooks/useTraspasoServices";
 
 type Party = "vendedor" | "comprador";
@@ -16,6 +17,22 @@ interface AiResult {
   rasgos_coincidentes: string[];
   rasgos_diferentes: string[];
   notas: string;
+}
+
+function toAi(r: {
+  match: boolean;
+  confidence: "alta" | "media" | "baja";
+  rasgos_coincidentes: string[];
+  rasgos_diferentes: string[];
+  notas: string | null;
+}): AiResult {
+  return {
+    match: r.match,
+    confidence: r.confidence,
+    rasgos_coincidentes: r.rasgos_coincidentes ?? [],
+    rasgos_diferentes: r.rasgos_diferentes ?? [],
+    notas: r.notas ?? "",
+  };
 }
 
 function Thumb({ docId, label }: { docId: string | undefined; label: string }) {
@@ -46,6 +63,7 @@ function PartyVerification({
   cedulaDocId,
   selfieDocId,
   onResult,
+  onPersisted,
 }: {
   traspasoId: string;
   party: Party;
@@ -53,6 +71,7 @@ function PartyVerification({
   cedulaDocId?: string;
   selfieDocId?: string;
   onResult?: (party: Party, result: AiResult | null) => void;
+  onPersisted?: () => void;
 }) {
   const [running, setRunning] = useState(false);
   const [result, setResultState] = useState<AiResult | null>(null);
@@ -92,10 +111,31 @@ function PartyVerification({
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || "Error de verificación");
-      setResult(data.data as AiResult);
+      const ai = data.data as AiResult;
+      setResult(ai);
+
+      // Persist to identity_verifications
+      const { data: userRes } = await supabase.auth.getUser();
+      const { error: insErr } = await supabase.from("identity_verifications").insert({
+        traspaso_id: traspasoId,
+        party,
+        match: ai.match,
+        confidence: ai.confidence,
+        rasgos_coincidentes: ai.rasgos_coincidentes ?? [],
+        rasgos_diferentes: ai.rasgos_diferentes ?? [],
+        notas: ai.notas ?? null,
+        created_by: userRes.user?.id ?? null,
+      });
+      if (insErr) {
+        console.error("identity_verifications insert error", insErr);
+        toast.warning("Verificación realizada pero no se guardó el historial");
+      } else {
+        onPersisted?.();
+      }
+
       toast.success(
-        data.data.match
-          ? `Identidad ${party} coincide (${data.data.confidence})`
+        ai.match
+          ? `Identidad ${party} coincide (${ai.confidence})`
           : `Identidad ${party} NO coincide`,
       );
     } catch (e: any) {
@@ -212,10 +252,57 @@ export default function IdentityVerificationPanel({
   onVerificationChange,
 }: Props) {
   const { data: docs } = useDocumentos(traspasoId);
+  const queryClient = useQueryClient();
   const [results, setResults] = useState<{ vendedor: AiResult | null; comprador: AiResult | null }>({
     vendedor: null,
     comprador: null,
   });
+
+  type VerificationRow = {
+    id: string;
+    party: Party;
+    match: boolean;
+    confidence: "alta" | "media" | "baja";
+    rasgos_coincidentes: string[];
+    rasgos_diferentes: string[];
+    notas: string | null;
+    created_at: string;
+  };
+
+  const historyKey = ["identity_verifications", traspasoId];
+  const { data: history = [] } = useQuery<VerificationRow[]>({
+    queryKey: historyKey,
+    enabled: !!traspasoId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("identity_verifications")
+        .select("id, party, match, confidence, rasgos_coincidentes, rasgos_diferentes, notas, created_at")
+        .eq("traspaso_id", traspasoId)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as VerificationRow[];
+    },
+  });
+
+  // Hidrata estado de verificación a partir del historial guardado (último por parte)
+  useEffect(() => {
+    if (!history.length) return;
+    const latestBy = (p: Party) => history.find((r) => r.party === p);
+    const v = latestBy("vendedor");
+    const c = latestBy("comprador");
+    setResults((prev) => {
+      const next = {
+        vendedor: prev.vendedor ?? (v ? toAi(v) : null),
+        comprador: prev.comprador ?? (c ? toAi(c) : null),
+      };
+      onVerificationChange?.({
+        vendedorVerified: !!next.vendedor,
+        compradorVerified: !!next.comprador,
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [history.length]);
 
   const handleResult = (party: Party, r: AiResult | null) => {
     setResults((prev) => {
@@ -226,6 +313,10 @@ export default function IdentityVerificationPanel({
       });
       return next;
     });
+  };
+
+  const handlePersisted = () => {
+    queryClient.invalidateQueries({ queryKey: historyKey });
   };
 
   const { cedVend, selVend, cedComp, selComp } = useMemo(() => {
@@ -293,6 +384,7 @@ export default function IdentityVerificationPanel({
         cedulaDocId={cedVend}
         selfieDocId={selVend}
         onResult={handleResult}
+        onPersisted={handlePersisted}
       />
       <PartyVerification
         traspasoId={traspasoId}
@@ -301,7 +393,76 @@ export default function IdentityVerificationPanel({
         cedulaDocId={cedComp}
         selfieDocId={selComp}
         onResult={handleResult}
+        onPersisted={handlePersisted}
       />
+
+      {/* Historial de verificaciones IA guardadas */}
+      <Card className="rounded-xl">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <History className="h-4 w-4 text-muted-foreground" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Historial de verificaciones IA
+            </p>
+            <span className="ml-auto text-[10px] text-muted-foreground">{history.length}</span>
+          </div>
+
+          {history.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Aún no se ha registrado ninguna verificación IA para este traspaso.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {history.map((h) => {
+                const confClass =
+                  h.confidence === "alta"
+                    ? "bg-success/15 text-success border-success/30"
+                    : h.confidence === "media"
+                      ? "bg-warning/15 text-warning border-warning/30"
+                      : "bg-destructive/15 text-destructive border-destructive/30";
+                const matchClass = h.match
+                  ? "bg-success/15 text-success border-success/30"
+                  : "bg-destructive/15 text-destructive border-destructive/30";
+                return (
+                  <li key={h.id} className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-[10px] uppercase">
+                        {h.party}
+                      </Badge>
+                      <Badge variant="outline" className={`gap-1 text-[10px] uppercase ${matchClass}`}>
+                        {h.match ? <ShieldCheck className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                        {h.match ? "Coincide" : "No coincide"}
+                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] uppercase ${confClass}`}>
+                        Confianza {h.confidence}
+                      </Badge>
+                      <span className="ml-auto text-[10px] text-muted-foreground">
+                        {new Date(h.created_at).toLocaleString("es-DO", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    </div>
+                    {h.rasgos_coincidentes?.length > 0 && (
+                      <p className="text-[11px] text-foreground">
+                        <span className="font-bold">Coinciden:</span> {h.rasgos_coincidentes.join(", ")}
+                      </p>
+                    )}
+                    {h.rasgos_diferentes?.length > 0 && (
+                      <p className="text-[11px] text-foreground">
+                        <span className="font-bold">Dudas:</span> {h.rasgos_diferentes.join(", ")}
+                      </p>
+                    )}
+                    {h.notas && (
+                      <p className="text-[11px] italic text-muted-foreground">{h.notas}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       <p className="text-[10px] text-muted-foreground leading-relaxed">
         La verificación facial es asistida por IA como apoyo al juicio del notario. El estatus

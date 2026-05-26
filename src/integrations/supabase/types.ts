@@ -79,6 +79,45 @@ export type Database = {
           },
         ]
       }
+      identity_verifications: {
+        Row: {
+          confidence: string
+          created_at: string
+          created_by: string | null
+          id: string
+          match: boolean
+          notas: string | null
+          party: string
+          rasgos_coincidentes: string[]
+          rasgos_diferentes: string[]
+          traspaso_id: string
+        }
+        Insert: {
+          confidence: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match: boolean
+          notas?: string | null
+          party: string
+          rasgos_coincidentes?: string[]
+          rasgos_diferentes?: string[]
+          traspaso_id: string
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          match?: boolean
+          notas?: string | null
+          party?: string
+          rasgos_coincidentes?: string[]
+          rasgos_diferentes?: string[]
+          traspaso_id?: string
+        }
+        Relationships: []
+      }
       leads: {
         Row: {
           ano: number | null
