@@ -268,6 +268,14 @@ export default function NotarioTraspasoDetail() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Al firmar, certificas la validez legal de este traspaso vehicular.
                   </p>
+                  {!identityAiOk && (
+                    <div className="mb-3 rounded-xl bg-warning/10 text-warning text-xs p-3 flex items-start gap-2 text-left">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>
+                        Debes ejecutar la verificación IA de identidad para ambas partes (vendedor y comprador) antes de firmar.
+                      </span>
+                    </div>
+                  )}
                   {!antifraudeAprobado && (
                     <div className="mb-3 rounded-xl bg-warning/10 text-warning text-xs p-3 flex items-start gap-2 text-left">
                       <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
@@ -281,7 +289,7 @@ export default function NotarioTraspasoDetail() {
                     className="w-full font-bold h-14 text-base"
                     size="lg"
                     onClick={() => setShowSignature(true)}
-                    disabled={!antifraudeAprobado}
+                    disabled={!antifraudeAprobado || !identityAiOk}
                   >
                     <PenTool className="h-5 w-5 mr-2" />
                     Firmar con un toque
