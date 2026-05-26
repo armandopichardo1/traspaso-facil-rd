@@ -47,6 +47,7 @@ function PartyVerification({
   cedulaDocId,
   selfieDocId,
   onResult,
+  onPersisted,
 }: {
   traspasoId: string;
   party: Party;
@@ -54,6 +55,7 @@ function PartyVerification({
   cedulaDocId?: string;
   selfieDocId?: string;
   onResult?: (party: Party, result: AiResult | null) => void;
+  onPersisted?: () => void;
 }) {
   const [running, setRunning] = useState(false);
   const [result, setResultState] = useState<AiResult | null>(null);
