@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
+import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
 import { motion } from "framer-motion";
-import { STATUS_LABELS } from "@/lib/traspaso-status";
+import { STATUS_LABELS, getNextStatus } from "@/lib/traspaso-status";
+import { AlertTriangle } from "lucide-react";
 import {
   useTraspaso,
   useContratos,
@@ -57,13 +58,18 @@ export default function NotarioTraspasoDetail() {
 
   const handleAdvanceStatus = async () => {
     if (!traspaso || !user) return;
+    const next = getNextStatus(traspaso.status, "notario");
+    if (!next) {
+      toast.error("No se puede avanzar desde el estado actual");
+      return;
+    }
     try {
       await advanceMutation.mutateAsync({
-        toStatus: "verificacion_antifraude",
+        toStatus: next,
         actor: { id: user.id, role: "notario" },
-        nota: "Contrato certificado por notario — pasa a verificación antifraude",
+        nota: `Contrato certificado por notario — pasa a ${STATUS_LABELS[next]}`,
       });
-      toast.success("Traspaso avanzado a verificación antifraude");
+      toast.success(`Traspaso avanzado a ${STATUS_LABELS[next]}`);
       navigate("/notario");
     } catch (err: any) {
       toast.error(err.message || "Error al avanzar");
@@ -96,6 +102,9 @@ export default function NotarioTraspasoDetail() {
   }
 
   const notarioFirma = firmas.find((f) => f.tipoFirmante === "notario");
+  const antifraudeAprobado = traspaso.antifraudeStatus === "aprobado";
+  const antifraudeRechazado = traspaso.antifraudeStatus === "rechazado";
+  const nextStatus = getNextStatus(traspaso.status, "notario");
 
   return (
     <div className="p-4 max-w-lg mx-auto pb-24">
@@ -152,15 +161,49 @@ export default function NotarioTraspasoDetail() {
           <Card className="rounded-xl">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <User className="h-6 w-6 text-green-600" />
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                  antifraudeAprobado ? "bg-emerald/10" : antifraudeRechazado ? "bg-destructive/10" : "bg-warning/10"
+                }`}>
+                  {antifraudeAprobado ? (
+                    <ShieldCheck className="h-6 w-6 text-emerald" />
+                  ) : (
+                    <AlertTriangle className={`h-6 w-6 ${antifraudeRechazado ? "text-destructive" : "text-warning"}`} />
+                  )}
                 </div>
                 <div>
-                  <p className="font-bold text-sm">Identidad Verificada</p>
-                  <p className="text-xs text-muted-foreground">Biometría facial confirmada</p>
+                  <p className="font-bold text-sm">
+                    {antifraudeAprobado
+                      ? "Verificación antifraude aprobada"
+                      : antifraudeRechazado
+                      ? "Verificación antifraude rechazada"
+                      : "Verificación antifraude pendiente"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {antifraudeAprobado
+                      ? "El equipo confirmó la identidad de las partes."
+                      : antifraudeRechazado
+                      ? "No puedes certificar este traspaso. Contacta al equipo."
+                      : "Debes esperar la aprobación del equipo antes de certificar."}
+                  </p>
                 </div>
-                <Badge className="ml-auto bg-green-50 text-green-700 border-green-200 text-[10px]">✓ OK</Badge>
+                <Badge
+                  variant="secondary"
+                  className={`ml-auto text-[10px] uppercase tracking-wide ${
+                    antifraudeAprobado
+                      ? "bg-emerald/10 text-emerald"
+                      : antifraudeRechazado
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-warning/10 text-warning"
+                  }`}
+                >
+                  {traspaso.antifraudeStatus}
+                </Badge>
               </div>
+              {traspaso.antifraudeNotas && (
+                <p className="text-xs text-muted-foreground italic mb-3">
+                  Notas: {traspaso.antifraudeNotas}
+                </p>
+              )}
 
               <div className="text-sm space-y-2">
                 <div className="flex justify-between">
@@ -281,11 +324,20 @@ export default function NotarioTraspasoDetail() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Al firmar, certificas la validez legal de este traspaso vehicular.
                   </p>
+                  {!antifraudeAprobado && (
+                    <div className="mb-3 rounded-xl bg-warning/10 text-warning text-xs p-3 flex items-start gap-2 text-left">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>
+                        No puedes firmar hasta que la verificación antifraude esté aprobada por el equipo.
+                      </span>
+                    </div>
+                  )}
                   <Button
                     variant="cta"
                     className="w-full font-bold h-14 text-base"
                     size="lg"
                     onClick={() => setShowSignature(true)}
+                    disabled={!antifraudeAprobado}
                   >
                     <PenTool className="h-5 w-5 mr-2" />
                     Firmar con un toque
@@ -325,15 +377,24 @@ export default function NotarioTraspasoDetail() {
             </CardContent>
           </Card>
 
-          <Button
-            variant="teal"
-            className="w-full font-bold"
-            size="lg"
-            onClick={handleAdvanceStatus}
-            disabled={advanceMutation.isPending}
-          >
-            {advanceMutation.isPending ? "Avanzando..." : "Avanzar a Verificación Antifraude →"}
-          </Button>
+          {nextStatus && (
+            <Button
+              variant="teal"
+              className="w-full font-bold"
+              size="lg"
+              onClick={handleAdvanceStatus}
+              disabled={advanceMutation.isPending || !antifraudeAprobado}
+            >
+              {advanceMutation.isPending
+                ? "Avanzando..."
+                : `Avanzar a ${STATUS_LABELS[nextStatus]} →`}
+            </Button>
+          )}
+          {!antifraudeAprobado && (
+            <p className="text-xs text-warning text-center">
+              No puedes avanzar el traspaso hasta que la verificación antifraude esté aprobada.
+            </p>
+          )}
         </motion.div>
       )}
     </div>
