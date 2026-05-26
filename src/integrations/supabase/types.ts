@@ -543,6 +543,8 @@ export type Database = {
           es_traspaso_familiar: boolean
           escrow_status: string
           fecha_acto_venta: string | null
+          gestor_commission_pct: number
+          gestor_costs_rd: number
           gestor_id: string | null
           id: string
           medio_pago: string | null
@@ -587,6 +589,8 @@ export type Database = {
           es_traspaso_familiar?: boolean
           escrow_status?: string
           fecha_acto_venta?: string | null
+          gestor_commission_pct?: number
+          gestor_costs_rd?: number
           gestor_id?: string | null
           id?: string
           medio_pago?: string | null
@@ -631,6 +635,8 @@ export type Database = {
           es_traspaso_familiar?: boolean
           escrow_status?: string
           fecha_acto_venta?: string | null
+          gestor_commission_pct?: number
+          gestor_costs_rd?: number
           gestor_id?: string | null
           id?: string
           medio_pago?: string | null
