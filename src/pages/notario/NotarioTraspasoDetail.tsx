@@ -104,7 +104,6 @@ export default function NotarioTraspasoDetail() {
 
   const notarioFirma = firmas.find((f) => f.tipoFirmante === "notario");
   const antifraudeAprobado = traspaso.antifraudeStatus === "aprobado";
-  const antifraudeRechazado = traspaso.antifraudeStatus === "rechazado";
   const nextStatus = getNextStatus(traspaso.status, "notario");
 
   return (
