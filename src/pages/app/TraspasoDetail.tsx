@@ -36,8 +36,23 @@ export default function TraspasoDetail() {
   const queryClient = useQueryClient();
   const [marbeteData, setMarbeteData] = useState<MarbeteOcrResult | null>(null);
 
-  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id);
+  const { data: traspaso, isLoading, isError, error, refetch } = useTraspaso(id, {
+    refetchInterval: 15000,
+  });
   const { data: docs } = useDocumentos(id);
+  const inFlight = traspaso ? !isTerminal(traspaso.status) : false;
+  const { data: timeline } = useTimeline(id, {
+    refetchInterval: inFlight ? 20000 : false,
+  });
+  const { data: aiSummary, isLoading: loadingSummary } = useTraspasoSummary({
+    traspasoId: id,
+    status: traspaso?.status,
+    codigo: traspaso?.codigo,
+    vehiculo: traspaso
+      ? `${traspaso.vehiculoMarca ?? ""} ${traspaso.vehiculoModelo ?? ""} ${traspaso.vehiculoAno ?? ""}`.trim()
+      : null,
+    timeline,
+  });
 
   const { data: contracts = [] } = useContratos(id);
 
