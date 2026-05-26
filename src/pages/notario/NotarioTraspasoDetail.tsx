@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, User, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
 import { motion } from "framer-motion";
-import { STATUS_LABELS } from "@/lib/traspaso-status";
+import { STATUS_LABELS, getNextStatus } from "@/lib/traspaso-status";
+import { AlertTriangle } from "lucide-react";
 import {
   useTraspaso,
   useContratos,
@@ -57,13 +58,18 @@ export default function NotarioTraspasoDetail() {
 
   const handleAdvanceStatus = async () => {
     if (!traspaso || !user) return;
+    const next = getNextStatus(traspaso.status, "notario");
+    if (!next) {
+      toast.error("No se puede avanzar desde el estado actual");
+      return;
+    }
     try {
       await advanceMutation.mutateAsync({
-        toStatus: "verificacion_antifraude",
+        toStatus: next,
         actor: { id: user.id, role: "notario" },
-        nota: "Contrato certificado por notario — pasa a verificación antifraude",
+        nota: `Contrato certificado por notario — pasa a ${STATUS_LABELS[next]}`,
       });
-      toast.success("Traspaso avanzado a verificación antifraude");
+      toast.success(`Traspaso avanzado a ${STATUS_LABELS[next]}`);
       navigate("/notario");
     } catch (err: any) {
       toast.error(err.message || "Error al avanzar");
