@@ -15,14 +15,16 @@ export function LoadingSkeleton({
   rows = 3,
   className = "p-4 max-w-lg mx-auto space-y-3",
   rowClassName = "h-24 w-full rounded-xl",
+  showHeader = true,
 }: {
   rows?: number;
   className?: string;
   rowClassName?: string;
+  showHeader?: boolean;
 }) {
   return (
     <div className={className}>
-      <Skeleton className="h-8 w-48" />
+      {showHeader && <Skeleton className="h-8 w-48" />}
       {Array.from({ length: rows }).map((_, i) => (
         <Skeleton key={i} className={rowClassName} />
       ))}
