@@ -82,11 +82,19 @@ function PartyVerification({
   const canRun = !!cedulaDocId && !!selfieDocId;
 
   const run = async () => {
-    if (!canRun) return;
+    if (!canRun) {
+      const faltan: string[] = [];
+      if (!cedulaDocId) faltan.push("cédula");
+      if (!selfieDocId) faltan.push("selfie");
+      toast.error(
+        `Faltan documentos del ${party}: ${faltan.join(" y ")}. Súbelos antes de verificar.`,
+      );
+      return;
+    }
     setRunning(true);
     try {
-      // Get fresh signed URLs for AI call
-      const [{ data: selfieUrlRes }, { data: cedulaUrlRes }] = await Promise.all([
+      // 1. Buscar rutas de archivo en la base
+      const [selfieRow, cedulaRow] = await Promise.all([
         supabase
           .from("traspaso_documentos")
           .select("file_url")
@@ -98,23 +106,59 @@ function PartyVerification({
           .eq("id", cedulaDocId!)
           .maybeSingle(),
       ]);
-      const [selfieSigned, cedulaSigned] = await Promise.all([
-        supabase.storage.from("documentos").createSignedUrl(selfieUrlRes!.file_url as string, 600),
-        supabase.storage.from("documentos").createSignedUrl(cedulaUrlRes!.file_url as string, 600),
-      ]);
-      const selfie_url = selfieSigned.data?.signedUrl;
-      const cedula_url = cedulaSigned.data?.signedUrl;
-      if (!selfie_url || !cedula_url) throw new Error("No se pudieron firmar las URLs");
+      if (selfieRow.error) {
+        throw new Error(`No se pudo leer la selfie del ${party}: ${selfieRow.error.message}`);
+      }
+      if (cedulaRow.error) {
+        throw new Error(`No se pudo leer la cédula del ${party}: ${cedulaRow.error.message}`);
+      }
+      const selfiePath = selfieRow.data?.file_url as string | undefined;
+      const cedulaPath = cedulaRow.data?.file_url as string | undefined;
+      if (!selfiePath) throw new Error(`La selfie del ${party} no existe en la base de datos.`);
+      if (!cedulaPath) throw new Error(`La cédula del ${party} no existe en la base de datos.`);
 
+      // 2. Firmar URLs en Storage
+      const [selfieSigned, cedulaSigned] = await Promise.all([
+        supabase.storage.from("documentos").createSignedUrl(selfiePath, 600),
+        supabase.storage.from("documentos").createSignedUrl(cedulaPath, 600),
+      ]);
+      if (selfieSigned.error || !selfieSigned.data?.signedUrl) {
+        throw new Error(
+          `No se pudo firmar la selfie del ${party}: ${selfieSigned.error?.message ?? "URL vacía"}`,
+        );
+      }
+      if (cedulaSigned.error || !cedulaSigned.data?.signedUrl) {
+        throw new Error(
+          `No se pudo firmar la cédula del ${party}: ${cedulaSigned.error?.message ?? "URL vacía"}`,
+        );
+      }
+      const selfie_url = selfieSigned.data.signedUrl;
+      const cedula_url = cedulaSigned.data.signedUrl;
+
+      // 3. Invocar verify-face
       const { data, error } = await supabase.functions.invoke("verify-face", {
         body: { selfie_url, cedula_url },
       });
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Error de verificación");
-      const ai = data.data as AiResult;
+      if (error) {
+        throw new Error(
+          `La función verify-face falló para el ${party}: ${error.message ?? "error desconocido"}`,
+        );
+      }
+      if (!data) {
+        throw new Error(`verify-face no devolvió datos para el ${party}.`);
+      }
+      if (!data.success) {
+        throw new Error(
+          `verify-face rechazó la verificación del ${party}: ${data.error ?? "sin detalle"}`,
+        );
+      }
+      const ai = data.data as AiResult | undefined;
+      if (!ai) {
+        throw new Error(`verify-face devolvió una respuesta vacía para el ${party}.`);
+      }
       setResult(ai);
 
-      // Persist to identity_verifications
+      // 4. Persistir en identity_verifications
       const { data: userRes } = await supabase.auth.getUser();
       const { error: insErr } = await supabase.from("identity_verifications").insert({
         traspaso_id: traspasoId,
@@ -128,18 +172,21 @@ function PartyVerification({
       });
       if (insErr) {
         console.error("identity_verifications insert error", insErr);
-        toast.warning("Verificación realizada pero no se guardó el historial");
+        toast.warning(
+          `Verificación del ${party} realizada, pero no se guardó en el historial: ${insErr.message}`,
+        );
       } else {
         onPersisted?.();
       }
 
       toast.success(
         ai.match
-          ? `Identidad ${party} coincide (${ai.confidence})`
-          : `Identidad ${party} NO coincide`,
+          ? `Identidad del ${party} coincide (confianza ${ai.confidence})`
+          : `Identidad del ${party} NO coincide (confianza ${ai.confidence})`,
       );
     } catch (e: any) {
-      toast.error(e?.message || "Error al verificar identidad");
+      console.error("verify-face flow error", e);
+      toast.error(e?.message || `Error al verificar la identidad del ${party}.`);
     } finally {
       setRunning(false);
     }
