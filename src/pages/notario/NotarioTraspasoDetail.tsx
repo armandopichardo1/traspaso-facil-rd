@@ -161,15 +161,49 @@ export default function NotarioTraspasoDetail() {
           <Card className="rounded-xl">
             <CardContent className="p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                  <User className="h-6 w-6 text-green-600" />
+                <div className={`h-12 w-12 rounded-full flex items-center justify-center ${
+                  antifraudeAprobado ? "bg-emerald/10" : antifraudeRechazado ? "bg-destructive/10" : "bg-warning/10"
+                }`}>
+                  {antifraudeAprobado ? (
+                    <ShieldCheck className="h-6 w-6 text-emerald" />
+                  ) : (
+                    <AlertTriangle className={`h-6 w-6 ${antifraudeRechazado ? "text-destructive" : "text-warning"}`} />
+                  )}
                 </div>
                 <div>
-                  <p className="font-bold text-sm">Identidad Verificada</p>
-                  <p className="text-xs text-muted-foreground">Biometría facial confirmada</p>
+                  <p className="font-bold text-sm">
+                    {antifraudeAprobado
+                      ? "Verificación antifraude aprobada"
+                      : antifraudeRechazado
+                      ? "Verificación antifraude rechazada"
+                      : "Verificación antifraude pendiente"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {antifraudeAprobado
+                      ? "El equipo confirmó la identidad de las partes."
+                      : antifraudeRechazado
+                      ? "No puedes certificar este traspaso. Contacta al equipo."
+                      : "Debes esperar la aprobación del equipo antes de certificar."}
+                  </p>
                 </div>
-                <Badge className="ml-auto bg-green-50 text-green-700 border-green-200 text-[10px]">✓ OK</Badge>
+                <Badge
+                  variant="secondary"
+                  className={`ml-auto text-[10px] uppercase tracking-wide ${
+                    antifraudeAprobado
+                      ? "bg-emerald/10 text-emerald"
+                      : antifraudeRechazado
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-warning/10 text-warning"
+                  }`}
+                >
+                  {traspaso.antifraudeStatus}
+                </Badge>
               </div>
+              {traspaso.antifraudeNotas && (
+                <p className="text-xs text-muted-foreground italic mb-3">
+                  Notas: {traspaso.antifraudeNotas}
+                </p>
+              )}
 
               <div className="text-sm space-y-2">
                 <div className="flex justify-between">
