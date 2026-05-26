@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { ArrowLeft, Scale, FileText, PenTool, CheckCircle, ShieldCheck, Eye } from "lucide-react";
 import SignaturePad from "@/components/gestor/SignaturePad";
+import IdentityVerificationPanel from "@/components/notario/IdentityVerificationPanel";
 import { motion } from "framer-motion";
 import { STATUS_LABELS, getNextStatus } from "@/lib/traspaso-status";
 import { AlertTriangle } from "lucide-react";
