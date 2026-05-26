@@ -29,6 +29,8 @@ export default function Dashboard() {
   const { data: traspasos, isLoading: loadingTraspasos } = useTraspasosForRole(
     "customer",
     user?.id,
+    undefined,
+    { refetchInterval: 15000 },
   );
   const { data: historiales, isLoading: loadingHistoriales } = useHistorialesForUser(user?.id);
   const createHistorial = useCreateHistorialRequest();
