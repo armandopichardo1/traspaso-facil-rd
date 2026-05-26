@@ -292,6 +292,7 @@ export default function IdentityVerificationPanel({
         nombre={vendedorNombre}
         cedulaDocId={cedVend}
         selfieDocId={selVend}
+        onResult={handleResult}
       />
       <PartyVerification
         traspasoId={traspasoId}
@@ -299,6 +300,7 @@ export default function IdentityVerificationPanel({
         nombre={compradorNombre}
         cedulaDocId={cedComp}
         selfieDocId={selComp}
+        onResult={handleResult}
       />
 
       <p className="text-[10px] text-muted-foreground leading-relaxed">
