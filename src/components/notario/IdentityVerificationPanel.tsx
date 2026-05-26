@@ -19,6 +19,22 @@ interface AiResult {
   notas: string;
 }
 
+function toAi(r: {
+  match: boolean;
+  confidence: "alta" | "media" | "baja";
+  rasgos_coincidentes: string[];
+  rasgos_diferentes: string[];
+  notas: string | null;
+}): AiResult {
+  return {
+    match: r.match,
+    confidence: r.confidence,
+    rasgos_coincidentes: r.rasgos_coincidentes ?? [],
+    rasgos_diferentes: r.rasgos_diferentes ?? [],
+    notas: r.notas ?? "",
+  };
+}
+
 function Thumb({ docId, label }: { docId: string | undefined; label: string }) {
   const { data: url, isLoading } = useDocumentoSignedUrl(docId);
   return (
