@@ -47,29 +47,18 @@ export default function GestorTraspasoDetail() {
 
 
   const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
-    if (!traspaso) return;
-    setAdvancing(true);
+    if (!traspaso || !user) return;
     try {
-      const { error } = await supabase
-        .from("traspasos")
-        .update({ status: nextStatus })
-        .eq("id", traspaso.id);
-      if (error) throw error;
-
-      await supabase.from("traspaso_timeline").insert({
-        traspaso_id: traspaso.id,
-        status: nextStatus,
+      await advanceStatus.mutateAsync({
+        toStatus: nextStatus as any,
+        actor: { id: user.id, role: "gestor" },
         nota,
-        created_by: user?.id,
       });
-
       toast.success(`Traspaso avanzado a ${STATUS_LABELS[nextStatus] || nextStatus}`);
       queryClient.invalidateQueries({ queryKey: ["gestor-traspaso", id] });
       queryClient.invalidateQueries({ queryKey: ["gestor-timeline", id] });
     } catch (err: any) {
       toast.error(err.message || "Error al avanzar");
-    } finally {
-      setAdvancing(false);
     }
   };
 
