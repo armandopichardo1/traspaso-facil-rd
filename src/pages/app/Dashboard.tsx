@@ -225,29 +225,45 @@ export default function Dashboard() {
                 </Badge>
               </div>
 
-              {/* Segmented progress */}
+              {/* AI summary */}
+              {!isTerminal(activeOne.status) && (
+                <div className="mt-4 rounded-xl border border-gold/30 bg-gold/10 p-3 flex gap-2">
+                  <Sparkles className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
+                  {loadingSummary || !aiSummary ? (
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-3 w-full" />
+                      <Skeleton className="h-3 w-3/4" />
+                    </div>
+                  ) : (
+                    <p className="text-xs text-foreground leading-snug">{aiSummary}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Pills progress: emerald done, gold current, muted future */}
               <div className="mt-4">
-                <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-muted-foreground">Progreso del Traspaso</span>
                   <span className="text-sm font-bold text-accent">{getProgressPercent(activeOne.status)}%</span>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex flex-wrap gap-1.5">
                   {CLIENT_PROGRESS_LABELS.map((label, i) => {
                     const step = getProgressStep(activeOne.status);
-                    const filled = i <= step;
+                    const isDone = i < step;
+                    const isCurrent = i === step;
+                    const cls = isDone
+                      ? "bg-success/15 text-success border-success/30"
+                      : isCurrent
+                        ? "bg-gold/20 text-gold border-gold/40 ring-2 ring-gold/20"
+                        : "bg-muted text-muted-foreground border-transparent";
                     return (
-                      <div key={label} className="flex-1">
-                        <div
-                          className={`h-2 rounded-full ${
-                            filled ? "bg-accent" : "bg-muted"
-                          }`}
-                        />
-                        <p className={`text-[8px] mt-1 text-center font-medium ${
-                          filled ? "text-accent" : "text-muted-foreground"
-                        }`}>
-                          {label}
-                        </p>
-                      </div>
+                      <span
+                        key={label}
+                        className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-wide ${cls}`}
+                      >
+                        {isDone && <CheckCircle className="h-2.5 w-2.5" />}
+                        {label}
+                      </span>
                     );
                   })}
                 </div>
@@ -256,6 +272,7 @@ export default function Dashboard() {
               <Button variant="cta" className="w-full mt-4 font-bold text-sm h-12" size="lg">
                 CONTINUAR TRASPASO →
               </Button>
+
             </CardContent>
           </Card>
         </motion.div>
