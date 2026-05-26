@@ -2,3 +2,6 @@ project_id = "xjlmowaddktytczovzze"
 
 [functions.placa-precheck]
 verify_jwt = false
+
+[functions.traspaso-summary]
+verify_jwt = false
