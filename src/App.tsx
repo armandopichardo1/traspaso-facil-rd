@@ -38,6 +38,7 @@ import NotarioTraspasoDetail from "./pages/notario/NotarioTraspasoDetail.tsx";
 import MensajeroLayout from "./components/mensajero/MensajeroLayout.tsx";
 import MensajeroDashboard from "./pages/mensajero/MensajeroDashboard.tsx";
 import MensajeroTraspasoDetail from "./pages/mensajero/MensajeroTraspasoDetail.tsx";
+import RequireRole from "./components/auth/RequireRole.tsx";
 
 const queryClient = new QueryClient();
 
@@ -58,9 +59,11 @@ const App = () => (
             <Route path="/terminos" element={<TerminosServicio />} />
             <Route path="/privacidad" element={<PoliticaPrivacidad />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/traspaso/:id" element={<AdminTraspasoDetail />} />
-            <Route path="/admin/historiales" element={<AdminHistoriales />} />
+            <Route element={<RequireRole allow={["admin"]} />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/traspaso/:id" element={<AdminTraspasoDetail />} />
+              <Route path="/admin/historiales" element={<AdminHistoriales />} />
+            </Route>
 
             {/* Auth */}
             <Route path="/app/login" element={<Login />} />

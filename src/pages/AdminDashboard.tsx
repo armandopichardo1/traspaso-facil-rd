@@ -13,6 +13,7 @@ import ConsultaFilters from "@/components/admin/ConsultaFilters";
 import SlaConfig from "@/components/admin/SlaConfig";
 import MetricsDashboard from "@/components/admin/MetricsDashboard";
 import TrendCharts from "@/components/admin/TrendCharts";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Lead = {
   id: string;
