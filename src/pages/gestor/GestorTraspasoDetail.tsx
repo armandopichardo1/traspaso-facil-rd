@@ -5,9 +5,27 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
-import { ArrowLeft, Car, User, Shield, Clock, Phone, FileText, CheckCircle, ArrowRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Car,
+  User,
+  Shield,
+  Clock,
+  Phone,
+  FileText,
+  CheckCircle,
+  ArrowRight,
+  Sparkles,
+  Calendar,
+  ClipboardCheck,
+  TrendingUp,
+  Copy,
+} from "lucide-react";
 import { getNextStatus } from "@/lib/traspaso-status";
 import { useAdvanceStatus } from "@/hooks/useTraspasoServices";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
@@ -16,7 +34,55 @@ import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { STATUS_STEPS, STATUS_LABELS, statusColor, getProgress } from "@/lib/traspaso-status";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+// Formatea pesos dominicanos sin decimales
+const fmtRD = (n: number) =>
+  new Intl.NumberFormat("es-DO", { style: "currency", currency: "DOP", maximumFractionDigits: 0 })
+    .format(n)
+    .replace("DOP", "RD$");
+
+/** Genera 3 slots propuestos para inspección CENARVE (próximos días hábiles, mañana/mediodía/tarde). */
+function proposeCenarveSlots(from = new Date()) {
+  const slots: { date: Date; label: string }[] = [];
+  const times = [
+    { h: 9, label: "9:00 AM" },
+    { h: 11, label: "11:00 AM" },
+    { h: 14, label: "2:00 PM" },
+  ];
+  let cursor = new Date(from);
+  cursor.setDate(cursor.getDate() + 1);
+  let i = 0;
+  while (slots.length < 3 && i < 14) {
+    const day = cursor.getDay(); // 0 dom, 6 sáb
+    if (day !== 0 && day !== 6) {
+      const t = times[slots.length];
+      const d = new Date(cursor);
+      d.setHours(t.h, 0, 0, 0);
+      slots.push({
+        date: d,
+        label: `${d.toLocaleDateString("es-DO", { weekday: "long", day: "numeric", month: "short" })} · ${t.label}`,
+      });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+    i++;
+  }
+  return slots;
+}
+
+/** Checklist estándar para radicación CENARVE / DGII */
+const RADICACION_CHECKLIST = [
+  "Matrícula original del vendedor (sin enmiendas)",
+  "Cédula vigente del vendedor y comprador (copia ambos lados)",
+  "Contrato de venta notarizado (Ley 126-02) en 3 originales",
+  "Certificación de no oposición DGII (vigencia 30 días)",
+  "Recibo de pago del 2% de transferencia DGII",
+  "Inspección física CENARVE: chasis y motor visibles y limpios",
+  "Fotos del vehículo (frontal, lateral, trasera, chasis)",
+  "Marbete vigente o constancia de pago",
+  "Formulario IR-17 de la DGII completado",
+  "Poder notarizado del apoderado (si aplica)",
+];
 
 
 export default function GestorTraspasoDetail() {
@@ -44,6 +110,67 @@ export default function GestorTraspasoDetail() {
       return data;
     },
   });
+
+  // ---------- Estado: panel de margen ----------
+  const [commissionPctInput, setCommissionPctInput] = useState<string>("");
+  const [costsInput, setCostsInput] = useState<string>("");
+  const [savingMargen, setSavingMargen] = useState(false);
+
+  // Hidrata los inputs al cargar el traspaso
+  useEffect(() => {
+    if (!traspaso) return;
+    const t = traspaso as any;
+    setCommissionPctInput(String(Math.round(Number(t.gestor_commission_pct ?? 0.3) * 100)));
+    setCostsInput(String(Number(t.gestor_costs_rd ?? 0)));
+  }, [traspaso]);
+
+  // ---------- Estado: agente CENARVE / DGII ----------
+  const proposedSlots = useMemo(() => proposeCenarveSlots(), []);
+  const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null);
+  const [checklistDone, setChecklistDone] = useState<Record<number, boolean>>({});
+  const checklistProgress = useMemo(() => {
+    const done = Object.values(checklistDone).filter(Boolean).length;
+    return Math.round((done / RADICACION_CHECKLIST.length) * 100);
+  }, [checklistDone]);
+
+  const saveMargen = async () => {
+    if (!id) return;
+    const pct = Math.max(0, Math.min(100, Number(commissionPctInput) || 0)) / 100;
+    const costs = Math.max(0, Number(costsInput) || 0);
+    setSavingMargen(true);
+    const { error } = await supabase
+      .from("traspasos")
+      .update({ gestor_commission_pct: pct, gestor_costs_rd: costs })
+      .eq("id", id);
+    setSavingMargen(false);
+    if (error) {
+      toast.error("No se pudo guardar el margen: " + error.message);
+      return;
+    }
+    toast.success("Margen actualizado");
+    queryClient.invalidateQueries({ queryKey: ["gestor-traspaso", id] });
+  };
+
+  const copyRadicacionDraft = async (slotLabel: string | null) => {
+    if (!traspaso) return;
+    const tt = traspaso as any;
+    const lines = [
+      `Radicación CENARVE / DGII — ${tt.codigo ?? ""}`,
+      `Vehículo: ${tt.vehiculo_marca ?? ""} ${tt.vehiculo_modelo ?? ""} ${tt.vehiculo_ano ?? ""} · Placa ${tt.vehiculo_placa ?? "—"}`,
+      `Vendedor: ${tt.vendedor_nombre ?? "—"} · Comprador: ${tt.comprador_nombre ?? "—"}`,
+      slotLabel ? `Inspección propuesta: ${slotLabel}` : `Inspección: por confirmar`,
+      "",
+      "Checklist de radicación:",
+      ...RADICACION_CHECKLIST.map((item, i) => `${checklistDone[i] ? "[x]" : "[ ]"} ${item}`),
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      toast.success("Borrador copiado al portapapeles");
+    } catch {
+      toast.error("No se pudo copiar al portapapeles");
+    }
+  };
+
 
 
   const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
@@ -250,6 +377,207 @@ export default function GestorTraspasoDetail() {
           <div className="flex justify-between"><span>Plan:</span><span className="font-medium">{t.plan} · RD$ {Number(t.precio_servicio).toLocaleString()}</span></div>
         </CardContent>
       </Card>
+
+      {/* Panel de Margen — tarjeta premium dorada */}
+      {(() => {
+        const servicio = Number(t.precio_servicio ?? 0);
+        const pct = Math.max(0, Math.min(100, Number(commissionPctInput) || 0)) / 100;
+        const costs = Math.max(0, Number(costsInput) || 0);
+        const comision = servicio * pct;
+        const neto = comision - costs;
+        return (
+          <Card
+            className="mb-4 relative overflow-hidden border-0 shadow-lg text-navy-foreground"
+            style={{
+              background:
+                "linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold)) 55%, hsl(var(--navy)) 100%)",
+            }}
+          >
+            <div className="absolute inset-0 opacity-20 pointer-events-none"
+              style={{
+                backgroundImage:
+                  "radial-gradient(circle at 80% 0%, hsl(var(--navy-foreground)/0.4), transparent 40%)",
+              }}
+            />
+            <CardHeader className="pb-2 relative">
+              <CardTitle className="text-sm flex items-center justify-between text-navy-foreground">
+                <span className="flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Margen del Traspaso
+                </span>
+                <Badge className="bg-navy-foreground/15 text-navy-foreground border border-navy-foreground/20 backdrop-blur-sm">
+                  Premium
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="relative space-y-4">
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="rounded-lg bg-navy-foreground/10 backdrop-blur-sm p-2">
+                  <div className="text-[10px] uppercase tracking-wider opacity-80">Fee servicio</div>
+                  <div className="font-bold text-base">{fmtRD(servicio)}</div>
+                </div>
+                <div className="rounded-lg bg-navy-foreground/10 backdrop-blur-sm p-2">
+                  <div className="text-[10px] uppercase tracking-wider opacity-80">Comisión gestor</div>
+                  <div className="font-bold text-base">{fmtRD(comision)}</div>
+                </div>
+                <div className="rounded-lg bg-navy/80 text-white p-2 ring-1 ring-navy-foreground/30">
+                  <div className="text-[10px] uppercase tracking-wider opacity-80">Neto a recibir</div>
+                  <div className={`font-extrabold text-base ${neto < 0 ? "text-destructive" : ""}`}>
+                    {fmtRD(neto)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="commission-pct" className="text-xs text-navy-foreground/90">
+                    Comisión (%)
+                  </Label>
+                  <Input
+                    id="commission-pct"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={1}
+                    value={commissionPctInput}
+                    onChange={(e) => setCommissionPctInput(e.target.value)}
+                    onBlur={saveMargen}
+                    className="h-9 bg-navy-foreground text-navy border-0"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="gestor-costs" className="text-xs text-navy-foreground/90">
+                    Gastos (RD$)
+                  </Label>
+                  <Input
+                    id="gestor-costs"
+                    type="number"
+                    min={0}
+                    step={100}
+                    value={costsInput}
+                    onChange={(e) => setCostsInput(e.target.value)}
+                    onBlur={saveMargen}
+                    className="h-9 bg-navy-foreground text-navy border-0"
+                  />
+                </div>
+              </div>
+              <p className="text-[10px] opacity-80">
+                {savingMargen
+                  ? "Guardando..."
+                  : "Edita el % de comisión y tus gastos de bolsillo. Se guarda al salir del campo."}
+              </p>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
+      {/* Agente CENARVE / DGII — solo en paso plan_piloto */}
+      {t.status === "plan_piloto" && (
+        <Card className="mb-4 border-teal/30 bg-teal/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2 text-teal">
+              <Sparkles className="h-4 w-4" />
+              Agente CENARVE / DGII
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Propone slots de inspección y arma el borrador de radicación.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Slots propuestos */}
+            <div className="space-y-2">
+              <div className="text-xs font-semibold flex items-center gap-1 text-foreground">
+                <Calendar className="h-3 w-3" /> Slots de inspección propuestos
+              </div>
+              <div className="grid gap-2">
+                {proposedSlots.map((slot, idx) => {
+                  const selected = selectedSlotIdx === idx;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setSelectedSlotIdx(selected ? null : idx)}
+                      className={`text-left rounded-lg border px-3 py-2 text-sm transition ${
+                        selected
+                          ? "border-teal bg-teal text-white"
+                          : "border-border bg-card hover:border-teal/60"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="capitalize">{slot.label}</span>
+                        {selected && <CheckCircle className="h-4 w-4" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Checklist de radicación */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold flex items-center gap-1 text-foreground">
+                  <ClipboardCheck className="h-3 w-3" /> Checklist de radicación
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {checklistProgress}% completado
+                </span>
+              </div>
+              <Progress value={checklistProgress} className="h-1.5" />
+              <ul className="space-y-1.5 mt-2">
+                {RADICACION_CHECKLIST.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2 text-xs">
+                    <Checkbox
+                      id={`chk-${i}`}
+                      checked={!!checklistDone[i]}
+                      onCheckedChange={(v) =>
+                        setChecklistDone((prev) => ({ ...prev, [i]: !!v }))
+                      }
+                      className="mt-0.5"
+                    />
+                    <label htmlFor={`chk-${i}`} className="leading-snug cursor-pointer">
+                      {item}
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() =>
+                  copyRadicacionDraft(
+                    selectedSlotIdx !== null ? proposedSlots[selectedSlotIdx].label : null,
+                  )
+                }
+              >
+                <Copy className="h-3 w-3 mr-1" />
+                Copiar borrador
+              </Button>
+              <Button
+                variant="teal"
+                size="sm"
+                className="flex-1"
+                disabled={selectedSlotIdx === null || advancing}
+                onClick={() => {
+                  const slot = selectedSlotIdx !== null ? proposedSlots[selectedSlotIdx] : null;
+                  const done = Object.values(checklistDone).filter(Boolean).length;
+                  const nota = `CENARVE/DGII — Slot: ${slot?.label ?? "no definido"} · Checklist: ${done}/${RADICACION_CHECKLIST.length}`;
+                  handleAdvanceStatus("dgii_proceso", nota);
+                }}
+              >
+                <ArrowRight className="h-3 w-3 mr-1" />
+                Radicar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {/* Timeline */}
       {timeline && timeline.length > 0 && (
