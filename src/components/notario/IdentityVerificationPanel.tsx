@@ -4,7 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldCheck, AlertTriangle, Loader2, ImageOff, ScanFace, History } from "lucide-react";
+import {
+  ShieldCheck,
+  AlertTriangle,
+  Loader2,
+  ImageOff,
+  ScanFace,
+  History,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDocumentos, useDocumentoSignedUrl } from "@/hooks/useTraspasoServices";
