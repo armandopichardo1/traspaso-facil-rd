@@ -39,6 +39,8 @@ export default function NotarioTraspasoDetail() {
 
   const [activeStep, setActiveStep] = useState(0);
   const [showSignature, setShowSignature] = useState(false);
+  const [aiVerified, setAiVerified] = useState({ vendedorVerified: false, compradorVerified: false });
+  const identityAiOk = aiVerified.vendedorVerified && aiVerified.compradorVerified;
 
   const handleSign = async (signatureData: { imageDataUrl: string; userAgent: string; geolocation: string | null }) => {
     if (!traspaso || !user) return;
