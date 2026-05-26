@@ -9,7 +9,7 @@ import { ErrorState, LoadingSkeleton, NotFoundView } from "@/components/shared/S
 import { Progress } from "@/components/ui/progress";
 import {
   ArrowLeft, Car, Shield, CheckCircle, Clock, Loader2, Lock, MessageCircle,
-  ShieldCheck, MapPin,
+  ShieldCheck, MapPin, Sparkles,
 } from "lucide-react";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import DocumentUpload from "@/components/gestor/DocumentUpload";
@@ -17,9 +17,11 @@ import MarbeteUpload, { type MarbeteOcrResult } from "@/components/app/MarbeteUp
 import TraspasoChat from "@/components/app/TraspasoChat";
 import type { ContractData } from "@/lib/contract-templates";
 import { motion } from "framer-motion";
-import { useTraspaso, useDocumentos, useContratos } from "@/hooks/useTraspasoServices";
+import { useTraspaso, useDocumentos, useContratos, useTimeline } from "@/hooks/useTraspasoServices";
+import { useTraspasoSummary } from "@/hooks/useTraspasoSummary";
+import { Skeleton } from "@/components/ui/skeleton";
 
-import { STATUS_STEPS } from "@/lib/traspaso-status";
+import { STATUS_STEPS, isTerminal } from "@/lib/traspaso-status";
 
 const antifraudeBadge = (s: string) => {
   if (s === "aprobado") return { color: "bg-success/10 text-success border-success/30", icon: Shield, label: "Aprobado" };
