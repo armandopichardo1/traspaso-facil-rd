@@ -313,7 +313,7 @@ export default function Dashboard() {
         </div>
 
         {loadingHistoriales && loadingTraspasos ? (
-          <Skeleton className="h-32 w-full rounded-xl" />
+          <LoadingSkeleton rows={1} showHeader={false} className="space-y-1" rowClassName="h-32 w-full rounded-xl" />
         ) : (recentActivity.length > 0 || (historiales && historiales.length > 0)) ? (
           <div className="grid grid-cols-2 gap-3">
             {recentActivity.map((t) => (
