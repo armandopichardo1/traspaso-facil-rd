@@ -133,16 +133,86 @@ export async function getTraspasoByCodigo(
   return { ok: true, data: toTraspaso(data as TraspasoRow) };
 }
 
+/**
+ * Columnas por rol. RLS en Supabase ya restringe qué filas puede leer cada
+ * rol (ver políticas en traspasos); aquí además limitamos las COLUMNAS para
+ * reducir payload y minimizar exposición de campos sensibles
+ * (notas_internas, antifraude_notas, márgenes) a roles que no los necesitan.
+ *
+ * - customer / admin: vista completa (toTraspaso usa todos los campos).
+ * - mensajero: solo lo necesario para la entrega (vehículo, partes, status).
+ * - notario: contrato + partes + status (sin financieros ni notas internas).
+ * - gestor: operacional + margen, sin notas crudas de antifraude.
+ */
+const SELECT_FULL = "*";
+
+const SELECT_MENSAJERO = [
+  "id", "codigo", "status", "plan", "asset_type",
+  "customer_id", "mensajero_id",
+  "vehiculo_marca", "vehiculo_modelo", "vehiculo_ano",
+  "vehiculo_placa", "vehiculo_color", "vehiculo_chasis",
+  "vendedor_nombre", "vendedor_telefono",
+  "comprador_nombre", "comprador_telefono",
+  "created_at", "updated_at",
+].join(",");
+
+const SELECT_NOTARIO = [
+  "id", "codigo", "status", "plan", "asset_type",
+  "customer_id", "notario_id",
+  "vehiculo_marca", "vehiculo_modelo", "vehiculo_ano",
+  "vehiculo_placa", "vehiculo_color", "vehiculo_chasis",
+  "vendedor_nombre", "vendedor_cedula", "vendedor_telefono",
+  "vendedor_tipo_persona", "vendedor_rnc",
+  "comprador_nombre", "comprador_cedula", "comprador_telefono",
+  "comprador_tipo_persona", "comprador_rnc",
+  "fecha_acto_venta", "medio_pago",
+  "tiene_apoderado", "apoderado_nombre", "apoderado_cedula",
+  "es_traspaso_familiar",
+  "created_at", "updated_at",
+].join(",");
+
+const SELECT_GESTOR = [
+  "id", "codigo", "status", "plan", "asset_type",
+  "customer_id", "gestor_id", "notario_id", "mensajero_id",
+  "vehiculo_marca", "vehiculo_modelo", "vehiculo_ano",
+  "vehiculo_placa", "vehiculo_color", "vehiculo_chasis",
+  "vendedor_nombre", "vendedor_cedula", "vendedor_telefono",
+  "vendedor_tipo_persona", "vendedor_rnc",
+  "comprador_nombre", "comprador_cedula", "comprador_telefono",
+  "comprador_tipo_persona", "comprador_rnc",
+  "precio_vehiculo", "precio_servicio",
+  "pago_servicio_status", "escrow_status",
+  "antifraude_status", // status sí, notas crudas NO
+  "gestor_commission_pct", "gestor_costs_rd",
+  "fecha_acto_venta", "medio_pago",
+  "tiene_apoderado", "apoderado_nombre", "apoderado_cedula",
+  "es_traspaso_familiar",
+  "created_at", "updated_at",
+].join(",");
+
+function selectColumnsForRole(role: UserRole): string {
+  switch (role) {
+    case "mensajero": return SELECT_MENSAJERO;
+    case "notario":   return SELECT_NOTARIO;
+    case "gestor":    return SELECT_GESTOR;
+    case "customer":
+    case "admin":
+    default:          return SELECT_FULL;
+  }
+}
+
 export async function listTraspasosForRole(
   role: UserRole,
   userId: string,
   filters?: TraspasoFilters,
 ): Promise<ServiceResult<Traspaso[]>> {
-  let q = supabase.from("traspasos").select("*").order("created_at", { ascending: false });
+  const columns = selectColumnsForRole(role);
+  let q = supabase.from("traspasos").select(columns).order("created_at", { ascending: false });
 
-  // RLS hace el filtrado fino; aquí filtramos en cliente para datasets
-  // mostrables (e.g. el gestor solo ve los suyos, etc.). Aun así
-  // restringimos por columna donde aplique para reducir payload.
+  // RLS hace el filtrado fino server-side; aquí restringimos también por
+  // columna indexada para reducir payload. Las políticas en traspasos
+  // garantizan que un rol nunca recibe filas que no le pertenecen aunque
+  // alguien manipule el filtro del cliente.
   if (role === "customer") q = q.eq("customer_id", userId);
   else if (role === "gestor") q = q.eq("gestor_id", userId);
   else if (role === "notario") q = q.eq("notario_id", userId);
@@ -152,7 +222,7 @@ export async function listTraspasosForRole(
 
   const { data, error } = await q;
   if (error) return { ok: false, error: error.message };
-  let rows = (data as TraspasoRow[]).map(toTraspaso);
+  let rows = (data as unknown as TraspasoRow[]).map(toTraspaso);
   if (filters?.search) {
     const s = filters.search.toLowerCase();
     rows = rows.filter(
