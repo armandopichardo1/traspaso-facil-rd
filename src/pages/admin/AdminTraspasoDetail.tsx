@@ -163,7 +163,7 @@ export default function AdminTraspasoDetail() {
         { id: user.id, role: "admin" },
         { nota: statusNote || undefined },
       );
-      if (!res.ok) throw new Error(res.error);
+      if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-traspaso", id] });
