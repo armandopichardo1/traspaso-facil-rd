@@ -72,6 +72,19 @@ export default function Dashboard() {
   const recentActivity = traspasos?.filter(t => t.status === "completado" || t.status === "cancelado").slice(0, 4) || [];
   const activeOne = activeTraspasos[0];
 
+  const { data: activeTimeline } = useTimeline(activeOne?.id, {
+    refetchInterval: activeOne ? 20000 : false,
+  });
+  const { data: aiSummary, isLoading: loadingSummary } = useTraspasoSummary({
+    traspasoId: activeOne?.id,
+    status: activeOne?.status,
+    codigo: activeOne?.codigo,
+    vehiculo: activeOne
+      ? `${activeOne.vehiculoMarca ?? ""} ${activeOne.vehiculoModelo ?? ""} ${activeOne.vehiculoAno ?? ""}`.trim()
+      : null,
+    timeline: activeTimeline,
+  });
+
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
       {/* Welcome */}
