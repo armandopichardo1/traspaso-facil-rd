@@ -24,7 +24,8 @@ export default function GestorTraspasoDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  const [advancing, setAdvancing] = useState(false);
+  const advanceStatus = useAdvanceStatus(id!);
+  const advancing = advanceStatus.isPending;
 
   const { data: traspaso, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["gestor-traspaso", id],
