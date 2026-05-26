@@ -321,7 +321,8 @@ export async function advanceStatus(
     status: toStatus,
     nota: options?.nota ?? options?.evidenceUrl ?? null,
     created_by: actor.id,
-  });
+    actor_role: actor.role,
+  } as never);
 
   // Hook: al completar, liberar escrow (mock).
   if (toStatus === "completado") {
