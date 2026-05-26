@@ -617,19 +617,12 @@ export default function IdentityVerificationPanel({
                         })}
                       </span>
                     </div>
-                    {h.rasgos_coincidentes?.length > 0 && (
-                      <p className="text-[11px] text-foreground">
-                        <span className="font-bold">Coinciden:</span> {h.rasgos_coincidentes.join(", ")}
-                      </p>
-                    )}
-                    {h.rasgos_diferentes?.length > 0 && (
-                      <p className="text-[11px] text-foreground">
-                        <span className="font-bold">Dudas:</span> {h.rasgos_diferentes.join(", ")}
-                      </p>
-                    )}
-                    {h.notas && (
-                      <p className="text-[11px] italic text-muted-foreground">{h.notas}</p>
-                    )}
+                    <RasgosDetailView
+                      rasgosCoincidentes={h.rasgos_coincidentes ?? []}
+                      rasgosDiferentes={h.rasgos_diferentes ?? []}
+                      notas={h.notas}
+                      compact
+                    />
                   </li>
                 );
               })}
