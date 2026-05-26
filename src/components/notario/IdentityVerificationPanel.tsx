@@ -363,26 +363,19 @@ function PartyVerification({
         </div>
 
         {result && (
-          <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1.5">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2">
               <span className="text-xs font-medium text-muted-foreground">Confianza del modelo</span>
               <Badge variant="outline" className={`text-[10px] uppercase ${confidenceClass}`}>
                 {result.confidence}
               </Badge>
             </div>
-            {result.rasgos_coincidentes?.length > 0 && (
-              <p className="text-[11px] text-foreground">
-                <span className="font-bold">Coinciden:</span> {result.rasgos_coincidentes.join(", ")}
-              </p>
-            )}
-            {result.rasgos_diferentes?.length > 0 && (
-              <p className="text-[11px] text-foreground">
-                <span className="font-bold">Dudas:</span> {result.rasgos_diferentes.join(", ")}
-              </p>
-            )}
-            {result.notas && (
-              <p className="text-[11px] italic text-muted-foreground">{result.notas}</p>
-            )}
+            <RasgosDetailView
+              rasgosCoincidentes={result.rasgos_coincidentes ?? []}
+              rasgosDiferentes={result.rasgos_diferentes ?? []}
+              notas={result.notas}
+              compact={false}
+            />
           </div>
         )}
 
