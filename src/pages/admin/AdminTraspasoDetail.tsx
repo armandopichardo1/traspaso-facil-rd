@@ -21,7 +21,7 @@ import { Progress } from "@/components/ui/progress";
 import ContractGenerator from "@/components/gestor/ContractGenerator";
 import type { ContractData } from "@/lib/contract-templates";
 import { STATUS_STEPS, STATUS_LABELS, getValidNextStatuses } from "@/lib/traspaso-status";
-import { advanceStatus as advanceStatusSvc } from "@/services/traspasoService";
+import { advanceStatus as advanceStatusSvc, cancelTraspaso as cancelTraspasoSvc } from "@/services/traspasoService";
 
 const ESCROW_OPTIONS = ["no_aplica", "depositado", "en_custodia", "liberado", "reembolsado"];
 
@@ -68,6 +68,7 @@ export default function AdminTraspasoDetail() {
   const [selectedGestorId, setSelectedGestorId] = useState("");
   const [selectedNotarioId, setSelectedNotarioId] = useState("");
   const [selectedMensajeroId, setSelectedMensajeroId] = useState("");
+  const [cancelReason, setCancelReason] = useState("");
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["admin-traspaso", id],
@@ -176,6 +177,24 @@ export default function AdminTraspasoDetail() {
     },
   });
 
+  const cancelTraspaso = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Sesión no encontrada");
+      const res = await cancelTraspasoSvc(id!, { id: user.id, role: "admin" }, cancelReason);
+      if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-traspaso", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-timeline", id] });
+      setCancelReason("");
+      toast({ title: "Traspaso cancelado" });
+    },
+    onError: (e: any) => {
+      toast({ title: "Error", description: e.message, variant: "destructive" });
+    },
+  });
+
   const handleAntifraude = (status: string) => {
     updateTraspaso.mutate({ antifraude_status: status, antifraude_notas: antifraudeNotas });
   };
@@ -234,6 +253,14 @@ export default function AdminTraspasoDetail() {
 
   // Valid next statuses for the dropdown
   const validNextStatuses = getValidNextStatuses(traspaso.status);
+
+  const isAntifraudeGated = traspaso.status === "verificacion_antifraude";
+  const antifraudeApproved = traspaso.antifraude_status === "aprobado";
+  const antifraudeAlerta = traspaso.antifraude_status === "alerta";
+
+  const availableStatuses = isAntifraudeGated && !antifraudeApproved
+    ? validNextStatuses.filter((s) => s === "cancelado")
+    : validNextStatuses;
 
   return (
     <div className="min-h-screen bg-muted">
@@ -484,24 +511,58 @@ export default function AdminTraspasoDetail() {
               <div className="text-xs text-muted-foreground mb-1">
                 Status actual: <Badge variant="secondary">{STATUS_LABELS[traspaso.status] || traspaso.status}</Badge>
               </div>
+
+              {isAntifraudeGated && !antifraudeApproved && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 flex items-start gap-2">
+                  <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    {antifraudeAlerta
+                      ? "El antifraude marcó alerta. Debes cancelar este traspaso."
+                      : "Antifraude pendiente. No se puede avanzar hasta aprobar la verificación."}
+                  </span>
+                </div>
+              )}
+
               <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={traspaso.status}>{STATUS_LABELS[traspaso.status]} (actual)</SelectItem>
-                  {validNextStatuses.map((s) => (
+                  {availableStatuses.map((s) => (
                     <SelectItem key={s} value={s}>{STATUS_LABELS[s] || s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Textarea value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Nota (opcional)..." rows={2} />
-              <Button
-                variant="cta"
-                className="w-full"
-                onClick={() => addTimelineEntry.mutate()}
-                disabled={addTimelineEntry.isPending || newStatus === traspaso.status}
-              >
-                {addTimelineEntry.isPending ? "Actualizando..." : "Actualizar Status"}
-              </Button>
+
+              {antifraudeAlerta ? (
+                <>
+                  <Textarea
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Razón de cancelación..."
+                    rows={2}
+                  />
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => cancelTraspaso.mutate()}
+                    disabled={cancelTraspaso.isPending || !cancelReason.trim()}
+                  >
+                    {cancelTraspaso.isPending ? "Cancelando..." : "Cancelar traspaso"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Textarea value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Nota (opcional)..." rows={2} />
+                  <Button
+                    variant="cta"
+                    className="w-full"
+                    onClick={() => addTimelineEntry.mutate()}
+                    disabled={addTimelineEntry.isPending || newStatus === traspaso.status}
+                  >
+                    {addTimelineEntry.isPending ? "Actualizando..." : "Actualizar Status"}
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 
