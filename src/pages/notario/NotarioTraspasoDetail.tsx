@@ -324,11 +324,20 @@ export default function NotarioTraspasoDetail() {
                   <p className="text-sm text-muted-foreground mb-4">
                     Al firmar, certificas la validez legal de este traspaso vehicular.
                   </p>
+                  {!antifraudeAprobado && (
+                    <div className="mb-3 rounded-xl bg-warning/10 text-warning text-xs p-3 flex items-start gap-2 text-left">
+                      <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                      <span>
+                        No puedes firmar hasta que la verificación antifraude esté aprobada por el equipo.
+                      </span>
+                    </div>
+                  )}
                   <Button
                     variant="cta"
                     className="w-full font-bold h-14 text-base"
                     size="lg"
                     onClick={() => setShowSignature(true)}
+                    disabled={!antifraudeAprobado}
                   >
                     <PenTool className="h-5 w-5 mr-2" />
                     Firmar con un toque
@@ -368,15 +377,24 @@ export default function NotarioTraspasoDetail() {
             </CardContent>
           </Card>
 
-          <Button
-            variant="teal"
-            className="w-full font-bold"
-            size="lg"
-            onClick={handleAdvanceStatus}
-            disabled={advanceMutation.isPending}
-          >
-            {advanceMutation.isPending ? "Avanzando..." : "Avanzar a Verificación Antifraude →"}
-          </Button>
+          {nextStatus && (
+            <Button
+              variant="teal"
+              className="w-full font-bold"
+              size="lg"
+              onClick={handleAdvanceStatus}
+              disabled={advanceMutation.isPending || !antifraudeAprobado}
+            >
+              {advanceMutation.isPending
+                ? "Avanzando..."
+                : `Avanzar a ${STATUS_LABELS[nextStatus]} →`}
+            </Button>
+          )}
+          {!antifraudeAprobado && (
+            <p className="text-xs text-warning text-center">
+              No puedes avanzar el traspaso hasta que la verificación antifraude esté aprobada.
+            </p>
+          )}
         </motion.div>
       )}
     </div>
