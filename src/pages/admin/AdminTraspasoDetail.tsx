@@ -511,24 +511,58 @@ export default function AdminTraspasoDetail() {
               <div className="text-xs text-muted-foreground mb-1">
                 Status actual: <Badge variant="secondary">{STATUS_LABELS[traspaso.status] || traspaso.status}</Badge>
               </div>
+
+              {isAntifraudeGated && !antifraudeApproved && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 flex items-start gap-2">
+                  <ShieldAlert className="h-4 w-4 mt-0.5 shrink-0" />
+                  <span>
+                    {antifraudeAlerta
+                      ? "El antifraude marcó alerta. Debes cancelar este traspaso."
+                      : "Antifraude pendiente. No se puede avanzar hasta aprobar la verificación."}
+                  </span>
+                </div>
+              )}
+
               <Select value={newStatus} onValueChange={setNewStatus}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={traspaso.status}>{STATUS_LABELS[traspaso.status]} (actual)</SelectItem>
-                  {validNextStatuses.map((s) => (
+                  {availableStatuses.map((s) => (
                     <SelectItem key={s} value={s}>{STATUS_LABELS[s] || s}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Textarea value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Nota (opcional)..." rows={2} />
-              <Button
-                variant="cta"
-                className="w-full"
-                onClick={() => addTimelineEntry.mutate()}
-                disabled={addTimelineEntry.isPending || newStatus === traspaso.status}
-              >
-                {addTimelineEntry.isPending ? "Actualizando..." : "Actualizar Status"}
-              </Button>
+
+              {antifraudeAlerta ? (
+                <>
+                  <Textarea
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Razón de cancelación..."
+                    rows={2}
+                  />
+                  <Button
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() => cancelTraspaso.mutate()}
+                    disabled={cancelTraspaso.isPending || !cancelReason.trim()}
+                  >
+                    {cancelTraspaso.isPending ? "Cancelando..." : "Cancelar traspaso"}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Textarea value={statusNote} onChange={(e) => setStatusNote(e.target.value)} placeholder="Nota (opcional)..." rows={2} />
+                  <Button
+                    variant="cta"
+                    className="w-full"
+                    onClick={() => addTimelineEntry.mutate()}
+                    disabled={addTimelineEntry.isPending || newStatus === traspaso.status}
+                  >
+                    {addTimelineEntry.isPending ? "Actualizando..." : "Actualizar Status"}
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
 
