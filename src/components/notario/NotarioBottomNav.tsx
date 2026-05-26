@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   { icon: Scale, label: "Queue", path: "/notario" },
-  { icon: UserCircle, label: "Perfil", path: "/app/perfil" },
+  { icon: UserCircle, label: "Perfil", path: "/notario/perfil" },
 ];
 
 export default function NotarioBottomNav() {
