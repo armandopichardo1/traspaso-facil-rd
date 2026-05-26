@@ -158,13 +158,22 @@ export default function AdminTraspasoDetail() {
     mutationFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Sesión no encontrada");
-      const res = await advanceStatusSvc(
-        id!,
-        newStatus as any,
-        { id: user.id, role: "admin" },
-        { nota: statusNote || undefined },
-      );
-      if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
+      if (newStatus === "cancelado") {
+        const res = await cancelTraspasoSvc(
+          id!,
+          { id: user.id, role: "admin" },
+          statusNote || "Cancelado desde panel admin",
+        );
+        if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
+      } else {
+        const res = await advanceStatusSvc(
+          id!,
+          newStatus as any,
+          { id: user.id, role: "admin" },
+          { nota: statusNote || undefined },
+        );
+        if (!res.ok) throw new Error((res as { ok: false; error: string }).error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-traspaso", id] });
