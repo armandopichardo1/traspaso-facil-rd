@@ -189,6 +189,21 @@ export default function TraspasoDetail() {
         <span className="text-sm font-medium">Antifraude: {af.label}</span>
       </div>
 
+      {/* AI summary */}
+      {!isTerminal(t.status) && (
+        <div className="mb-4 rounded-xl border border-gold/30 bg-gold/10 p-3 flex gap-2">
+          <Sparkles className="h-4 w-4 text-gold flex-shrink-0 mt-0.5" />
+          {loadingSummary || !aiSummary ? (
+            <div className="flex-1 space-y-1.5">
+              <Skeleton className="h-3 w-full" />
+              <Skeleton className="h-3 w-2/3" />
+            </div>
+          ) : (
+            <p className="text-xs text-foreground leading-snug">{aiSummary}</p>
+          )}
+        </div>
+      )}
+
       {/* Timeline */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
@@ -200,24 +215,25 @@ export default function TraspasoDetail() {
             <h2 className="font-bold text-sm mb-4">Progreso del Traspaso</h2>
             <div className="space-y-0">
               {STATUS_STEPS.map((s, i) => {
-                const isDone = i <= currentIdx && t.status !== "cancelado";
-                const isCurrent = i === currentIdx;
+                const isDone = i < currentIdx && t.status !== "cancelado";
+                const isCurrent = i === currentIdx && t.status !== "cancelado";
                 return (
                   <div key={s.key} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-all ${
-                        isDone && !isCurrent ? "bg-success/100 text-white" :
-                        isCurrent ? "bg-accent text-white ring-4 ring-accent/20" :
+                        isDone ? "bg-success text-success-foreground" :
+                        isCurrent ? "bg-gold text-gold-foreground ring-4 ring-gold/25" :
                         "bg-muted text-muted-foreground"
                       }`}>
-                        {isDone && !isCurrent ? <CheckCircle className="h-4 w-4" /> :
+                        {isDone ? <CheckCircle className="h-4 w-4" /> :
                          isCurrent ? <Loader2 className="h-4 w-4 animate-spin" /> :
                          <Clock className="h-3.5 w-3.5" />}
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
-                        <div className={`w-0.5 h-10 ${isDone ? "bg-success/100" : "bg-muted"}`} />
+                        <div className={`w-0.5 h-10 ${isDone ? "bg-success" : "bg-muted"}`} />
                       )}
                     </div>
+
                     <div className="pb-6">
                       <p className={`text-sm ${isDone || isCurrent ? "font-bold" : "text-muted-foreground"}`}>
                         {s.label}
