@@ -67,12 +67,12 @@ export function ErrorState({
   onRetry?: () => void;
 }) {
   return (
-    <Card className="rounded-xl border-red-200 bg-red-50/50">
+    <Card className="rounded-xl border-destructive/30 bg-destructive/10/50">
       <CardContent className="p-6 text-center">
-        <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-red-600" />
-        <p className="text-sm font-bold text-red-800">{title}</p>
+        <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-destructive" />
+        <p className="text-sm font-bold text-destructive">{title}</p>
         {message && (
-          <p className="text-xs text-red-700/80 mt-1 break-words">{message}</p>
+          <p className="text-xs text-destructive/80 mt-1 break-words">{message}</p>
         )}
         {onRetry && (
           <Button

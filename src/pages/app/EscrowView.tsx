@@ -120,10 +120,10 @@ export default function EscrowView() {
       return { label: "REEMBOLSADO", className: "bg-destructive/10 text-destructive border-destructive/20" };
     }
     if (isReleased) {
-      return { label: "LIBERADO AL VENDEDOR", className: "bg-emerald-100 text-emerald-700 border-emerald-200" };
+      return { label: "LIBERADO AL VENDEDOR", className: "bg-success/15 text-success border-success/30" };
     }
     if (isDeposited) {
-      return { label: "EN CUSTODIA", className: "bg-amber-100 text-amber-800 border-amber-300" };
+      return { label: "EN CUSTODIA", className: "bg-warning/15 text-warning border-warning/50" };
     }
     return { label: "PENDIENTE DE DEPÓSITO", className: "bg-muted text-muted-foreground border-border" };
   })();
@@ -185,9 +185,9 @@ export default function EscrowView() {
             <p className="text-sm text-muted-foreground mt-1">💰 Pago del vehículo</p>
 
             {isDeposited && (
-              <div className="mt-4 inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-bold text-emerald-700">VERIFICADO POR TRASPASA.DO</span>
+              <div className="mt-4 inline-flex items-center gap-2 bg-success/10 border border-success/30 rounded-full px-4 py-1.5">
+                <ShieldCheck className="h-4 w-4 text-success" />
+                <span className="text-xs font-bold text-success">VERIFICADO POR TRASPASA.DO</span>
               </div>
             )}
           </CardContent>
@@ -211,7 +211,7 @@ export default function EscrowView() {
               <Button
                 onClick={handleDeposit}
                 disabled={depositMutation.isPending}
-                className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full h-12 rounded-xl font-bold bg-success hover:bg-success text-white"
               >
                 <Wallet className="h-4 w-4 mr-2" />
                 {depositMutation.isPending
@@ -229,12 +229,12 @@ export default function EscrowView() {
       {/* Confirmación post-depósito */}
       {isDeposited && !isReleased && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="mb-6 rounded-2xl border-emerald-200 bg-emerald-50">
+          <Card className="mb-6 rounded-2xl border-success/30 bg-success/10">
             <CardContent className="p-5 flex gap-3">
-              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
               <div className="text-sm text-foreground">
-                <p className="font-bold text-emerald-800 mb-1">Tus fondos están en custodia.</p>
-                <p className="text-emerald-900/80 text-xs">
+                <p className="font-bold text-success mb-1">Tus fondos están en custodia.</p>
+                <p className="text-success/80 text-xs">
                   Se liberan al vendedor solo cuando recibes la matrícula nueva. Si el traspaso se cancela, te devolvemos el 100% del depósito.
                 </p>
               </div>
@@ -246,12 +246,12 @@ export default function EscrowView() {
       {/* Liberado */}
       {isReleased && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <Card className="mb-6 rounded-2xl border-emerald-200 bg-emerald-50">
+          <Card className="mb-6 rounded-2xl border-success/30 bg-success/10">
             <CardContent className="p-5 flex gap-3">
-              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
               <div className="text-sm text-foreground">
-                <p className="font-bold text-emerald-800 mb-1">Fondos liberados al vendedor.</p>
-                <p className="text-emerald-900/80 text-xs">
+                <p className="font-bold text-success mb-1">Fondos liberados al vendedor.</p>
+                <p className="text-success/80 text-xs">
                   El traspaso se completó con éxito y el pago fue transferido al vendedor.
                 </p>
               </div>
@@ -294,7 +294,7 @@ export default function EscrowView() {
                     <div
                       className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
                         done
-                          ? "bg-emerald-600 text-white"
+                          ? "bg-success text-white"
                           : isCurrent
                           ? "bg-accent/20 text-accent"
                           : "bg-muted text-muted-foreground"
@@ -302,7 +302,7 @@ export default function EscrowView() {
                     >
                       {done && !isCurrent ? <CheckCircle className="h-4 w-4" /> : <s.icon className="h-4 w-4" />}
                     </div>
-                    {!isLast && <div className={`w-0.5 h-10 ${done ? "bg-emerald-600" : "bg-muted"}`} />}
+                    {!isLast && <div className={`w-0.5 h-10 ${done ? "bg-success" : "bg-muted"}`} />}
                   </div>
                   <div className="pb-6">
                     <p className={`text-sm ${done || isCurrent ? "font-bold" : "text-muted-foreground"}`}>

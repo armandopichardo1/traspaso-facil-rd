@@ -128,7 +128,7 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
 
           {result && (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-green-700">
+              <div className="flex items-center gap-2 text-success">
                 <CheckCircle className="h-4 w-4" />
                 <p className="text-sm font-medium">Datos extraídos</p>
               </div>
@@ -147,7 +147,7 @@ export default function MatriculaScanner({ onAccept, onSkip }: MatriculaScannerP
                 )}
               </div>
               {Object.values(result).some(v => !v) && (
-                <div className="flex items-start gap-2 text-amber-700 bg-amber-50 rounded-lg p-3">
+                <div className="flex items-start gap-2 text-warning bg-warning/10 rounded-lg p-3">
                   <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
                   <p className="text-xs">Algunos campos no se pudieron leer. Podrás editarlos manualmente.</p>
                 </div>
@@ -174,7 +174,7 @@ function Field({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between">
       <span className="text-muted-foreground">{label}:</span>
-      <span className={`font-medium ${value ? "" : "text-amber-600 italic"}`}>
+      <span className={`font-medium ${value ? "" : "text-warning italic"}`}>
         {value || "No detectado"}
       </span>
     </div>

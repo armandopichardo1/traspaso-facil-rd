@@ -121,7 +121,7 @@ export default function NotarioTraspasoDetail() {
           <Scale className="h-5 w-5 text-accent" />
           Certificar Traspaso
         </h1>
-        <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-200">
+        <Badge variant="secondary" className="bg-warning/15 text-warning border-warning/30">
           {STATUS_LABELS[traspaso.status] || traspaso.status}
         </Badge>
       </motion.div>
@@ -142,7 +142,7 @@ export default function NotarioTraspasoDetail() {
                   i === activeStep
                     ? "bg-accent text-white shadow-md"
                     : i < activeStep
-                    ? "bg-green-100 text-green-700"
+                    ? "bg-success/15 text-success"
                     : "bg-muted text-muted-foreground"
                 }`}
                 onClick={() => setActiveStep(i)}
@@ -363,16 +363,16 @@ export default function NotarioTraspasoDetail() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <Card className="rounded-xl bg-green-50 border-green-200">
+          <Card className="rounded-xl bg-success/10 border-success/30">
             <CardContent className="p-5 text-center">
-              <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
-              <h2 className="font-extrabold text-lg text-green-800 mb-1">Contrato Certificado</h2>
-              <p className="text-sm text-green-700">
+              <CheckCircle className="h-12 w-12 text-success/100 mx-auto mb-3" />
+              <h2 className="font-extrabold text-lg text-success mb-1">Contrato Certificado</h2>
+              <p className="text-sm text-success">
                 La firma del notario ha sido registrada exitosamente.
               </p>
-              <div className="mt-3 inline-flex items-center gap-2 bg-green-100 rounded-full px-4 py-1.5">
-                <ShieldCheck className="h-4 w-4 text-green-600" />
-                <span className="text-xs font-bold text-green-700">VERIFICADO POR TRASPASA.DO</span>
+              <div className="mt-3 inline-flex items-center gap-2 bg-success/15 rounded-full px-4 py-1.5">
+                <ShieldCheck className="h-4 w-4 text-success" />
+                <span className="text-xs font-bold text-success">VERIFICADO POR TRASPASA.DO</span>
               </div>
             </CardContent>
           </Card>

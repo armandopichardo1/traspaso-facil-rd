@@ -57,7 +57,7 @@ export default function MensajeroDashboard() {
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
-            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-green-600" />
+            <CheckCircle2 className="h-5 w-5 mx-auto mb-1 text-success" />
             <p className="text-lg font-bold">{completados.length}</p>
             <p className="text-[10px] text-muted-foreground">Entregados</p>
           </CardContent>
@@ -115,7 +115,7 @@ export default function MensajeroDashboard() {
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Badge variant="secondary" className={`text-xs ${isPending ? "bg-blue-100 text-blue-800" : "bg-green-100 text-green-800"}`}>
+                      <Badge variant="secondary" className={`text-xs ${isPending ? "bg-teal/15 text-teal" : "bg-success/15 text-success"}`}>
                         {t.status.replace(/_/g, " ")}
                       </Badge>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />

@@ -25,17 +25,17 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const statusDot = (s: string) => {
-  if (s === "completado") return "bg-green-500";
-  if (s === "cancelado") return "bg-red-500";
-  if (s === "contrato_firmado") return "bg-orange-500";
-  return "bg-blue-500";
+  if (s === "completado") return "bg-success/100";
+  if (s === "cancelado") return "bg-destructive/100";
+  if (s === "contrato_firmado") return "bg-orange/100";
+  return "bg-teal/100";
 };
 
 const statusBadgeColor = (s: string) => {
-  if (s === "completado") return "bg-green-50 text-green-700 border-green-200";
-  if (s === "cancelado") return "bg-red-50 text-red-700 border-red-200";
-  if (s === "contrato_firmado") return "bg-orange-50 text-orange-700 border-orange-200";
-  return "bg-blue-50 text-blue-700 border-blue-200";
+  if (s === "completado") return "bg-success/10 text-success border-success/30";
+  if (s === "cancelado") return "bg-destructive/10 text-destructive border-destructive/30";
+  if (s === "contrato_firmado") return "bg-orange/10 text-orange border-orange/30";
+  return "bg-teal/10 text-teal border-teal/30";
 };
 
 export default function GestorDashboard() {
@@ -84,7 +84,7 @@ export default function GestorDashboard() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between mb-2">
               <FileText className="h-5 w-5 text-accent" />
-              <Badge className="bg-green-100 text-green-700 text-[10px]">↑ 12%</Badge>
+              <Badge className="bg-success/15 text-success text-[10px]">↑ 12%</Badge>
             </div>
             <p className="text-2xl font-extrabold">{activos.length}</p>
             <p className="text-xs text-muted-foreground">Traspasos Activos</p>
@@ -92,7 +92,7 @@ export default function GestorDashboard() {
         </Card>
         <Card className="rounded-xl">
           <CardContent className="p-4">
-            <CheckCircle className="h-5 w-5 text-green-600 mb-2" />
+            <CheckCircle className="h-5 w-5 text-success mb-2" />
             <p className="text-2xl font-extrabold">{completados.length}</p>
             <p className="text-xs text-muted-foreground">Completados (Mes)</p>
           </CardContent>
@@ -214,12 +214,12 @@ export default function GestorDashboard() {
           </Card>
 
           {/* Dealer badge */}
-          <Card className="rounded-xl border-green-200 bg-green-50/50">
+          <Card className="rounded-xl border-success/30 bg-success/10/50">
             <CardContent className="p-4 flex items-start gap-3">
-              <ShieldCheck className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <ShieldCheck className="h-5 w-5 text-success mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-bold text-sm text-green-800">Dealer Verificado</p>
-                <p className="text-xs text-green-700/80 mt-0.5">
+                <p className="font-bold text-sm text-success">Dealer Verificado</p>
+                <p className="text-xs text-success/80 mt-0.5">
                   Acceso prioritario y precios mayoristas en traspasos.
                 </p>
               </div>

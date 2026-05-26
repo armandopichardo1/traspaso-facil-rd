@@ -177,7 +177,7 @@ export default function ContractGenerator({ traspasoId, contractData, onRefresh 
                           </Button>
                         </>
                       )}
-                      {isSigned && <CheckCircle className="h-4 w-4 text-green-600" />}
+                      {isSigned && <CheckCircle className="h-4 w-4 text-success" />}
                     </>
                   )}
                 </div>

@@ -149,7 +149,7 @@ export default function MarbeteUpload({ traspasoId, existingUrl, onUploaded, onO
               className="w-full max-h-48 object-contain rounded-lg border"
             />
             {existingUrl && !preview && (
-              <p className="text-xs text-green-600 flex items-center gap-1 mt-1">
+              <p className="text-xs text-success flex items-center gap-1 mt-1">
                 <CheckCircle className="h-3 w-3" /> Marbete cargado
               </p>
             )}
@@ -176,8 +176,8 @@ export default function MarbeteUpload({ traspasoId, existingUrl, onUploaded, onO
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Datos Extraídos</span>
               <Badge className={ocrResult.vigente
-                ? "bg-green-100 text-green-700 border-green-200 text-[10px]"
-                : "bg-red-100 text-red-700 border-red-200 text-[10px]"
+                ? "bg-success/15 text-success border-success/30 text-[10px]"
+                : "bg-destructive/15 text-destructive border-destructive/30 text-[10px]"
               }>
                 {ocrResult.vigente ? (
                   <><CheckCircle className="h-3 w-3 mr-0.5" /> VIGENTE</>

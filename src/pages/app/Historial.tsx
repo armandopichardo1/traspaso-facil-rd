@@ -98,8 +98,8 @@ export default function Historial() {
                     variant="secondary"
                     className={
                       c.status === "completado"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-yellow-100 text-yellow-800"
+                        ? "bg-success/15 text-success"
+                        : "bg-warning/15 text-warning"
                     }
                   >
                     <Clock className="h-3 w-3 mr-1" />

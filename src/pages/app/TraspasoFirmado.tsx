@@ -44,13 +44,13 @@ export default function TraspasoFirmado() {
         animate={{ scale: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 15 }}
       >
-        <div className="h-24 w-24 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+        <div className="h-24 w-24 rounded-full bg-success/15 flex items-center justify-center mx-auto">
           <motion.div
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
           >
-            <CheckCircle className="h-14 w-14 text-green-500" />
+            <CheckCircle className="h-14 w-14 text-success/100" />
           </motion.div>
         </div>
       </motion.div>
@@ -129,9 +129,9 @@ export default function TraspasoFirmado() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.6 }}
       >
-        <div className="inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-5 py-2">
-          <ShieldCheck className="h-4 w-4 text-green-600" />
-          <span className="text-xs font-bold text-green-700">VERIFICADO POR TRASPASA.DO</span>
+        <div className="inline-flex items-center gap-2 bg-success/10 border border-success/30 rounded-full px-5 py-2">
+          <ShieldCheck className="h-4 w-4 text-success" />
+          <span className="text-xs font-bold text-success">VERIFICADO POR TRASPASA.DO</span>
         </div>
       </motion.div>
 

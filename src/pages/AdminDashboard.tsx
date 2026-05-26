@@ -362,17 +362,17 @@ const AdminDashboard = () => {
                       <td className="p-3 capitalize">{t.plan}</td>
                       <td className="p-3">
                         <Badge variant="secondary" className={
-                          t.antifraude_status === "aprobado" ? "bg-green-100 text-green-800" :
-                          t.antifraude_status === "alerta" ? "bg-amber-100 text-amber-800" :
-                          t.antifraude_status === "rechazado" ? "bg-red-100 text-red-800" :
-                          "bg-blue-100 text-blue-800"
+                          t.antifraude_status === "aprobado" ? "bg-success/15 text-success" :
+                          t.antifraude_status === "alerta" ? "bg-warning/15 text-warning" :
+                          t.antifraude_status === "rechazado" ? "bg-destructive/15 text-destructive" :
+                          "bg-teal/15 text-teal"
                         }>{t.antifraude_status}</Badge>
                       </td>
                       <td className="p-3">
                         <Badge variant="secondary" className={
-                          t.status === "completado" ? "bg-green-100 text-green-800" :
-                          t.status === "cancelado" ? "bg-red-100 text-red-800" :
-                          "bg-blue-100 text-blue-800"
+                          t.status === "completado" ? "bg-success/15 text-success" :
+                          t.status === "cancelado" ? "bg-destructive/15 text-destructive" :
+                          "bg-teal/15 text-teal"
                         }>{t.status.replace(/_/g, " ")}</Badge>
                       </td>
                       <td className="p-3"><ArrowRight className="h-4 w-4 text-muted-foreground" /></td>
@@ -420,9 +420,9 @@ const AdminDashboard = () => {
                           <Select value={l.status} onValueChange={(v) => handleStatusChange(l.id, v)}>
                             <SelectTrigger className={`h-7 w-[130px] text-xs font-medium border-0 ${
                               l.status === "nuevo" ? "bg-teal/10 text-teal" :
-                              l.status === "contactado" ? "bg-blue-500/10 text-blue-600" :
+                              l.status === "contactado" ? "bg-teal/100/10 text-teal" :
                               l.status === "en_proceso" ? "bg-cta/10 text-cta" :
-                              l.status === "completado" ? "bg-green-500/10 text-green-600" :
+                              l.status === "completado" ? "bg-success/100/10 text-success" :
                               "bg-muted text-muted-foreground"
                             }`}>
                               <SelectValue />

@@ -193,8 +193,8 @@ export default function NuevoTraspaso() {
   if (step === 5) {
     return (
       <div className="max-w-lg mx-auto px-4 pt-10 text-center">
-        <div className="h-20 w-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle className="h-10 w-10 text-green-600" />
+        <div className="h-20 w-20 rounded-full bg-success/15 flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="h-10 w-10 text-success" />
         </div>
         <h1 className="text-xl font-bold mb-2">¡Solicitud recibida! 🎉</h1>
         <p className="text-muted-foreground mb-2">Tu código de seguimiento:</p>
@@ -246,8 +246,8 @@ export default function NuevoTraspaso() {
                   miRol === "vendedor" ? "border-accent bg-accent/5" : "border-border"
                 }`}
               >
-                <div className="h-12 w-12 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-2">
-                  <User className="h-6 w-6 text-orange-600" />
+                <div className="h-12 w-12 rounded-full bg-orange/15 flex items-center justify-center mx-auto mb-2">
+                  <User className="h-6 w-6 text-orange" />
                 </div>
                 <p className="font-semibold text-sm">Soy el Vendedor</p>
                 <p className="text-xs text-muted-foreground mt-1">Vendo mi vehículo</p>
@@ -258,8 +258,8 @@ export default function NuevoTraspaso() {
                   miRol === "comprador" ? "border-accent bg-accent/5" : "border-border"
                 }`}
               >
-                <div className="h-12 w-12 rounded-full bg-teal-100 flex items-center justify-center mx-auto mb-2">
-                  <User className="h-6 w-6 text-teal-600" />
+                <div className="h-12 w-12 rounded-full bg-teal/15 flex items-center justify-center mx-auto mb-2">
+                  <User className="h-6 w-6 text-teal" />
                 </div>
                 <p className="font-semibold text-sm">Soy el Comprador</p>
                 <p className="text-xs text-muted-foreground mt-1">Compro un vehículo</p>
@@ -349,7 +349,7 @@ export default function NuevoTraspaso() {
                 </div>
                 {!cedulaFiles[`cedula_${miRol}_frente`] && <FileInput tipo={`cedula_${miRol}_frente`} label="Cédula (Frente)" />}
                 {cedulaFiles[`cedula_${miRol}_frente`] && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
+                  <div className="flex items-center gap-2 text-sm text-success">
                     <CheckCircle className="h-4 w-4" /> Cédula capturada por cámara
                   </div>
                 )}
@@ -361,7 +361,7 @@ export default function NuevoTraspaso() {
                 </div>
                 {!cedulaFiles[`cedula_${contraparteSide}_frente`] && <FileInput tipo={`cedula_${contraparteSide}_frente`} label={`Cédula ${contraparteLabel} (Frente)`} />}
                 {cedulaFiles[`cedula_${contraparteSide}_frente`] && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
+                  <div className="flex items-center gap-2 text-sm text-success">
                     <CheckCircle className="h-4 w-4" /> Cédula del {contraparteLabel.toLowerCase()} capturada
                   </div>
                 )}

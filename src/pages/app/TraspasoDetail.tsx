@@ -22,10 +22,10 @@ import { useTraspaso, useDocumentos, useContratos } from "@/hooks/useTraspasoSer
 import { STATUS_STEPS } from "@/lib/traspaso-status";
 
 const antifraudeBadge = (s: string) => {
-  if (s === "aprobado") return { color: "bg-green-50 text-green-800 border-green-200", icon: Shield, label: "Aprobado" };
-  if (s === "alerta") return { color: "bg-red-50 text-red-800 border-red-200", icon: Shield, label: "Alerta" };
-  if (s === "rechazado") return { color: "bg-red-50 text-red-800 border-red-200", icon: Shield, label: "Rechazado" };
-  return { color: "bg-amber-50 text-amber-800 border-amber-200", icon: Shield, label: "Pendiente" };
+  if (s === "aprobado") return { color: "bg-success/10 text-success border-success/30", icon: Shield, label: "Aprobado" };
+  if (s === "alerta") return { color: "bg-destructive/10 text-destructive border-destructive/30", icon: Shield, label: "Alerta" };
+  if (s === "rechazado") return { color: "bg-destructive/10 text-destructive border-destructive/30", icon: Shield, label: "Rechazado" };
+  return { color: "bg-warning/10 text-warning border-warning/30", icon: Shield, label: "Pendiente" };
 };
 
 export default function TraspasoDetail() {
@@ -108,7 +108,7 @@ export default function TraspasoDetail() {
               <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                 Tu proceso está en marcha
               </h2>
-              <Badge className="bg-green-50 text-green-700 border-green-200 text-[10px] gap-1">
+              <Badge className="bg-success/10 text-success border-success/30 text-[10px] gap-1">
                 <ShieldCheck className="h-3 w-3" /> VERIFICADO
               </Badge>
             </div>
@@ -156,7 +156,7 @@ export default function TraspasoDetail() {
                   <div key={s.key} className="flex gap-3">
                     <div className="flex flex-col items-center">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-all ${
-                        isDone && !isCurrent ? "bg-green-500 text-white" :
+                        isDone && !isCurrent ? "bg-success/100 text-white" :
                         isCurrent ? "bg-accent text-white ring-4 ring-accent/20" :
                         "bg-muted text-muted-foreground"
                       }`}>
@@ -165,7 +165,7 @@ export default function TraspasoDetail() {
                          <Clock className="h-3.5 w-3.5" />}
                       </div>
                       {i < STATUS_STEPS.length - 1 && (
-                        <div className={`w-0.5 h-10 ${isDone ? "bg-green-500" : "bg-muted"}`} />
+                        <div className={`w-0.5 h-10 ${isDone ? "bg-success/100" : "bg-muted"}`} />
                       )}
                     </div>
                     <div className="pb-6">
@@ -176,7 +176,7 @@ export default function TraspasoDetail() {
                       {/* Badges for specific steps */}
                       {isCurrent && s.key === "contrato_firmado" && (
                         <div className="flex gap-1.5 mt-1.5">
-                          <Badge className="bg-green-50 text-green-700 text-[9px]">FIRMA DIGITAL OK</Badge>
+                          <Badge className="bg-success/10 text-success text-[9px]">FIRMA DIGITAL OK</Badge>
                           <Badge className="bg-accent/10 text-accent text-[9px]">FONDOS EN CUSTODIA</Badge>
                         </div>
                       )}
@@ -281,16 +281,16 @@ export default function TraspasoDetail() {
       )}
 
       {/* WhatsApp help */}
-      <Card className="rounded-xl bg-green-50 border-green-200 cursor-pointer hover:shadow-md transition-shadow"
+      <Card className="rounded-xl bg-success/10 border-success/30 cursor-pointer hover:shadow-md transition-shadow"
         onClick={() => window.open(`https://wa.me/18092001234?text=Hola, necesito ayuda con mi traspaso ${t.codigo}`, "_blank")}
       >
         <CardContent className="p-4 flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+          <div className="h-10 w-10 rounded-full bg-success/100 flex items-center justify-center flex-shrink-0">
             <MessageCircle className="h-5 w-5 text-white" />
           </div>
           <div>
-            <p className="font-bold text-sm text-green-800">¿Necesitas ayuda?</p>
-            <p className="text-xs text-green-700">Habla con tu asesor por WhatsApp</p>
+            <p className="font-bold text-sm text-success">¿Necesitas ayuda?</p>
+            <p className="text-xs text-success">Habla con tu asesor por WhatsApp</p>
           </div>
         </CardContent>
       </Card>
