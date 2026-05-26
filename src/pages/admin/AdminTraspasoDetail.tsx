@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSkeleton, NotFoundView } from "@/components/shared/StateView";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -214,14 +214,24 @@ export default function AdminTraspasoDetail() {
 
   if (isLoading) {
     return (
-      <div className="container py-6 space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-40 w-full" />
-      </div>
+      <LoadingSkeleton
+        rows={3}
+        className="container py-6 space-y-4"
+        rowClassName="h-40 w-full rounded-xl"
+      />
     );
   }
 
-  if (!traspaso) return <div className="container py-6">No encontrado</div>;
+  if (!traspaso) {
+    return (
+      <NotFoundView
+        title="Traspaso no encontrado"
+        description="Este expediente no existe o fue removido."
+        onBack={() => navigate("/admin")}
+        backLabel="Volver al panel"
+      />
+    );
+  }
 
   const cedulaComprador = docs?.find((d: any) => d.tipo === "cedula_comprador");
   const selfieComprador = docs?.find((d: any) => d.tipo === "selfie_comprador");
