@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { icon: Scale, label: "Queue", path: "/notario" },
+  { icon: Scale, label: "Pendientes", path: "/notario" },
   { icon: UserCircle, label: "Perfil", path: "/notario/perfil" },
 ];
 

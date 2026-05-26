@@ -31,7 +31,7 @@ export default function NotarioDashboard() {
         <div>
           <h1 className="text-xl font-bold flex items-center gap-2">
             <Scale className="h-5 w-5 text-accent" />
-            Queue de Firma
+            Firmas Pendientes
           </h1>
           <p className="text-sm text-muted-foreground">Traspasos pendientes de certificación</p>
         </div>
