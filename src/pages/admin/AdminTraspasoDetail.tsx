@@ -254,6 +254,14 @@ export default function AdminTraspasoDetail() {
   // Valid next statuses for the dropdown
   const validNextStatuses = getValidNextStatuses(traspaso.status);
 
+  const isAntifraudeGated = traspaso.status === "verificacion_antifraude";
+  const antifraudeApproved = traspaso.antifraude_status === "aprobado";
+  const antifraudeAlerta = traspaso.antifraude_status === "alerta";
+
+  const availableStatuses = isAntifraudeGated && !antifraudeApproved
+    ? validNextStatuses.filter((s) => s === "cancelado")
+    : validNextStatuses;
+
   return (
     <div className="min-h-screen bg-muted">
       <header className="bg-card border-b border-border sticky top-0 z-50">
