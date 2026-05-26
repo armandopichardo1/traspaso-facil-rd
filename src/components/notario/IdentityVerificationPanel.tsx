@@ -45,15 +45,21 @@ function PartyVerification({
   nombre,
   cedulaDocId,
   selfieDocId,
+  onResult,
 }: {
   traspasoId: string;
   party: Party;
   nombre: string;
   cedulaDocId?: string;
   selfieDocId?: string;
+  onResult?: (party: Party, result: AiResult | null) => void;
 }) {
   const [running, setRunning] = useState(false);
-  const [result, setResult] = useState<AiResult | null>(null);
+  const [result, setResultState] = useState<AiResult | null>(null);
+  const setResult = (r: AiResult | null) => {
+    setResultState(r);
+    onResult?.(party, r);
+  };
   const canRun = !!cedulaDocId && !!selfieDocId;
 
   const run = async () => {
