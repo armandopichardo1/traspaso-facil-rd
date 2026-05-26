@@ -166,6 +166,7 @@ export default function NotarioTraspasoDetail() {
             compradorNombre={traspaso.compradorNombre || ""}
             antifraudeStatus={traspaso.antifraudeStatus}
             antifraudeNotas={traspaso.antifraudeNotas}
+            onVerificationChange={setAiVerified}
           />
 
           <Card className="rounded-xl">
