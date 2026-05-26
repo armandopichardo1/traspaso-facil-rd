@@ -4,7 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ShieldCheck, AlertTriangle, Loader2, ImageOff, ScanFace, History } from "lucide-react";
+import {
+  ShieldCheck,
+  AlertTriangle,
+  Loader2,
+  ImageOff,
+  ScanFace,
+  History,
+  ChevronDown,
+  ChevronUp,
+  Check,
+  X,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDocumentos, useDocumentoSignedUrl } from "@/hooks/useTraspasoServices";
@@ -52,6 +64,127 @@ function Thumb({ docId, label }: { docId: string | undefined; label: string }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function RasgosDetailView({
+  rasgosCoincidentes,
+  rasgosDiferentes,
+  notas,
+  compact = false,
+}: {
+  rasgosCoincidentes: string[];
+  rasgosDiferentes: string[];
+  notas?: string | null;
+  compact?: boolean;
+}) {
+  const [expanded, setExpanded] = useState(!compact);
+  const hasContent =
+    rasgosCoincidentes.length > 0 || rasgosDiferentes.length > 0 || !!notas;
+  if (!hasContent) return null;
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setExpanded((p) => !p)}
+        className="w-full flex items-center justify-between px-3 py-2.5 hover:bg-muted/50 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-teal" />
+          <span className="text-[11px] font-bold uppercase tracking-wide text-foreground">
+            Análisis facial detallado
+          </span>
+          {rasgosDiferentes.length > 0 && (
+            <Badge variant="outline" className="text-[9px] bg-destructive/10 text-destructive border-destructive/20">
+              {rasgosDiferentes.length} alerta{rasgosDiferentes.length > 1 ? "s" : ""}
+            </Badge>
+          )}
+          {rasgosCoincidentes.length > 0 && rasgosDiferentes.length === 0 && (
+            <Badge variant="outline" className="text-[9px] bg-success/10 text-success border-success/20">
+              Coincidencia total
+            </Badge>
+          )}
+        </div>
+        {compact && (
+          expanded ? (
+            <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          )
+        )}
+      </button>
+
+      {expanded && (
+        <div className="px-3 pb-3 space-y-3">
+          {/* Rasgos coincidentes */}
+          {rasgosCoincidentes.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="h-5 w-5 rounded-full bg-success/15 flex items-center justify-center">
+                  <Check className="h-3 w-3 text-success" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-success">
+                  Rasgos coincidentes
+                </span>
+                <span className="text-[10px] text-muted-foreground ml-1">
+                  ({rasgosCoincidentes.length})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {rasgosCoincidentes.map((r) => (
+                  <span
+                    key={r}
+                    className="inline-flex items-center gap-1 rounded-full bg-success/10 text-success border border-success/20 px-2.5 py-1 text-[11px] font-medium"
+                  >
+                    <Check className="h-3 w-3" />
+                    {r}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rasgos diferentes */}
+          {rasgosDiferentes.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className="h-5 w-5 rounded-full bg-destructive/15 flex items-center justify-center">
+                  <X className="h-3 w-3 text-destructive" />
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-destructive">
+                  Rasgos con discrepancia
+                </span>
+                <span className="text-[10px] text-muted-foreground ml-1">
+                  ({rasgosDiferentes.length})
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {rasgosDiferentes.map((r) => (
+                  <span
+                    key={r}
+                    className="inline-flex items-center gap-1 rounded-full bg-destructive/10 text-destructive border border-destructive/20 px-2.5 py-1 text-[11px] font-medium"
+                  >
+                    <X className="h-3 w-3" />
+                    {r}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notas del modelo */}
+          {notas && (
+            <div className="rounded-lg bg-warning/10 border border-warning/20 p-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-warning mb-1">
+                Notas del modelo IA
+              </p>
+              <p className="text-[11px] text-foreground leading-relaxed">{notas}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -230,26 +363,19 @@ function PartyVerification({
         </div>
 
         {result && (
-          <div className="rounded-lg border border-border bg-muted/40 p-3 space-y-1.5">
-            <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-3 py-2">
               <span className="text-xs font-medium text-muted-foreground">Confianza del modelo</span>
               <Badge variant="outline" className={`text-[10px] uppercase ${confidenceClass}`}>
                 {result.confidence}
               </Badge>
             </div>
-            {result.rasgos_coincidentes?.length > 0 && (
-              <p className="text-[11px] text-foreground">
-                <span className="font-bold">Coinciden:</span> {result.rasgos_coincidentes.join(", ")}
-              </p>
-            )}
-            {result.rasgos_diferentes?.length > 0 && (
-              <p className="text-[11px] text-foreground">
-                <span className="font-bold">Dudas:</span> {result.rasgos_diferentes.join(", ")}
-              </p>
-            )}
-            {result.notas && (
-              <p className="text-[11px] italic text-muted-foreground">{result.notas}</p>
-            )}
+            <RasgosDetailView
+              rasgosCoincidentes={result.rasgos_coincidentes ?? []}
+              rasgosDiferentes={result.rasgos_diferentes ?? []}
+              notas={result.notas}
+              compact={false}
+            />
           </div>
         )}
 
@@ -491,19 +617,12 @@ export default function IdentityVerificationPanel({
                         })}
                       </span>
                     </div>
-                    {h.rasgos_coincidentes?.length > 0 && (
-                      <p className="text-[11px] text-foreground">
-                        <span className="font-bold">Coinciden:</span> {h.rasgos_coincidentes.join(", ")}
-                      </p>
-                    )}
-                    {h.rasgos_diferentes?.length > 0 && (
-                      <p className="text-[11px] text-foreground">
-                        <span className="font-bold">Dudas:</span> {h.rasgos_diferentes.join(", ")}
-                      </p>
-                    )}
-                    {h.notas && (
-                      <p className="text-[11px] italic text-muted-foreground">{h.notas}</p>
-                    )}
+                    <RasgosDetailView
+                      rasgosCoincidentes={h.rasgos_coincidentes ?? []}
+                      rasgosDiferentes={h.rasgos_diferentes ?? []}
+                      notas={h.notas}
+                      compact
+                    />
                   </li>
                 );
               })}
