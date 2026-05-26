@@ -384,6 +384,7 @@ export default function IdentityVerificationPanel({
         cedulaDocId={cedVend}
         selfieDocId={selVend}
         onResult={handleResult}
+        onPersisted={handlePersisted}
       />
       <PartyVerification
         traspasoId={traspasoId}
@@ -392,7 +393,76 @@ export default function IdentityVerificationPanel({
         cedulaDocId={cedComp}
         selfieDocId={selComp}
         onResult={handleResult}
+        onPersisted={handlePersisted}
       />
+
+      {/* Historial de verificaciones IA guardadas */}
+      <Card className="rounded-xl">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <History className="h-4 w-4 text-muted-foreground" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Historial de verificaciones IA
+            </p>
+            <span className="ml-auto text-[10px] text-muted-foreground">{history.length}</span>
+          </div>
+
+          {history.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Aún no se ha registrado ninguna verificación IA para este traspaso.
+            </p>
+          ) : (
+            <ul className="space-y-2">
+              {history.map((h) => {
+                const confClass =
+                  h.confidence === "alta"
+                    ? "bg-success/15 text-success border-success/30"
+                    : h.confidence === "media"
+                      ? "bg-warning/15 text-warning border-warning/30"
+                      : "bg-destructive/15 text-destructive border-destructive/30";
+                const matchClass = h.match
+                  ? "bg-success/15 text-success border-success/30"
+                  : "bg-destructive/15 text-destructive border-destructive/30";
+                return (
+                  <li key={h.id} className="rounded-lg border border-border bg-muted/30 p-3 space-y-1.5">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-[10px] uppercase">
+                        {h.party}
+                      </Badge>
+                      <Badge variant="outline" className={`gap-1 text-[10px] uppercase ${matchClass}`}>
+                        {h.match ? <ShieldCheck className="h-3 w-3" /> : <AlertTriangle className="h-3 w-3" />}
+                        {h.match ? "Coincide" : "No coincide"}
+                      </Badge>
+                      <Badge variant="outline" className={`text-[10px] uppercase ${confClass}`}>
+                        Confianza {h.confidence}
+                      </Badge>
+                      <span className="ml-auto text-[10px] text-muted-foreground">
+                        {new Date(h.created_at).toLocaleString("es-DO", {
+                          dateStyle: "short",
+                          timeStyle: "short",
+                        })}
+                      </span>
+                    </div>
+                    {h.rasgos_coincidentes?.length > 0 && (
+                      <p className="text-[11px] text-foreground">
+                        <span className="font-bold">Coinciden:</span> {h.rasgos_coincidentes.join(", ")}
+                      </p>
+                    )}
+                    {h.rasgos_diferentes?.length > 0 && (
+                      <p className="text-[11px] text-foreground">
+                        <span className="font-bold">Dudas:</span> {h.rasgos_diferentes.join(", ")}
+                      </p>
+                    )}
+                    {h.notas && (
+                      <p className="text-[11px] italic text-muted-foreground">{h.notas}</p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
 
       <p className="text-[10px] text-muted-foreground leading-relaxed">
         La verificación facial es asistida por IA como apoyo al juicio del notario. El estatus
