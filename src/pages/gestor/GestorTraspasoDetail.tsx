@@ -111,6 +111,67 @@ export default function GestorTraspasoDetail() {
     },
   });
 
+  // ---------- Estado: panel de margen ----------
+  const [commissionPctInput, setCommissionPctInput] = useState<string>("");
+  const [costsInput, setCostsInput] = useState<string>("");
+  const [savingMargen, setSavingMargen] = useState(false);
+
+  // Hidrata los inputs al cargar el traspaso
+  useEffect(() => {
+    if (!traspaso) return;
+    const t = traspaso as any;
+    setCommissionPctInput(String(Math.round(Number(t.gestor_commission_pct ?? 0.3) * 100)));
+    setCostsInput(String(Number(t.gestor_costs_rd ?? 0)));
+  }, [traspaso]);
+
+  // ---------- Estado: agente CENARVE / DGII ----------
+  const proposedSlots = useMemo(() => proposeCenarveSlots(), []);
+  const [selectedSlotIdx, setSelectedSlotIdx] = useState<number | null>(null);
+  const [checklistDone, setChecklistDone] = useState<Record<number, boolean>>({});
+  const checklistProgress = useMemo(() => {
+    const done = Object.values(checklistDone).filter(Boolean).length;
+    return Math.round((done / RADICACION_CHECKLIST.length) * 100);
+  }, [checklistDone]);
+
+  const saveMargen = async () => {
+    if (!id) return;
+    const pct = Math.max(0, Math.min(100, Number(commissionPctInput) || 0)) / 100;
+    const costs = Math.max(0, Number(costsInput) || 0);
+    setSavingMargen(true);
+    const { error } = await supabase
+      .from("traspasos")
+      .update({ gestor_commission_pct: pct, gestor_costs_rd: costs })
+      .eq("id", id);
+    setSavingMargen(false);
+    if (error) {
+      toast.error("No se pudo guardar el margen: " + error.message);
+      return;
+    }
+    toast.success("Margen actualizado");
+    queryClient.invalidateQueries({ queryKey: ["gestor-traspaso", id] });
+  };
+
+  const copyRadicacionDraft = async (slotLabel: string | null) => {
+    if (!traspaso) return;
+    const tt = traspaso as any;
+    const lines = [
+      `Radicación CENARVE / DGII — ${tt.codigo ?? ""}`,
+      `Vehículo: ${tt.vehiculo_marca ?? ""} ${tt.vehiculo_modelo ?? ""} ${tt.vehiculo_ano ?? ""} · Placa ${tt.vehiculo_placa ?? "—"}`,
+      `Vendedor: ${tt.vendedor_nombre ?? "—"} · Comprador: ${tt.comprador_nombre ?? "—"}`,
+      slotLabel ? `Inspección propuesta: ${slotLabel}` : `Inspección: por confirmar`,
+      "",
+      "Checklist de radicación:",
+      ...RADICACION_CHECKLIST.map((item, i) => `${checklistDone[i] ? "[x]" : "[ ]"} ${item}`),
+    ];
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      toast.success("Borrador copiado al portapapeles");
+    } catch {
+      toast.error("No se pudo copiar al portapapeles");
+    }
+  };
+
+
 
   const handleAdvanceStatus = async (nextStatus: string, nota: string) => {
     if (!traspaso || !user) return;
