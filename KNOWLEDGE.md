@@ -286,10 +286,12 @@ Producto principal. Sigue la máquina de estados definida en `src/lib/traspaso-s
    ▼
 [Gestor / Admin]
 6. legalizacion_pgr                (owner: gestor/admin)    NUEVO
-   │  - Legalización de firmas en PGR
+   │  - Legalización PGR + Banco de Reservas
+   │    (Legalización en PGR y pago en Banco de Reservas)
    ▼
 7. plan_piloto                     (owner: gestor/admin)
-   │  - Pago de impuestos (transferencia + opacidad)
+   │  - CENARVE / Plan Piloto
+   │    (Inspección CENARVE y plan piloto DGII)
    ▼
 [Admin]
 8. dgii_proceso                    (owner: admin)

@@ -2,7 +2,7 @@
  * SINGLE SOURCE OF TRUTH para la máquina de 10 estados del traspaso.
  *
  * Este archivo DEBE estar sincronizado con:
- *   - KNOWLEDGE.md §3 (tabla de estados + dueños) y §7 (constraints técnicos)
+ *   - KNOWLEDGE.md §4.2 (tabla de estados + dueños)
  *   - El enum/validation trigger de `traspasos.status` en el back-end
  *   - Las políticas RLS por rol en supabase/migrations
  *
@@ -64,7 +64,7 @@ export const getProgress = (status: string) => {
 
 /**
  * Transiciones permitidas. `roles` lista quién PUEDE avanzar el paso.
- * Roles alineados con KNOWLEDGE.md §3. `admin` es comodín solo donde el spec lo permite
+ * Roles alineados con KNOWLEDGE.md §4.2. `admin` es comodín solo donde el spec lo permite
  * (apoyo operativo en pasos de mensajero/notario/gestor).
  */
 const TRANSITIONS: Record<TraspasoStatusKey, { next: TraspasoStatusKey; roles: UserRole[] }> = {
