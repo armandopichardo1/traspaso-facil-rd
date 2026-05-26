@@ -1,43 +1,59 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Lock, CheckCircle, Clock, ShieldCheck, Info, QrCode, HelpCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Lock,
+  CheckCircle,
+  Clock,
+  ShieldCheck,
+  Info,
+  QrCode,
+  HelpCircle,
+  Wallet,
+  AlertTriangle,
+} from "lucide-react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { useCreateEscrowDeposit } from "@/hooks/useTraspasoServices";
 
-const ESCROW_STEPS = [
+type EscrowStatus = "no_aplica" | "pendiente" | "depositado" | "liberado" | "reembolsado";
+
+const ESCROW_STEPS: Array<{ key: EscrowStatus; label: string; desc: string; icon: any }> = [
+  {
+    key: "pendiente",
+    label: "Esperando tu depósito",
+    desc: "Inicia el depósito en custodia para arrancar el traspaso",
+    icon: Wallet,
+  },
   {
     key: "depositado",
-    label: "Comprador depositó fondos",
-    desc: "Completado ayer, 2:45 PM",
-    icon: CheckCircle,
-  },
-  {
-    key: "en_custodia",
-    label: "Fondos verificados y en custodia",
-    desc: "Seguridad de nivel bancario activa",
+    label: "Fondos en custodia",
+    desc: "Tu dinero está protegido por TRASPASA.DO",
     icon: ShieldCheck,
-  },
-  {
-    key: "en_proceso",
-    label: "Traspaso en proceso",
-    desc: "Estamos validando los documentos en DGII",
-    icon: Clock,
   },
   {
     key: "liberado",
     label: "Liberación al vendedor",
-    desc: "Esperando confirmación de entrega",
+    desc: "Se libera cuando recibes la matrícula nueva",
     icon: Lock,
   },
 ];
 
+const formatRD = (n: number | string | null | undefined) => {
+  const v = Number(n ?? 0);
+  return `RD$${v.toLocaleString("es-DO")}`;
+};
+
 export default function EscrowView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const depositMutation = useCreateEscrowDeposit(id ?? "");
 
   const { data: traspaso, isLoading } = useQuery({
     queryKey: ["traspaso-escrow", id],
@@ -63,8 +79,54 @@ export default function EscrowView() {
 
   if (!traspaso) return null;
 
-  const escrowIdx = ESCROW_STEPS.findIndex((s) => s.key === traspaso.escrow_status);
+  const escrowStatus = (traspaso.escrow_status as EscrowStatus) ?? "pendiente";
+  const amount = Number(traspaso.precio_vehiculo ?? 0);
+  const isDeposited = escrowStatus === "depositado" || escrowStatus === "liberado";
+  const isReleased = escrowStatus === "liberado";
+  const isRefunded = escrowStatus === "reembolsado";
+  const canDeposit =
+    !isDeposited && !isRefunded && amount > 0 && (escrowStatus === "pendiente" || escrowStatus === "no_aplica");
+
+  const escrowIdx = ESCROW_STEPS.findIndex((s) => s.key === escrowStatus);
   const progressPct = ((Math.max(escrowIdx, 0) + 1) / ESCROW_STEPS.length) * 100;
+
+  const handleDeposit = async () => {
+    if (!id || amount <= 0) return;
+
+    // Optimistic update — mover el stepper a "depositado" inmediatamente
+    const previous = qc.getQueryData<any>(["traspaso-escrow", id]);
+    qc.setQueryData(["traspaso-escrow", id], (old: any) =>
+      old ? { ...old, escrow_status: "depositado" } : old,
+    );
+
+    try {
+      await depositMutation.mutateAsync(amount);
+      toast.success("Depósito en custodia confirmado");
+      // Refrescar con datos reales del backend
+      qc.invalidateQueries({ queryKey: ["traspaso-escrow", id] });
+    } catch (err: any) {
+      // Rollback
+      qc.setQueryData(["traspaso-escrow", id], previous);
+      toast.error(
+        err?.message ||
+          "No pudimos procesar tu depósito. Verifica tu conexión e inténtalo de nuevo.",
+      );
+    }
+  };
+
+  // Badge dinámico según estado
+  const statusBadge = (() => {
+    if (isRefunded) {
+      return { label: "REEMBOLSADO", className: "bg-destructive/10 text-destructive border-destructive/20" };
+    }
+    if (isReleased) {
+      return { label: "LIBERADO AL VENDEDOR", className: "bg-emerald-100 text-emerald-700 border-emerald-200" };
+    }
+    if (isDeposited) {
+      return { label: "EN CUSTODIA", className: "bg-amber-100 text-amber-800 border-amber-300" };
+    }
+    return { label: "PENDIENTE DE DEPÓSITO", className: "bg-muted text-muted-foreground border-border" };
+  })();
 
   return (
     <div className="max-w-lg mx-auto px-4 pt-6 pb-24">
@@ -76,33 +138,31 @@ export default function EscrowView() {
       </button>
 
       {/* Header */}
-      <motion.div
-        className="mb-6"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-      >
+      <motion.div className="mb-6" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-extrabold text-foreground mb-1">
-          Tu dinero está seguro.
+          {isDeposited ? "Tu dinero está seguro." : "Deposita en custodia."}
         </h1>
         <p className="text-sm text-muted-foreground">
-          Estado de tu pago en custodia (Escrow).
+          {isDeposited
+            ? "Estado de tu pago en custodia (Escrow)."
+            : "Tu pago se mantiene bajo protección hasta que recibas la matrícula nueva."}
         </p>
       </motion.div>
 
-      {/* Amount card with ring */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.1 }}
-      >
+      {/* Amount card */}
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
         <Card className="mb-6 rounded-2xl overflow-hidden">
           <CardContent className="p-6 text-center">
-            {/* Progress ring */}
             <div className="relative h-28 w-28 mx-auto mb-4">
               <svg className="h-28 w-28 -rotate-90" viewBox="0 0 112 112">
                 <circle cx="56" cy="56" r="48" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
                 <motion.circle
-                  cx="56" cy="56" r="48" fill="none" stroke="hsl(var(--accent))" strokeWidth="6"
+                  cx="56"
+                  cy="56"
+                  r="48"
+                  fill="none"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth="6"
                   strokeDasharray={`${(progressPct / 100) * 301.6} 301.6`}
                   strokeLinecap="round"
                   initial={{ strokeDasharray: "0 301.6" }}
@@ -117,32 +177,108 @@ export default function EscrowView() {
               </div>
             </div>
 
-            {/* Status badge */}
-            <Badge className="bg-accent/10 text-accent border-accent/20 font-bold text-xs mb-3">
-              EN CUSTODIA — PENDIENTE DE TRASPASO
+            <Badge className={`font-bold text-xs mb-3 border ${statusBadge.className}`}>
+              {statusBadge.label}
             </Badge>
 
-            {/* Amount */}
-            <p className="text-3xl font-extrabold text-foreground">
-              RD${traspaso.precio_vehiculo ? Number(traspaso.precio_vehiculo).toLocaleString() : "0"}
-            </p>
+            <p className="text-3xl font-extrabold text-foreground">{formatRD(amount)}</p>
             <p className="text-sm text-muted-foreground mt-1">💰 Pago del vehículo</p>
 
-            {/* Verified badge */}
-            <div className="mt-4 inline-flex items-center gap-2 bg-green-50 border border-green-200 rounded-full px-4 py-1.5">
-              <ShieldCheck className="h-4 w-4 text-green-600" />
-              <span className="text-xs font-bold text-green-700">VERIFICADO POR TRASPASA.DO</span>
-            </div>
+            {isDeposited && (
+              <div className="mt-4 inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-full px-4 py-1.5">
+                <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-bold text-emerald-700">VERIFICADO POR TRASPASA.DO</span>
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
 
+      {/* CTA de depósito (antes de depositar) */}
+      {canDeposit && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="mb-6 rounded-2xl border-2 border-accent/30 bg-accent/5">
+            <CardContent className="p-5 space-y-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-foreground">
+                  <p className="font-bold mb-1">Esto es un depósito en custodia, no un pago al vendedor.</p>
+                  <p className="text-muted-foreground text-xs">
+                    Tu dinero queda retenido por TRASPASA.DO y solo se libera al vendedor cuando recibes la matrícula nueva a tu nombre.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleDeposit}
+                disabled={depositMutation.isPending}
+                className="w-full h-12 rounded-xl font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Wallet className="h-4 w-4 mr-2" />
+                {depositMutation.isPending
+                  ? "Procesando depósito..."
+                  : `Depositar ${formatRD(amount)} en custodia`}
+              </Button>
+              <p className="text-[10px] text-muted-foreground text-center">
+                Al continuar aceptas los términos del servicio de custodia de TRASPASA.DO.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Confirmación post-depósito */}
+      {isDeposited && !isReleased && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="mb-6 rounded-2xl border-emerald-200 bg-emerald-50">
+            <CardContent className="p-5 flex gap-3">
+              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-foreground">
+                <p className="font-bold text-emerald-800 mb-1">Tus fondos están en custodia.</p>
+                <p className="text-emerald-900/80 text-xs">
+                  Se liberan al vendedor solo cuando recibes la matrícula nueva. Si el traspaso se cancela, te devolvemos el 100% del depósito.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Liberado */}
+      {isReleased && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="mb-6 rounded-2xl border-emerald-200 bg-emerald-50">
+            <CardContent className="p-5 flex gap-3">
+              <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-foreground">
+                <p className="font-bold text-emerald-800 mb-1">Fondos liberados al vendedor.</p>
+                <p className="text-emerald-900/80 text-xs">
+                  El traspaso se completó con éxito y el pago fue transferido al vendedor.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Reembolsado */}
+      {isRefunded && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <Card className="mb-6 rounded-2xl border-destructive/30 bg-destructive/5">
+            <CardContent className="p-5 flex gap-3">
+              <Info className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="text-sm text-foreground">
+                <p className="font-bold text-destructive mb-1">Depósito reembolsado.</p>
+                <p className="text-muted-foreground text-xs">
+                  El traspaso fue cancelado y te devolvimos el 100% del monto depositado.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
       {/* Timeline */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
         <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
           Progreso del Proceso
         </h2>
@@ -155,18 +291,18 @@ export default function EscrowView() {
               return (
                 <div key={s.key} className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
-                      done ? "bg-green-500 text-white" : isCurrent ? "bg-cta/20 text-cta" : "bg-muted text-muted-foreground"
-                    }`}>
-                      {done && !isCurrent ? (
-                        <CheckCircle className="h-4 w-4" />
-                      ) : (
-                        <s.icon className="h-4 w-4" />
-                      )}
+                    <div
+                      className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${
+                        done
+                          ? "bg-emerald-600 text-white"
+                          : isCurrent
+                          ? "bg-accent/20 text-accent"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {done && !isCurrent ? <CheckCircle className="h-4 w-4" /> : <s.icon className="h-4 w-4" />}
                     </div>
-                    {!isLast && (
-                      <div className={`w-0.5 h-10 ${done ? "bg-green-500" : "bg-muted"}`} />
-                    )}
+                    {!isLast && <div className={`w-0.5 h-10 ${done ? "bg-emerald-600" : "bg-muted"}`} />}
                   </div>
                   <div className="pb-6">
                     <p className={`text-sm ${done || isCurrent ? "font-bold" : "text-muted-foreground"}`}>
@@ -182,41 +318,34 @@ export default function EscrowView() {
       </motion.div>
 
       {/* Info box */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <div className="bg-accent/5 border border-accent/20 rounded-2xl p-4 mb-6 flex gap-3">
           <Info className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
           <p className="text-sm text-foreground">
-            Los fondos se liberan automáticamente cuando el traspaso se complete y el comprador confirme la entrega del vehículo con <strong>código QR</strong>.
+            Los fondos se liberan automáticamente cuando recibes la matrícula nueva y confirmas la entrega con tu <strong>código QR</strong>.
           </p>
         </div>
       </motion.div>
 
-      {/* QR Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
-      >
-        <Card className="mb-6 rounded-2xl bg-muted/30">
-          <CardContent className="p-6 text-center">
-            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
-              Escanea al recibir el vehículo
-            </h3>
-            <div className="h-40 w-40 mx-auto bg-card border-2 border-dashed border-border rounded-xl flex items-center justify-center mb-3">
-              <QrCode className="h-16 w-16 text-muted-foreground/30" />
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Solo muestra este código al vendedor cuando tengas las llaves y el vehículo en tu poder.
-            </p>
-          </CardContent>
-        </Card>
-      </motion.div>
+      {/* QR Section (solo cuando ya está depositado) */}
+      {isDeposited && !isReleased && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+          <Card className="mb-6 rounded-2xl bg-muted/30">
+            <CardContent className="p-6 text-center">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">
+                Escanea al recibir la matrícula
+              </h3>
+              <div className="h-40 w-40 mx-auto bg-card border-2 border-dashed border-border rounded-xl flex items-center justify-center mb-3">
+                <QrCode className="h-16 w-16 text-muted-foreground/30" />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Muestra este código al mensajero cuando recibas tu nueva matrícula.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
-      {/* Help button */}
       <Button
         variant="destructive"
         className="w-full rounded-xl h-12 font-bold"
